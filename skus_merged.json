@@ -811,11 +811,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount \u2014 White",
+    "description": "Poly TC10 Glass Mount — White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount \u2014 Black",
+    "description": "Poly TC10 Glass Mount — Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -851,15 +851,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
@@ -1640,5 +1640,41 @@
   "99T09AA": {
     "description": "Poly Studio G62 Video Conferencing System",
     "msrp": 2682
+  },
+  "RCU3SL-C30": {
+    "description": "SCT USB 3.2 bar extender for Poly X32/X52/X72 and V52/V72. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RCU3SL-C00": {
+    "description": "SCT USB 3.2 extender; SCT lists Poly Studio V12. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RCU3SL-B20": {
+    "description": "SCT USB 3.2 extender for Poly Studio E60. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RCU3SL-C50": {
+    "description": "SCT USB 3.2 extender for Poly Studio E70. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RCU2S-PSU": {
+    "description": "SCT USB 2.0 extender for Poly Studio X/V series. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RTK-X57": {
+    "description": "SCT table BYOM kit for Poly Studio X52/X72. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RTK-X57-PSU": {
+    "description": "SCT table BYOM kit for Poly Studio V52/V72. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RM-X57": {
+    "description": "SCT analog expansion mic extender for 875M6AA. Dealer quote, not Poly MSRP.",
+    "msrp": null
+  },
+  "RCM-URMX": {
+    "description": "SCT wall mount for Poly Studio E60 hiding camera-end module. Dealer quote, not Poly MSRP.",
+    "msrp": null
   }
 }

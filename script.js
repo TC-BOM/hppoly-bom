@@ -1,5 +1,6 @@
-const VERSION = "v10.49";
-// script.js – HP | Poly Configurator – v10.49: Audio banner matches Video announcement; under construction
+const VERSION = "v10.50";
+// script.js – HP | Poly Configurator – v10.50: analog 875M6AA+875M4AA, A2/analog QSG, SCT/Netgear accessories
+// v10.49: Audio banner matches Video announcement; under construction
 // v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
 // v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
 // v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
@@ -20,6 +21,30 @@ const VERSION = "v10.49";
 // v10.31: VIDEO | AUDIO | HEADSETS tabs (audio/headset mock catalogs)
 // v10.30: Netgear Pro AV switch disclaimer + optional switch picker; mount QSG links while selecting mounts
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
+
+
+const PREEXISTING_AUDIO = "Pre-existing / 3rd Party Audio, (not added to BOM)";
+const ANALOG_MIC_VALUE = "Single Analog Extension mics";
+const ANALOG_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_9575660_en-US-1.pdf", label: "Analog expansion mic quick start (PDF)" };
+const A2_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_15155157_en-US-1.pdf", label: "Studio A2 quick start (PDF)" };
+const NETGEAR_KITS = [
+  { sku: "GSM4210PD-100NAS", label: "GSM4210PD-100NAS — 8-port PoE+ desktop (~$865 high-side)" },
+  { sku: "GSM4210PX-100NAS", label: "GSM4210PX-100NAS — 8-port PoE+ 220W (~$1,362)" },
+  { sku: "GSM4212PX-100NAS", label: "GSM4212PX-100NAS — 10-port PoE+ (~$1,910)" },
+  { sku: "GSM4230PX-100NAS", label: "GSM4230PX-100NAS — 26-port PoE+ (~$2,752)" },
+  { sku: "GSM4248PX-100NAS", label: "GSM4248PX-100NAS — 40-port PoE+ (~$4,521)" }
+];
+const SCT_KITS = [
+  { sku: "RCU3SL-C30", purpose: "USB 3.2 bar extender (Device Mode USB-C, up to 100 m CAT)", families: ["x32","x52","x72","v52","v72"], drawing: "https://docs.soundcontrol.net/download/3116/", drawingLabel: "RCU3SL-C30 application guide (PDF)" },
+  { sku: "RCU3SL-C00", purpose: "USB 3.2 extender; SCT lists Poly Studio V12 (confirm HP support)", families: ["v12"], drawing: "https://docs.soundcontrol.net/download/3107/", drawingLabel: "RCU3SL-C00 application guide (PDF)" },
+  { sku: "RCU3SL-B20", purpose: "USB 3.2 extender for Poly Studio E60 (camera >6 ft from codec)", camera: "E60", drawing: "https://docs.soundcontrol.net/download/3800/", drawingLabel: "RCU3SL-B20 application guide (PDF)", drawing2: "https://docs.soundcontrol.net/download/3383/", drawing2Label: "E60 / G62 design guide (PDF)" },
+  { sku: "RCU3SL-C50", purpose: "USB 3.2 extender for Poly Studio E70", camera: "E70", drawing: "https://docs.soundcontrol.net/download/3122/", drawingLabel: "RCU3SL-C50 application guide (PDF)", drawing2: "https://docs.soundcontrol.net/download/3753/", drawing2Label: "E70 / G62 design guide (PDF)" },
+  { sku: "RCU2S-PSU", purpose: "USB 2.0 extender for X/V bars (USB 2 is limited vs USB 3)", families: ["x32","x52","x72","v52","v72"], drawing: "https://docs.soundcontrol.net/download/763/", drawingLabel: "RCU2S-PSU application guide (PDF)" },
+  { sku: "RTK-X57", purpose: "Table BYOM kit: HDMI/USB/Ethernet, TC10 PoE, analog mics, powers the X-bar", families: ["x52","x72"], drawing: "https://docs.soundcontrol.net/download/3386/", drawingLabel: "RTK-X57 X-series design guide (PDF)", drawing2: "https://docs.soundcontrol.net/download/827/", drawing2Label: "RTK-X57 application guide (PDF)" },
+  { sku: "RTK-X57-PSU", purpose: "Table BYOM kit for V52/V72", families: ["v52","v72"], drawing: "https://docs.soundcontrol.net/download/1217/", drawingLabel: "RTK-X57 USB design guide (PDF)", drawing2: "https://docs.soundcontrol.net/download/829/", drawing2Label: "RTK-X57-PSU application guide (PDF)" },
+  { sku: "RM-X57", purpose: "Extend analog expansion mics (875M6AA) up to 100 m CAT", analog: true, drawing: "https://docs.soundcontrol.net/download/1187/", drawingLabel: "RM-X57 design guide (PDF)", drawing2: "https://docs.soundcontrol.net/download/775/", drawing2Label: "RM-X57 application guide (PDF)" },
+  { sku: "RCM-URMX", purpose: "Wall mount for E60 that hides the SCT camera-end module", camera: "E60", drawing: "https://docs.soundcontrol.net/download/3383/", drawingLabel: "E60 / G62 design guide (PDF)" }
+];
 
 document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
 
@@ -355,19 +380,23 @@ async function init() {
   mountingHint.className = "text-xs text-gray-600 mt-1";
   mountingWrapEl.appendChild(mountingHint);
   form.appendChild(mountingWrapEl);
-  form.appendChild(select("expansionMic", "Include Expansion Mic?", [
+  const expansionMicWrapEl = select("expansionMic", "Include Expansion Mic?", [
     "None",
-    "Single Analog Exp mic",
-    "Existing IP table mics",
-    "Existing IP Ceiling mics",
+    ANALOG_MIC_VALUE,
+    PREEXISTING_AUDIO,
     "New White A2 table mic pod(s)",
     "New Black A2 table mic pod(s)"
-  ]));
+  ]);
+  const expansionHint = document.createElement("p");
+  expansionHint.id = "expansionHint";
+  expansionHint.className = "text-xs text-gray-600 mt-1";
+  expansionMicWrapEl.appendChild(expansionHint);
+  form.appendChild(expansionMicWrapEl);
 
   const expansionInfo = document.createElement("div");
   expansionInfo.id = "expansionInfo";
   expansionInfo.className = "hidden text-sm mt-1 p-2 border-l-4 border-amber-400 bg-amber-50 text-amber-900 rounded";
-  expansionInfo.textContent = "Note: IP table/ceiling mics are not supported with V12, X32, X52, or V52. Use Analog or A2 mics.";
+  expansionInfo.textContent = "Pre-existing / 3rd party audio is noted only. Nothing is added to the BOM.";
   form.appendChild(expansionInfo);
 
   // A2 quantity (shown only when New White/Black A2 is selected)
@@ -434,28 +463,7 @@ async function init() {
     <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
   form.appendChild(cameraMountWrap);
 
-  // Netgear Pro AV switch (LLN / StudioNet) — Large / Very large, or X/V 52/72 with A2 + camera add-on
-  const netgearWrap = document.createElement("div");
-  netgearWrap.id = "netgearWrap";
-  netgearWrap.className = "hidden p-3 border-2 border-amber-400 rounded bg-blue-50 space-y-2";
-  netgearWrap.innerHTML = `
-    <div class="font-semibold text-amber-900">Netgear Pro AV switch required for more than one IP device</div>
-    <p class="text-sm text-blue-950">If this room has more than one IP-connected peripheral (extra camera + A2 mics, IP table/ceiling mics, etc.) on G62, X52/V52, or X72/V72, Poly requires a dedicated Netgear Pro AV switch on the LLN / StudioNet path. Do not use a generic office switch. Currently documented model: GSM4210PD. From October 2025 the Poly profile also covers M4250 / M4300 / M4350. High-side list estimates below are CDW advertised list, not Poly MSRP.</p>
-    <p class="text-xs">
-      <a href="https://support.hp.com/ie-en/document/ish_13031025-13026020-16" target="_blank" rel="noopener" class="text-blue-700 underline">HP article: HP Poly increasing the number of supported Netgear network switch models for Poly StudioNet</a>
-      ·
-      <a href="https://downloads1.netgear.com/files/netgear/documents/AV-over-IP-Switch-Reference-Guide-110v.pdf" target="_blank" rel="noopener" class="text-blue-700 underline">Netgear AV Product Reference Guide (PDF)</a>
-    </p>
-    <label class="block font-medium">Netgear Pro AV switch</label>
-    <select id="netgearSwitch" class="border p-2 w-full">
-      <option value="None">None — using existing supported switch / not adding to BOM</option>
-      <option value="GSM4210PD-100NAS">GSM4210PD-100NAS — 8-port PoE+ desktop (~$865 high-side)</option>
-      <option value="GSM4210PX-100NAS">GSM4210PX-100NAS — 8-port PoE+ 220W (~$1,362)</option>
-      <option value="GSM4212PX-100NAS">GSM4212PX-100NAS — 10-port PoE+ (~$1,910)</option>
-      <option value="GSM4230PX-100NAS">GSM4230PX-100NAS — 26-port PoE+ (~$2,752)</option>
-      <option value="GSM4248PX-100NAS">GSM4248PX-100NAS — 40-port PoE+ (~$4,521)</option>
-    </select>`;
-  form.appendChild(netgearWrap);
+  // Netgear Pro AV lives under Optional accessories (expandable table)
 
   const g6DockWrap = document.createElement("div");
   g6DockWrap.id = "g6DockWrap";
@@ -631,6 +639,38 @@ async function init() {
     "None", "Remote Implementation help", "Onsite Implementation help"
   ]));
   form.appendChild(input("accessories", "Optional: any additional accessories (comma-separated SKUs)", "e.g. 3rd party powered speakers, existing audio, 3rd party DSP, extra cameras, cables"));
+
+  const netgearDetails = document.createElement("details");
+  netgearDetails.id = "netgearDetails";
+  netgearDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
+  netgearDetails.innerHTML = `
+    <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
+      Netgear Pro AV switch — click to expand
+    </summary>
+    <div class="px-3 pb-3 space-y-2">
+      <p class="text-gray-600">Poly StudioNet / LLN for more than one IP peripheral. Do not use a generic office switch. High-side list estimates are CDW advertised list, not Poly MSRP.
+        <a href="https://support.hp.com/ie-en/document/ish_13031025-13026020-16" target="_blank" rel="noopener" class="text-blue-700 underline">HP Poly StudioNet switch article</a>
+        ·
+        <a href="https://downloads1.netgear.com/files/netgear/documents/AV-over-IP-Switch-Reference-Guide-110v.pdf" target="_blank" rel="noopener" class="text-blue-700 underline">Netgear AV Product Reference Guide (PDF)</a>
+      </p>
+      <div id="netgearKitList" class="space-y-1"></div>
+    </div>`;
+  form.appendChild(netgearDetails);
+
+  const sctDetails = document.createElement("details");
+  sctDetails.id = "sctDetails";
+  sctDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
+  sctDetails.innerHTML = `
+    <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
+      Sound Control Technologies — click to expand
+    </summary>
+    <div class="px-3 pb-3 space-y-2">
+      <p class="text-gray-600">Integrator kits mapped to the Poly host/camera selected above. Unchecked by default. SCT does not publish Poly MSRP (dealer quote).
+        <a href="https://soundcontrol.net/" target="_blank" rel="noopener" class="text-blue-700 underline">soundcontrol.net</a>
+      </p>
+      <div id="sctKitList" class="space-y-2"></div>
+    </div>`;
+  form.appendChild(sctDetails);
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
@@ -1132,54 +1172,85 @@ async function init() {
       sel.value = "None";
       const info = document.getElementById("expansionInfo");
       if (info) info.classList.add("hidden");
+      refreshExpansionHint();
       return;
     }
     if (wrap) wrap.classList.remove("hidden");
-    const prev = sel.value || "None";
+    let prev = sel.value || "None";
+    if (prev.includes("Existing IP")) prev = PREEXISTING_AUDIO;
+    if (prev.includes("Single Analog Exp")) prev = ANALOG_MIC_VALUE;
     const analog = analogMicApplies();
     const opts = [{ value: "None", label: "None" }];
-    if (analog) opts.push({ value: "Single Analog Exp mic", label: "Single Analog Exp mic (875M6AA)" });
-    opts.push({ value: "Existing IP table mics", label: "Existing IP table mics (not added to BOM)" });
-    opts.push({ value: "Existing IP Ceiling mics", label: "Existing IP Ceiling mics (not added to BOM)" });
+    if (analog) opts.push({ value: ANALOG_MIC_VALUE, label: "Single Analog Extension mics (875M6AA + 875M4AA)" });
+    opts.push({ value: PREEXISTING_AUDIO, label: PREEXISTING_AUDIO });
     opts.push({ value: "New White A2 table mic pod(s)", label: "New White A2 table mic pod(s)" });
     opts.push({ value: "New Black A2 table mic pod(s)", label: "New Black A2 table mic pod(s)" });
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
     const info = document.getElementById("expansionInfo");
-    const restrict = family === "v12" || family === "x32" || family === "v52" || family === "x52";
     if (info) {
-      info.classList.toggle("hidden", !restrict);
-      if (family === "v12" || family === "x32") {
-        info.textContent = "Note: IP table/ceiling mics are not supported with V12 or X32. Use A2 mics.";
-      } else if (family === "v52" || family === "x52") {
-        info.textContent = "Note: IP table/ceiling mics are not supported with X52 or V52. Use Analog or A2 mics.";
-      }
+      const show = sel.value === PREEXISTING_AUDIO;
+      info.classList.toggle("hidden", !show);
+      info.textContent = "Pre-existing / 3rd party audio is noted only. Nothing is added to the BOM.";
     }
+    refreshExpansionHint();
+  }
+  function refreshExpansionHint() {
+    const hint = document.getElementById("expansionHint");
+    if (!hint) return;
+    const family = hostFamily();
+    if (family === "r30") { hint.innerHTML = ""; return; }
+    const analog = analogMicApplies();
+    const parts = [];
+    if (analog) parts.push("Quick start: " + qsgLink(ANALOG_QSG.href, ANALOG_QSG.label));
+    parts.push("Quick start: " + qsgLink(A2_QSG.href, A2_QSG.label));
+    hint.innerHTML = parts.join("<br>");
   }
   function extraIpPeripheralSelected() {
     const exp = document.getElementById("expansionMic")?.value || "";
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const ipMic = exp.includes("New White A2") || exp.includes("New Black A2")
-      || exp.includes("Existing IP table") || exp.includes("Existing IP Ceiling");
+      || exp === PREEXISTING_AUDIO || exp.includes("Existing IP");
     const extraCam = canShowCameraAddOn() && (cam === "E60" || cam === "E70");
     return ipMic || extraCam;
   }
-  function updateNetgearVisibility() {
-    const wrap = document.getElementById("netgearWrap");
-    if (!wrap) return;
-    const r = document.getElementById("roomSize")?.value || "";
+  function sctKitApplies(kit) {
     const family = hostFamily();
-    const exp = document.getElementById("expansionMic")?.value || "";
     const cam = document.getElementById("cameraChoice")?.value || "None";
-    const a2 = exp.includes("New White A2") || exp.includes("New Black A2");
-    const extraCam = canShowCameraAddOn() && (cam === "E60" || cam === "E70");
-    const is5272 = family === "x52" || family === "v52" || family === "x72" || family === "v72";
-    const show = r === "Large" || r === "Very large" || !!(is5272 && a2 && extraCam);
-    wrap.classList.toggle("hidden", !show);
-    if (!show) {
-      const sel = document.getElementById("netgearSwitch");
-      if (sel) sel.value = "None";
+    const exp = document.getElementById("expansionMic")?.value || "";
+    const analogOn = exp.includes("Analog Extension") || exp.includes("Single Analog Exp");
+    if (kit.camera) return canShowCameraAddOn() && cam === kit.camera;
+    if (kit.analog) return analogOn && analogMicApplies();
+    if (kit.families) return kit.families.includes(family);
+    return false;
+  }
+  function refreshIntegratorAccessories() {
+    const ngList = document.getElementById("netgearKitList");
+    if (ngList && !ngList.dataset.built) {
+      ngList.innerHTML = NETGEAR_KITS.map(k =>
+        `<label class="flex items-start gap-2"><input type="checkbox" class="border mt-0.5 netgearKit" data-sku="${k.sku}"><span>${k.label}</span></label>`
+      ).join("");
+      ngList.dataset.built = "1";
     }
+    const sctList = document.getElementById("sctKitList");
+    if (sctList) {
+      const prev = {};
+      sctList.querySelectorAll("input.sctKit").forEach(cb => { prev[cb.dataset.sku] = cb.checked; });
+      const kits = SCT_KITS.filter(sctKitApplies);
+      if (!kits.length) {
+        sctList.innerHTML = `<p class="text-gray-500">No SCT kits mapped for this Poly host/camera.</p>`;
+      } else {
+        sctList.innerHTML = kits.map(k => {
+          const d1 = qsgLink(k.drawing, k.drawingLabel || "Technical drawing (PDF)");
+          const d2 = k.drawing2 ? " · " + qsgLink(k.drawing2, k.drawing2Label || "Application guide (PDF)") : "";
+          const checked = prev[k.sku] ? " checked" : "";
+          return `<label class="flex items-start gap-2"><input type="checkbox" class="border mt-0.5 sctKit" data-sku="${k.sku}"${checked}><span><span class="font-medium">${k.sku}</span> — ${k.purpose}<br>${d1}${d2}</span></label>`;
+        }).join("");
+      }
+    }
+  }
+  function updateNetgearVisibility() {
+    refreshIntegratorAccessories();
   }
   function updateG6DockVisibility() {
     const wrap = document.getElementById("g6DockWrap");
@@ -1425,6 +1496,9 @@ async function init() {
     html += `<h2 class="font-semibold mb-2">Your BOM:</h2>`;
     if (googleMeetNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
+    }
+    if (bom.sctQuoteNote) {
+      html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">SCT prices are dealer quote, not Poly MSRP.</p>`;
     }
     html += renderPcPickerHtml(bom);
     html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
@@ -1717,9 +1791,10 @@ async function init() {
       }
     }
 
-    // Analog expansion mic (875M6AA) — commercial SKU is the only catalog key
-    if ((expansionMic || "").includes("Single Analog Exp mic")) {
+    // Analog expansion mics: 875M6AA mic + 875M4AA CAT5/6 extender dongle
+    if ((expansionMic || "").includes("Analog Extension") || (expansionMic || "").includes("Single Analog Exp")) {
       addLine(results, "875M6AA");
+      addLine(results, "875M4AA");
     }
 
     // Mounting extras — detect by hostFamily(); G62 kit vs base is pickHost
@@ -1769,11 +1844,19 @@ async function init() {
       addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
 
-    const netgearWrapEl = document.getElementById("netgearWrap");
-    const netgearSku = document.getElementById("netgearSwitch")?.value || "";
-    if (netgearSku && netgearSku.startsWith("GSM") && netgearWrapEl && !netgearWrapEl.classList.contains("hidden")) {
-      addLine(results, netgearSku);
-    }
+    document.querySelectorAll("input.netgearKit:checked").forEach(cb => {
+      const sku = cb.dataset.sku || "";
+      if (sku) addLine(results, sku);
+    });
+    let sctAdded = false;
+    document.querySelectorAll("input.sctKit:checked").forEach(cb => {
+      const sku = cb.dataset.sku || "";
+      if (!sku) return;
+      const kit = SCT_KITS.find(k => k.sku === sku);
+      addLine(results, sku, kit ? kit.purpose : sku);
+      sctAdded = true;
+    });
+    const sctQuoteNote = sctAdded;
 
     const polarWrap = document.getElementById("polarFilterWrap");
     const polarOn = document.getElementById("polarFilterOpt")?.checked;
@@ -1792,6 +1875,7 @@ async function init() {
       results,
       includePrices,
       googleMeetNote: !!(needsPlatform && platform === "Google Meet"),
+      sctQuoteNote,
       typeOfSystem,
       platform,
       pcPlatform,
