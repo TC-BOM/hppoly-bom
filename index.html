@@ -20,7 +20,7 @@
       <span class="text-gray-300 mx-3">|</span>
       <button type="button" id="tabAudio" data-panel="audio" class="tab-btn opacity-30 text-gray-900">AUDIO</button>
       <span class="text-gray-300 mx-3">|</span>
-      <button type="button" id="tabHeadset" data-panel="headset" class="tab-btn opacity-30 text-gray-900">HEADSETS</button>
+      <button type="button" id="tabHeadset" disabled aria-disabled="true" title="Coming soon" class="opacity-20 text-gray-400 cursor-not-allowed pointer-events-none">HEADSETS</button>
     </nav>
     <div id="app">Loading...</div>
   </div>
@@ -29,7 +29,7 @@
   <script>
   (function(){
     var s=document.createElement('script');
-    s.src='script.js?v=10.42&ts='+Date.now();
+    s.src='script.js?v=10.45&ts='+Date.now();
     s.defer=true;
     document.currentScript.parentNode.insertBefore(s, document.currentScript);
   })();

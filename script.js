@@ -1,5 +1,8 @@
-const VERSION = "v10.42";
-// script.js – HP | Poly Configurator – v10.42: split Support and Install sections (Knauf layout)
+const VERSION = "v10.45";
+// script.js – HP | Poly Configurator – v10.45: Knauf-style flat home form; HEADSETS tab greyed out
+// v10.44: shrink announcement banner
+// v10.43: unique HP Documents QSG PDFs per mount option
+// v10.42: split Support and Install sections (Knauf layout)
 // v10.41: hide optional checkbox MSRP on form (quote only)
 // v10.40: polarizer under camera add-on
 // v10.39: in-box mount notes + per-option QSG links
@@ -169,14 +172,9 @@ async function init() {
   // Announcement banner (support + TC10 scheduler updates)
   const promoWrap = document.createElement("div");
   promoWrap.id = "promoBox";
-  promoWrap.className = "p-3 border-2 border-amber-400 rounded bg-amber-50 space-y-2";
+  promoWrap.className = "px-3 py-1.5 border border-amber-400 rounded bg-amber-50";
   promoWrap.innerHTML = `
-    <div class="font-semibold text-amber-900">📢 Announcement — new support &amp; TC10 scheduler options</div>
-    <ul class="text-sm text-amber-950 list-disc pl-5 space-y-1">
-      <li><strong>Support additions:</strong> 1 / 3 / 5 year <strong>Poly+</strong> and <strong>Poly+ Analyze</strong> terms are now selectable for the main system, cameras (E60/E70), A2 mics, and TC10. Poly+ Analyze includes estate-wide coverage and Lens Pro insights.</li>
-      <li><strong>TC10 scheduler additions:</strong> Optional outside-room TC10 scheduling panel in Black or White, with wall mount (included) or glass mount. Available in both commercial and TAA/JITC paths.</li>
-    </ul>
-    <p class="text-xs text-amber-800">Select Support term and Scheduling panel below to include these on the BOM.</p>`;
+    <div class="text-sm text-amber-900">Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
   form.appendChild(promoWrap);
 
   // TAA / JITC
@@ -189,41 +187,35 @@ async function init() {
     </label>
     <p class="text-xs text-blue-800 ml-6">When checked, only TAA/JITC-compliant SKUs are used. Standard commercial hardware is excluded. Support terms still apply.</p>`;
 
-  const roomSection = document.createElement("fieldset");
-  roomSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  roomSection.innerHTML = '<legend class="font-semibold px-1">Room configuration</legend>';
-  roomSection.appendChild(taaWrap);
+  form.appendChild(taaWrap);
 
-  roomSection.appendChild(select("typeOfSystem", "Select System Type", [
+  form.appendChild(select("typeOfSystem", "Select System Type", [
     "BYOD USB Bar only",
     "Windows PC based solution",
     "Android appliance based solution"
   ], true));
   const platformWrap = select("platform", "Select Primary Platform", ["Zoom", "Microsoft Teams", "Google Meet"], true);
+  platformWrap.id = "platformWrap";
   platformWrap.classList.add("hidden");
   const platformHint = document.createElement("p");
   platformHint.id = "platformHint";
   platformHint.className = "text-xs text-gray-600 mt-1";
   platformWrap.appendChild(platformHint);
-  roomSection.appendChild(platformWrap);
-  roomSection.appendChild(select("roomSize", "Select Room Size", [
+  form.appendChild(platformWrap);
+  form.appendChild(select("roomSize", "Select Room Size", [
     { value: "Small",  label: "Small — Up to 12' from front of room to furthest person to cover" },
     { value: "Medium", label: "Medium — Up to 16' from front of room to furthest person to cover" },
     { value: "Large",  label: "Large — Up to 25' from front of room to furthest person to cover" },
     { value: "Very large", label: "Very Large room. Distance of > 25' from front of room to furthest person to cover" }
   ], true));
-  form.appendChild(roomSection);
 
-  const hwSection = document.createElement("fieldset");
-  hwSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  hwSection.innerHTML = '<legend class="font-semibold px-1">Hardware options</legend>';
   const mountingWrapEl = select("mounting", "Select Mounting option", ["None", "Wall", "VESA style display mount", "Table"]);
   const mountingHint = document.createElement("p");
   mountingHint.id = "mountingHint";
   mountingHint.className = "text-xs text-gray-600 mt-1";
   mountingWrapEl.appendChild(mountingHint);
-  hwSection.appendChild(mountingWrapEl);
-  hwSection.appendChild(select("expansionMic", "Include Expansion Mic?", [
+  form.appendChild(mountingWrapEl);
+  form.appendChild(select("expansionMic", "Include Expansion Mic?", [
     "None",
     "Single Analog Exp mic",
     "Existing IP table mics",
@@ -231,6 +223,12 @@ async function init() {
     "New White A2 table mic pod(s)",
     "New Black A2 table mic pod(s)"
   ]));
+
+  const expansionInfo = document.createElement("div");
+  expansionInfo.id = "expansionInfo";
+  expansionInfo.className = "hidden text-sm mt-1 p-2 border-l-4 border-amber-400 bg-amber-50 text-amber-900 rounded";
+  expansionInfo.textContent = "Note: IP table/ceiling mics are not supported with V12, X32, X52, or V52. Use Analog or A2 mics.";
+  form.appendChild(expansionInfo);
 
   // A2 quantity (shown only when New White/Black A2 is selected)
   const a2QtyWrap = document.createElement("div");
@@ -240,7 +238,7 @@ async function init() {
     <label class="block font-medium">Number of A2 mic pods</label>
     <select id="a2Qty" class="border p-2 w-full"><option value="1">1</option></select>
     <p id="a2QtyHint" class="text-xs text-gray-600 mt-1"></p>`;
-  hwSection.appendChild(a2QtyWrap);
+  form.appendChild(a2QtyWrap);
 
   // Camera add-on (shown for Android Medium / Large / Very large)
   const camWrap = document.createElement("div");
@@ -254,7 +252,7 @@ async function init() {
       <option value="E60">Poly E60 (9W1A6AA#AC3)</option>
     </select>
     <p class="text-xs text-gray-600 mt-1">E70 recommended for AI camera switching on X52 only.</p>`;
-  hwSection.appendChild(camWrap);
+  form.appendChild(camWrap);
 
   const polarFilterWrap = document.createElement("div");
   polarFilterWrap.id = "polarFilterWrap";
@@ -265,7 +263,7 @@ async function init() {
       <span>Optional polarized filter (875K9AA)</span>
     </label>
     <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
-  hwSection.appendChild(polarFilterWrap);
+  form.appendChild(polarFilterWrap);
 
   // Camera power option (E60 + E70) — PoE+ injector or wall PSU
   const cameraPowerWrap = document.createElement("div");
@@ -282,7 +280,7 @@ async function init() {
       <input id="camPowerPoePP" type="checkbox" class="border">
       <span>45W PoE++ adapter (B5NH6AA)</span>
     </label>`;
-  hwSection.appendChild(cameraPowerWrap);
+  form.appendChild(cameraPowerWrap);
 
   // Camera mount option (VESA for E70, Ceiling for E60)
   const cameraMountWrap = document.createElement("div");
@@ -294,7 +292,7 @@ async function init() {
       <option value="None">None</option>
     </select>
     <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
-  hwSection.appendChild(cameraMountWrap);
+  form.appendChild(cameraMountWrap);
 
   // Netgear Pro AV switch (LLN / StudioNet) — G62 / X52 / V52 / X72 / V72, and X32 if A2/IP extras
   const netgearWrap = document.createElement("div");
@@ -317,7 +315,7 @@ async function init() {
       <option value="GSM4230PX-100NAS">GSM4230PX-100NAS — 26-port PoE+ (~$2,752)</option>
       <option value="GSM4248PX-100NAS">GSM4248PX-100NAS — 40-port PoE+ (~$4,521)</option>
     </select>`;
-  hwSection.appendChild(netgearWrap);
+  form.appendChild(netgearWrap);
 
   const g6DockWrap = document.createElement("div");
   g6DockWrap.id = "g6DockWrap";
@@ -328,26 +326,18 @@ async function init() {
       <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA)</span>
     </label>
     <p class="text-xs text-gray-600 ml-6">Optional for Windows PC based rooms. Not added unless checked.</p>`;
-  hwSection.appendChild(g6DockWrap);
+  form.appendChild(g6DockWrap);
 
-  form.appendChild(hwSection);
 
-  const schedSection = document.createElement("fieldset");
-  schedSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  schedSection.innerHTML = '<legend class="font-semibold px-1">Scheduling</legend>';
-  schedSection.appendChild(select("schedulingPanel", "Scheduling panel (additional TC10 outside room)", [
+  form.appendChild(select("schedulingPanel", "Include additional TC10 to use as scheduling panel outside room?", [
     { value: "None", label: "None" },
     { value: "tc10_black_wall",  label: "TC10 Black — wall mount (included)" },
     { value: "tc10_white_wall",  label: "TC10 White — wall mount (included)" },
     { value: "tc10_black_glass", label: "TC10 Black — glass mount" },
     { value: "tc10_white_glass", label: "TC10 White — glass mount" }
   ]));
-  form.appendChild(schedSection);
 
-  const supportSection = document.createElement("fieldset");
-  supportSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  supportSection.innerHTML = '<legend class="font-semibold px-1">Support</legend>';
-  supportSection.appendChild(select("supportTerm", "Select Support term", [
+  form.appendChild(select("supportTerm", "Select Support term", [
     { value: "",         label: "None" },
     { value: "poly1",    label: "1yr - Poly+" },
     { value: "poly3",    label: "3yr - Poly+" },
@@ -364,7 +354,7 @@ async function init() {
     <strong>Poly+</strong> — Essential support: unlimited 24/7 priority technical support, next-business-day advance hardware replacement, and ecosystem cloud partner support.<br>
     <strong>Poly+ Analyze</strong> — Premium tier that includes everything in Poly+ <em>plus</em> coverage for your entire HP Poly estate, HP Poly Lens Pro for Rooms (advanced insights), and enterprise integration / IT tools.<br>
     <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Learn more about Poly+ and Poly+ Analyze</a>`;
-  supportSection.appendChild(supportInfo);
+  form.appendChild(supportInfo);
 
   // Expandable Poly+ vs Poly+ Analyze comparison table
   const featuresDetails = document.createElement("details");
@@ -472,7 +462,7 @@ async function init() {
       </table>
     </div>
   `;
-  supportSection.appendChild(featuresDetails);
+  form.appendChild(featuresDetails);
 
   const lensProWrap = document.createElement("div");
   lensProWrap.className = "mt-2 space-y-2";
@@ -495,17 +485,12 @@ async function init() {
     const on = document.getElementById("lensProRooms").checked;
     lensProBandSel.classList.toggle("hidden", !on);
   });
-  supportSection.appendChild(lensProWrap);
-  form.appendChild(supportSection);
+  form.appendChild(lensProWrap);
 
-  const installSection = document.createElement("fieldset");
-  installSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  installSection.innerHTML = '<legend class="font-semibold px-1">Install</legend>';
-  installSection.appendChild(select("implementationHelp", "Implementation Help", [
+  form.appendChild(select("implementationHelp", "Implementation Help", [
     "None", "Remote Implementation help", "Onsite Implementation help"
   ]));
-  installSection.appendChild(input("accessories", "Optional: any additional accessories (comma-separated SKUs)", "e.g. extra cameras, cables"));
-  form.appendChild(installSection);
+  form.appendChild(input("accessories", "Optional: any additional accessories (comma-separated SKUs)", "e.g. 3rd party powered speakers, existing audio, 3rd party DSP, extra cameras, cables"));
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
@@ -634,10 +619,11 @@ async function init() {
   app.appendChild(legalFooter);
 
   function setActiveTab(name) {
+    if (name === "headset") return; // greyed out / not available yet
     panelVideo.classList.toggle("hidden", name !== "video");
     panelAudio.classList.toggle("hidden", name !== "audio");
-    panelHeadset.classList.toggle("hidden", name !== "headset");
-    [["tabVideo", "video"], ["tabAudio", "audio"], ["tabHeadset", "headset"]].forEach(([id, key]) => {
+    panelHeadset.classList.add("hidden");
+    [["tabVideo", "video"], ["tabAudio", "audio"]].forEach(([id, key]) => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.toggle("opacity-100", name === key);
@@ -648,7 +634,9 @@ async function init() {
   document.getElementById("tabBar")?.addEventListener("click", (e) => {
     const btn = e.target.closest(".tab-btn");
     if (!btn) return;
-    setActiveTab(btn.getAttribute("data-panel"));
+    const panel = btn.getAttribute("data-panel");
+    if (panel === "headset") return;
+    setActiveTab(panel);
   });
 
   const AUDIO_CATALOG = {
@@ -878,18 +866,20 @@ async function init() {
     let qsg = "";
     if (family === "v12" || family === "x32") {
       included = (usb ? "V12" : "X32") + " includes a display clamp in the box. Wall/VESA kit, table stand, and inverted wall are sold separately.";
-      if (choice === "Wall") qsg = qsgLink("https://media.dustin.eu/media/d2000010011101422/poly-studio-x30-vesa-display-mount-wall-mount-quick-start-guide.pdf", "X30/X32/V12 wall + VESA kit setup sheet (PDF)");
-      else if (choice === "Table" || choice === "Inverted wall" || choice === "None") qsg = qsgLink("https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html", "X32/V12 hardware install (included display clamp)");
+      if (choice === "Wall" || choice === "Inverted wall") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9575864_en-US-1.pdf", "X30/X32/V12 wall mount quick start (PDF)");
+      else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9575871_en-US-1.pdf", "X30/X32/V12 stand quick start (PDF)");
+      else qsg = qsgLink("https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html", "X32/V12 hardware install (included display clamp)");
     } else if (family === "v52" || family === "x52") {
       included = (usb ? "V52" : "X52") + " includes a display clamp and a wall mount in the box. VESA and table stand are sold separately.";
       if (choice === "Wall") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580259_en-US-1.pdf", "X52/V52 wall mount quick start (PDF)");
       else if (choice === "VESA style display mount") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580398_en-US-1.pdf", "X52/V52 VESA mount quick start (PDF)");
       else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580389_en-US-1.pdf", "X52/V52 table stand quick start (PDF)");
-      else qsg = qsgLink("https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/Poly-Studio-X52-V52-Accessories-Quick-Start-Guide/ta-p/9119238", "X52/V52 accessories quick starts (clamp, wall, VESA, stand)");
+      else qsg = qsgLink(usb ? "https://kaas.hpcloud.hp.com/pdf-public/pdf_10363625_en-US-1.pdf" : "https://kaas.hpcloud.hp.com/pdf-public/pdf_9580293_en-US-1.pdf", usb ? "V52 display clamp quick start (PDF)" : "X52 display clamp quick start (PDF)");
     } else if (family === "v72" || family === "x72") {
       included = (usb ? "V72" : "X72") + " includes a wall mount in the box. No extra wall SKU. VESA and table stand are sold separately.";
-      if (usb) qsg = qsgLink("https://docs.poly.com/bundle/poly-studio-v72-ug-current/page/mounting-the-poly-studio-v72.html", "V72 mounting guide (included wall mount)");
-      else qsg = qsgLink("https://docs.poly.com/bundle/studio-x72-ug/page/poly-studio-x-hardware-installation.html", "X72 hardware install (included wall mount)");
+      if (choice === "VESA style display mount") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580991_en-US-1.pdf", "X70/X72/V72 display mount quick start (PDF)");
+      else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580192_en-US-1.pdf", "X70/X72/V72 stand quick start (PDF)");
+      else qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9576018_en-US-1.pdf", "X70 wall mount quick start (PDF)");
     } else if (family === "g62") {
       included = "G62 commercial kit includes the mount; no extra bar-mount SKU is added.";
     }
@@ -957,6 +947,10 @@ async function init() {
     opts.push({ value: "New Black A2 table mic pod(s)", label: "New Black A2 table mic pod(s)" });
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
+    const info = document.getElementById("expansionInfo");
+    const family = hostFamily();
+    const restrict = family === "v12" || family === "x32" || family === "v52" || family === "x52";
+    if (info) info.classList.toggle("hidden", !restrict);
   }
   function extraIpPeripheralSelected() {
     const exp = document.getElementById("expansionMic")?.value || "";
