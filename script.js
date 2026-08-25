@@ -1,5 +1,5 @@
 const VERSION = "v10.57";
-// script.js – HP | Poly Configurator – v10.57: in-box mounts; E70 clamp off camera menu; TC10 black then white
+// script.js – HP | Poly Configurator – v10.57: in-box mounts; E70 clamp off; TC10 order; fix suggestion Send; footer PLEASE NOTE
 // v10.56: G9+ TAA kit A2TP1AA (includes TC10); Suggestions for the site
 // v10.55: welcome announcement + feedback box
 // v10.54: E70 wall power adds 874T5AA IEC cord
@@ -336,8 +336,8 @@ async function init() {
   promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 space-y-2 mb-4";
   promoWrap.innerHTML = `
     <div class="text-sm text-amber-900">📢 Welcome to the new site. Poly+ Analyze support and JITC/TAA are in. Suggestions and issues welcome. Otherwise, happy hunting!</div>
-    <label class="block text-xs text-amber-900" for="siteFeedback">Suggestions for the site</label>
-    <textarea id="siteFeedback" rows="1" class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="A suggestion or issue…"></textarea>
+    <label class="block text-xs text-amber-900" for="siteFeedback">Questions / Comments / Suggestions:</label>
+    <textarea id="siteFeedback" rows="1" class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="Questions, comments, or suggestions…"></textarea>
     <div class="flex items-center gap-2">
       <button type="button" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
       <span id="siteFeedbackStatus" class="text-xs text-amber-800"></span>
@@ -797,9 +797,9 @@ async function init() {
   panelVideo.appendChild(promoWrap);
   panelVideo.appendChild(form);
   panelVideo.appendChild(resultDiv);
-  const feedbackEl = document.getElementById("siteFeedback");
-  const feedbackSend = document.getElementById("siteFeedbackSend");
-  const feedbackStatus = document.getElementById("siteFeedbackStatus");
+  const feedbackEl = promoWrap.querySelector("#siteFeedback");
+  const feedbackSend = promoWrap.querySelector("#siteFeedbackSend");
+  const feedbackStatus = promoWrap.querySelector("#siteFeedbackStatus");
   function autosizeFeedback() {
     if (!feedbackEl) return;
     feedbackEl.style.height = "auto";
@@ -820,22 +820,28 @@ async function init() {
       build: VERSION,
       _subject: "Poly BOM site comment"
     };
+    payload._captcha = "false";
+    payload._template = "box";
     try {
       const res = await fetch("https://formsubmit.co/ajax/james.gamble@hp.com", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (res.ok) {
+      let data = null;
+      try { data = await res.json(); } catch (e) {}
+      if (res.ok && (!data || data.success !== "false")) {
         if (feedbackEl) feedbackEl.value = "";
         autosizeFeedback();
-        if (feedbackStatus) feedbackStatus.textContent = "Sent. (First time: confirm the FormSubmit email in your HP inbox.)";
+        if (feedbackStatus) feedbackStatus.textContent = "Sent. First time: confirm the FormSubmit email in your HP inbox.";
         return;
       }
-    } catch (e) {}
-    const mailto = "mailto:james.gamble@hp.com?subject=" + encodeURIComponent("Poly BOM site comment") + "&body=" + encodeURIComponent(text);
-    window.location.href = mailto;
-    if (feedbackStatus) feedbackStatus.textContent = "Opened an email to James if send was blocked.";
+      if (feedbackStatus) feedbackStatus.textContent = (data && (data.message || data.error)) || ("Send failed (" + res.status + "). Opening email…");
+    } catch (e) {
+      if (feedbackStatus) feedbackStatus.textContent = "Send blocked. Opening email…";
+    }
+    const mailto = "mailto:james.gamble@hp.com?subject=" + encodeURIComponent("Poly BOM site suggestion") + "&body=" + encodeURIComponent(text);
+    window.open(mailto, "_blank");
   });
 
   app.appendChild(panelVideo);
@@ -845,7 +851,7 @@ async function init() {
   // Single compact legalese at bottom of page only
   const legalFooter = document.createElement("p");
   legalFooter.className = "mt-6 text-[11px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
-  legalFooter.innerHTML = `<strong>Estimate only.</strong> Subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
+  legalFooter.innerHTML = `<span style="font-size:15px"><span class="italic text-red-600">*</span>PLEASE NOTE: estimate only</span> Subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
   app.appendChild(legalFooter);
 
   function setActiveTab(name) {
@@ -1589,8 +1595,6 @@ async function init() {
     html += `</tr></thead><tbody>`;
 
     let grandTotal = 0;
-    let pricedLines = 0;
-    let unpricedLines = 0;
 
     results.forEach((r, i) => {
       const sku = r.sku || "—";
@@ -1599,9 +1603,6 @@ async function init() {
 
       if (unit != null) {
         grandTotal += unit * qty;
-        pricedLines++;
-      } else {
-        unpricedLines++;
       }
 
       const isPcRow = PC_SKU_SET.has(r.sku);
@@ -1624,13 +1625,7 @@ async function init() {
 
     html += `</tbody></table>`;
 
-    if (includePrices) {
-      html += `<p class="text-gray-600 mt-2" style="font-size:125%">Total is Qty × unit MSRP for lines with a known price (${pricedLines} priced line${pricedLines === 1 ? "" : "s"}).`;
-      if (unpricedLines > 0) {
-        html += ` ${unpricedLines} line${unpricedLines === 1 ? "" : "s"} have no MSRP in the catalog and are excluded from the total.`;
-      }
-      html += ` Prices are list MSRP and may not reflect final quote. <span class="italic text-red-600" style="font-size:125%">estimate only*</span></p>`;
-    }
+    // Priced-line footnote moved to page footer (*PLEASE NOTE: estimate only).
 
 
     if (bom.footnote) {
