@@ -1,5 +1,6 @@
-const VERSION = "v10.67";
-// script.js – HP | Poly Configurator – v10.67: Audio TAA/JITC blue box (match Video)
+const VERSION = "v10.68";
+// script.js – HP | Poly Configurator – v10.68: TC10 TAA-only SKUs + TAA checkbox label (drop / GSA)
+// v10.67: Audio TAA/JITC blue box (match Video)
 // v10.66: strip MSRP from form option labels (quote only)
 // v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
 // v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
@@ -292,16 +293,20 @@ async function init() {
   }
   function pickTc10(color) {
     const flags = complianceFlags();
+    // Order: JITC+NR, JITC, TAA+NR, TAA, commercial
     if (color === "white") {
-      if (flags.nr && (flags.taa || flags.jitc)) return "93S70AA";
-      // commercial white missing → 973G1AA (do not invent)
+      if (flags.jitc && flags.nr) return "9A134AA"; // Poly TC10 White Touch Controller No Radio GSA/TAA JITC
+      if (flags.jitc) return "9A135AA"; // Poly TC10 White Touch Controller GSA/TAA JITC
+      if (flags.taa && flags.nr) return "93S70AA"; // Poly TC10 White Touch Controller No Radio GSA/TAA
+      if (flags.taa) return "973G1AA"; // Poly TC10 White Touch Controller GSA/TAA
+      // commercial white not in the sheet — keep using TAA white 973G1AA (do not invent)
       return "973G1AA";
     }
-    if (flags.jitc && flags.nr) return "973G0AA";
-    if (flags.jitc) return "973F9AA";
-    if (flags.taa && flags.nr) return "977L7AA";
-    if (flags.taa) return "973F9AA"; // no TAA black-with-radio in doc; JITC black is the listed TAA black
-    return "875K5AA";
+    if (flags.jitc && flags.nr) return "973G0AA"; // Poly TC10 Black Touch Controller No Radio GSA/TAA JITC
+    if (flags.jitc) return "973F9AA"; // Poly TC10 Black Touch Controller GSA/TAA JITC
+    if (flags.taa && flags.nr) return "977L7AA"; // Poly TC10 Black Touch Controller No Radio GSA/TAA
+    if (flags.taa) return "977L6AA"; // Poly TC10 Black Touch Controller GSA/TAA
+    return "875K5AA"; // Poly TC10 Touch Controller Black (commercial)
   }
 
   // ---------- UI ----------
@@ -353,7 +358,7 @@ async function init() {
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
       <label class="inline-flex items-center gap-2 cursor-pointer">
         <input id="optTaa" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold text-blue-900">TAA / GSA</span>
+        <span class="font-semibold text-blue-900">TAA</span>
       </label>
       <label class="inline-flex items-center gap-2 cursor-pointer">
         <input id="optJitc" type="checkbox" class="w-4 h-4 border">
@@ -773,7 +778,7 @@ async function init() {
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
       <label class="inline-flex items-center gap-2 cursor-pointer">
         <input id="audioTaa" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold text-blue-900">TAA / GSA</span>
+        <span class="font-semibold text-blue-900">TAA</span>
       </label>
       <label class="inline-flex items-center gap-2 cursor-pointer">
         <input id="audioJitc" type="checkbox" class="w-4 h-4 border">
