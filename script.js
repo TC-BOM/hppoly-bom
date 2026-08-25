@@ -1,5 +1,6 @@
-const VERSION = "v10.56";
-// script.js – HP | Poly Configurator – v10.56: G9+ TAA kit A2TP1AA
+const VERSION = "v10.57";
+// script.js – HP | Poly Configurator – v10.57: in-box mounts; E70 clamp off camera menu; TC10 black then white
+// v10.56: G9+ TAA kit A2TP1AA (includes TC10); Suggestions for the site
 // v10.55: welcome announcement + feedback box
 // v10.54: E70 wall power adds 874T5AA IEC cord
 // v10.53: BOM* / estimate only*; hide No Radio
@@ -487,8 +488,8 @@ async function init() {
   form.appendChild(select("schedulingPanel", "Include additional TC10 to use as scheduling panel outside room?", [
     { value: "None", label: "None" },
     { value: "tc10_black_wall",  label: "TC10 Black — wall mount (included)" },
-    { value: "tc10_white_wall",  label: "TC10 White — wall mount (included)" },
     { value: "tc10_black_glass", label: "TC10 Black — glass mount" },
+    { value: "tc10_white_wall",  label: "TC10 White — wall mount (included)" },
     { value: "tc10_white_glass", label: "TC10 White — glass mount" }
   ]));
 
@@ -1137,7 +1138,7 @@ async function init() {
       else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9575871_en-US-1.pdf", "X30/X32/V12 stand quick start (PDF)");
       else qsg = qsgLink("https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html", "X32/V12 hardware install (included display clamp)");
     } else if (family === "v52" || family === "x52") {
-      included = (usb ? "V52" : "X52") + " includes a display clamp and a wall mount in the box. VESA and table stand are sold separately.";
+      included = (usb ? "V52" : "X52") + " includes a display clamp in the box. Wall, VESA, and table stand are sold separately.";
       if (choice === "Wall") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580259_en-US-1.pdf", "X52/V52 wall mount quick start (PDF)");
       else if (choice === "VESA style display mount") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580398_en-US-1.pdf", "X52/V52 VESA mount quick start (PDF)");
       else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580389_en-US-1.pdf", "X52/V52 table stand quick start (PDF)");
@@ -1163,9 +1164,9 @@ async function init() {
     let included = "";
     let qsg = "";
     if (cam === "E70") {
-      included = "E70 includes a display clamp and a wall mount in the box. VESA kit is sold separately.";
-      if (choice === "Clamp") qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 display clamp quick start (PDF)");
-      else qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 display clamp quick start (PDF)");
+      included = "E70 is the only camera that includes both a display clamp and a wall mount in the box. VESA kit is sold separately.";
+      if (choice === "VESA") qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 display clamp quick start (PDF)");
+      else qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 in-box display clamp / wall mount (PDF)");
     } else if (cam === "E60") {
       included = "E60 includes a wall mount in the box. Ceiling and HDCI brackets are sold separately.";
       qsg = qsgLink("https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/How-to-unbox-and-set-up-the-Poly-Studio-E60/ta-p/9223557", "E60 unbox and setup (included wall mount)");
@@ -1188,21 +1189,24 @@ async function init() {
     wrap.classList.remove("hidden");
     const opts = [{ value: "None", label: "None — use in-box mount" }];
     if (family === "r30") {
-      opts[0] = { value: "None", label: "None — in-box / no extra mount" };
+      opts[0] = { value: "None", label: "None — in-box mounting" };
       opts.push({ value: "Wall", label: "Wall (783S4AA)" });
       opts.push({ value: "VESA style display mount", label: "VESA style display mount (875L1AA)" });
     } else if (family === "g62") {
       opts[0] = { value: "None", label: "None — bar only (no mounting plate)" };
       opts.push({ value: "Kit", label: "Mounting plate kit" });
     } else if (family === "v12" || family === "x32") {
+      opts[0] = { value: "None", label: "None — in-box display clamp" };
       opts.push({ value: "Wall", label: "Wall / VESA kit (875L6AA)" });
       opts.push({ value: "Table", label: "Table stand (875L5AA)" });
       opts.push({ value: "Inverted wall", label: "Inverted wall (875L7AA)" });
     } else if (family === "v52" || family === "x52") {
-      opts.push({ value: "Wall", label: "Wall (875L8AA) — spare / extra" });
+      opts[0] = { value: "None", label: "None — in-box display clamp" };
+      opts.push({ value: "Wall", label: "Wall (875L8AA)" });
       opts.push({ value: "VESA style display mount", label: "VESA (875L9AA)" });
       opts.push({ value: "Table", label: "Table stand (875M0AA)" });
     } else if (family === "v72" || family === "x72") {
+      opts[0] = { value: "None", label: "None — in-box wall mount" };
       opts.push({ value: "VESA style display mount", label: "VESA (875L2AA)" });
       opts.push({ value: "Table", label: "Table stand (875L3AA)" });
     }
@@ -1370,16 +1374,14 @@ async function init() {
       const prev = mountSel.value;
       mountSel.innerHTML = `<option value="None">None</option>`;
       if (cam === "E70") {
+        mountSel.innerHTML = `<option value="None">None — in-box display clamp and wall mount</option>`;
         if (getItem("875K7AA")) {
           mountSel.innerHTML += `<option value="VESA">VESA mount (875K7AA)</option>`;
           mountOptions++;
         }
-        if (getItem("875K8AA")) {
-          mountSel.innerHTML += `<option value="Clamp">Display clamp (875K8AA)</option>`;
-          mountOptions++;
-        }
         refreshCameraMountHint();
       } else if (cam === "E60") {
+        mountSel.innerHTML = `<option value="None">None — in-box wall mount</option>`;
         if (getItem("9W1A8AA#AC3") || getItem("9W1A8AA")) {
           mountSel.innerHTML += `<option value="Ceiling">Ceiling mount (9W1A8AA#AC3)</option>`;
           mountOptions++;
@@ -1789,9 +1791,7 @@ async function init() {
         if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
           addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
         }
-        if (camMount === "Clamp" && !hasSku(results, "875K8AA")) {
-          addLine(results, "875K8AA", "E70 display clamp");
-        }
+        // E70 in-box: display clamp + wall mount. Do not add 875K8AA.
       }
     }
 
