@@ -335,7 +335,7 @@ async function init() {
   promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 space-y-2 mb-4";
   promoWrap.innerHTML = `
     <div class="text-sm text-amber-900">📢 Welcome to the new site. Poly+ Analyze support and JITC/TAA are in. Suggestions and issues welcome. Otherwise, happy hunting!</div>
-    <label class="block text-xs text-amber-900" for="siteFeedback">Comment for James</label>
+    <label class="block text-xs text-amber-900" for="siteFeedback">Suggestions for the site</label>
     <textarea id="siteFeedback" rows="1" class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="A suggestion or issue…"></textarea>
     <div class="flex items-center gap-2">
       <button type="button" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
