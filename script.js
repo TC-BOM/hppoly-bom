@@ -1,5 +1,6 @@
-const VERSION = "v10.48";
-// script.js – HP | Poly Configurator – v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
+const VERSION = "v10.49";
+// script.js – HP | Poly Configurator – v10.49: Audio banner matches Video announcement; under construction
+// v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
 // v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
 // v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
 // v10.45: Knauf-style flat home form; HEADSETS tab greyed out
@@ -657,8 +658,8 @@ async function init() {
       <div class="font-semibold text-amber-900">Under construction. Mock catalog only — a few popular SKUs so you can click through. Support SKU mapping is not loaded yet. Do not use for a live quote.</div>
     </div>`;
   const AUDIO_BANNER = `
-    <div class="p-3 border border-blue-200 rounded bg-blue-50 space-y-1">
-      <div class="text-sm text-blue-950">Audio is live from the Aug 2026 HP Poly Collab Reference (Voice-Desk&amp;Conf Phone). Headsets remain under construction.</div>
+    <div class="px-3 py-1.5 border border-amber-400 rounded bg-amber-50">
+      <div class="text-sm text-amber-900">🚧 Under construction.</div>
     </div>`;
   const SUPPORT_OPTS = [
     { value: "",         label: "None" },
