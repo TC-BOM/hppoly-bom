@@ -1,5 +1,6 @@
-const VERSION = "v10.57";
-// script.js – HP | Poly Configurator – v10.57: in-box mounts; E70 clamp off; TC10 order; fix suggestion Send; footer PLEASE NOTE
+const VERSION = "v10.58";
+// script.js – HP | Poly Configurator – v10.58: Lens Pro column on Poly+/Analyze support table
+// v10.57: in-box mounts; E70 clamp off; TC10 order; footer Please Note; no suggestion box
 // v10.56: G9+ TAA kit A2TP1AA (includes TC10); Suggestions for the site
 // v10.55: welcome announcement + feedback box
 // v10.54: E70 wall power adds 874T5AA IEC cord
@@ -501,9 +502,12 @@ async function init() {
   const supportInfo = document.createElement("div");
   supportInfo.className = "text-xs text-gray-700 mt-1 p-2 border-l-4 border-blue-400 bg-blue-50 rounded";
   supportInfo.innerHTML = `
-    <strong>Poly+</strong> — Essential support: unlimited 24/7 priority technical support, next-business-day advance hardware replacement, and ecosystem cloud partner support.<br>
-    <strong>Poly+ Analyze</strong> — Premium tier that includes everything in Poly+ <em>plus</em> coverage for your entire HP Poly estate, HP Poly Lens Pro for Rooms (advanced insights), and enterprise integration / IT tools.<br>
-    <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Learn more about Poly+ and Poly+ Analyze</a>`;
+    <strong>Poly+</strong> — Hardware support: unlimited 24/7 priority technical support, next-business-day advance replacement, and ecosystem cloud partner support.<br>
+    <strong>Lens Pro for Rooms</strong> — Standalone Poly Lens software for room analytics, remote TC8/TC10 access, and calendar / Power BI / Zoom integrations. Does not include hardware replacement.<br>
+    <strong>Poly+ Analyze</strong> — Poly+ hardware support <em>plus</em> Lens Pro for Rooms, plus coverage for the entire HP Poly estate.<br>
+    <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Poly+ / Analyze</a>
+    ·
+    <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-features" target="_blank" rel="noopener" class="text-blue-700 underline">Lens Pro features</a>`;
   form.appendChild(supportInfo);
 
   // Expandable Poly+ vs Poly+ Analyze comparison table
@@ -511,12 +515,12 @@ async function init() {
   featuresDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
   featuresDetails.innerHTML = `
     <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
-      Poly+ vs Poly+ Analyze feature comparison — click to expand
+      Poly+ vs Lens Pro vs Poly+ Analyze — click to expand
     </summary>
     <div class="px-3 pb-3 overflow-x-auto">
       <p class="text-gray-600 mb-2">
-        Poly+ Analyze includes everything in Poly+ plus Poly Lens Pro for Rooms / Premium analytics.
-        <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-features" target="_blank" rel="noopener" class="text-blue-700 underline">Source</a>
+        Lens Pro for Rooms is the software SKU (UJ8T6LN / UJ8T5LN / UJ8T4LN). Poly+ Analyze includes that software plus Poly+ hardware support.
+        <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-features" target="_blank" rel="noopener" class="text-blue-700 underline">Lens Pro feature table</a>
         ·
         <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Poly+ Analyze overview</a>
       </p>
@@ -526,6 +530,7 @@ async function init() {
             <th class="border border-blue-100 px-2 py-1">Feature</th>
             <th class="border border-blue-100 px-2 py-1">Description</th>
             <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Poly+</th>
+            <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Lens Pro</th>
             <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Poly+ Analyze</th>
           </tr>
         </thead>
@@ -534,23 +539,27 @@ async function init() {
             <td class="border border-blue-100 px-2 py-1 font-medium">24/7 priority technical support</td>
             <td class="border border-blue-100 px-2 py-1">Unlimited global support via phone, chat, web, and video.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">Advance hardware replacement</td>
             <td class="border border-blue-100 px-2 py-1">Next-business-day replacement before returning the failed unit.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr>
             <td class="border border-blue-100 px-2 py-1 font-medium">Ecosystem cloud partner support</td>
             <td class="border border-blue-100 px-2 py-1">Faster resolution with Teams, Zoom, and other cloud partners.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">Coverage for entire HP Poly estate</td>
             <td class="border border-blue-100 px-2 py-1">Unified entitlement across your Poly inventory (not device-by-device only).</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
@@ -559,11 +568,13 @@ async function init() {
             <td class="border border-blue-100 px-2 py-1">Integrate Microsoft 365 calendars with Poly Lens for room schedule insights and utilization.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">Room Analytics</td>
             <td class="border border-blue-100 px-2 py-1">Customizable reports on room utilization and meeting behavior trends.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr>
@@ -571,11 +582,13 @@ async function init() {
             <td class="border border-blue-100 px-2 py-1">Interactive dashboard for trends, utilization, and KPIs across your Poly estate.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">Room Insights Feed</td>
             <td class="border border-blue-100 px-2 py-1">Curated feed of significant room utilization and meeting metrics.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr>
@@ -583,11 +596,13 @@ async function init() {
             <td class="border border-blue-100 px-2 py-1">Remotely access and control touch controllers from Poly Lens.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">Visual Analytics with Power BI</td>
             <td class="border border-blue-100 px-2 py-1">Visualize Poly inventory and combine with other UC datasets in Power BI.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr>
@@ -595,16 +610,19 @@ async function init() {
             <td class="border border-blue-100 px-2 py-1">Monitor Zoom device/room health and manage Poly devices in Poly Lens.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr class="bg-gray-50">
             <td class="border border-blue-100 px-2 py-1 font-medium">API Access to Premium Features</td>
             <td class="border border-blue-100 px-2 py-1">Poly Lens Premium APIs (requires Premium entitlement). Core APIs remain free.</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
           <tr>
             <td class="border border-blue-100 px-2 py-1 font-medium">Enterprise integration &amp; IT tools</td>
-            <td class="border border-blue-100 px-2 py-1">Broader estate tooling and integration for IT success.</td>
+            <td class="border border-blue-100 px-2 py-1">Estate-wide entitlement and IT tooling that wraps Lens Pro (Analyze / Enterprise).</td>
+            <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">—</td>
             <td class="border border-blue-100 px-2 py-1 text-center">✓</td>
           </tr>
