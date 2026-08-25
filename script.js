@@ -1,5 +1,6 @@
-const VERSION = "v10.39";
-// script.js – HP | Poly Configurator – v10.39: in-box mount notes + per-option QSG links
+const VERSION = "v10.40";
+// script.js – HP | Poly Configurator – v10.40: polarizer under camera add-on
+// v10.39: in-box mount notes + per-option QSG links
 // v10.38: live Audio phone catalog (Trio/CCX/Edge E/Rove) + G6 dock option
 // v10.37: polarized filter moved to Hardware options (E70/X72/V72)
 // v10.36: dedupe host mount lists (one VESA per family; X32/V12 wall+VESA is one kit)
@@ -253,6 +254,17 @@ async function init() {
     <p class="text-xs text-gray-600 mt-1">E70 recommended for AI camera switching on X52 only.</p>`;
   hwSection.appendChild(camWrap);
 
+  const polarFilterWrap = document.createElement("div");
+  polarFilterWrap.id = "polarFilterWrap";
+  polarFilterWrap.className = "hidden mt-2";
+  polarFilterWrap.innerHTML = `
+    <label class="flex items-center gap-2 text-sm">
+      <input id="polarFilterOpt" type="checkbox" class="border">
+      <span>Optional polarized filter (875K9AA) — $181</span>
+    </label>
+    <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
+  hwSection.appendChild(polarFilterWrap);
+
   // Camera power option (E60 + E70) — PoE+ injector or wall PSU
   const cameraPowerWrap = document.createElement("div");
   cameraPowerWrap.id = "cameraPowerWrap";
@@ -316,16 +328,6 @@ async function init() {
     <p class="text-xs text-gray-600 ml-6">Optional for Windows PC based rooms. Not added unless checked.</p>`;
   hwSection.appendChild(g6DockWrap);
 
-  const polarFilterWrap = document.createElement("div");
-  polarFilterWrap.id = "polarFilterWrap";
-  polarFilterWrap.className = "hidden mt-2";
-  polarFilterWrap.innerHTML = `
-    <label class="flex items-center gap-2 text-sm">
-      <input id="polarFilterOpt" type="checkbox" class="border">
-      <span>Optional polarized filter (875K9AA) — $181</span>
-    </label>
-    <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
-  hwSection.appendChild(polarFilterWrap);
   form.appendChild(hwSection);
 
   const svcSection = document.createElement("fieldset");
