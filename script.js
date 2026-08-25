@@ -1,5 +1,6 @@
-const VERSION = "v10.65";
-// script.js – HP | Poly Configurator – v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
+const VERSION = "v10.66";
+// script.js – HP | Poly Configurator – v10.66: strip MSRP from form option labels (quote only)
+// v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
 // v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
 // v10.62: Classic/New site toggle (top-right)
 // v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
@@ -42,11 +43,11 @@ const ANALOG_MIC_VALUE = "Single Analog Extension mics";
 const ANALOG_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_9575660_en-US-1.pdf", label: "Analog expansion mic quick start (PDF)" };
 const A2_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_15155157_en-US-1.pdf", label: "Studio A2 quick start (PDF)" };
 const NETGEAR_KITS = [
-  { sku: "GSM4210PD-100NAS", label: "GSM4210PD-100NAS — 8-port PoE+ desktop (~$865 high-side)" },
-  { sku: "GSM4210PX-100NAS", label: "GSM4210PX-100NAS — 8-port PoE+ 220W (~$1,362)" },
-  { sku: "GSM4212PX-100NAS", label: "GSM4212PX-100NAS — 10-port PoE+ (~$1,910)" },
-  { sku: "GSM4230PX-100NAS", label: "GSM4230PX-100NAS — 26-port PoE+ (~$2,752)" },
-  { sku: "GSM4248PX-100NAS", label: "GSM4248PX-100NAS — 40-port PoE+ (~$4,521)" }
+  { sku: "GSM4210PD-100NAS", label: "GSM4210PD-100NAS — 8-port PoE+ desktop" },
+  { sku: "GSM4210PX-100NAS", label: "GSM4210PX-100NAS — 8-port PoE+ 220W" },
+  { sku: "GSM4212PX-100NAS", label: "GSM4212PX-100NAS — 10-port PoE+" },
+  { sku: "GSM4230PX-100NAS", label: "GSM4230PX-100NAS — 26-port PoE+" },
+  { sku: "GSM4248PX-100NAS", label: "GSM4248PX-100NAS — 40-port PoE+" }
 ];
 const SCT_KITS = [
   { sku: "RCU3SL-C30", purpose: "USB 3.2 bar extender (Device Mode USB-C, up to 100 m CAT)", families: ["x32","x52","x72","v52","v72"], drawing: "https://docs.soundcontrol.net/download/3116/", drawingLabel: "RCU3SL-C30 application guide (PDF)" },
@@ -649,13 +650,13 @@ async function init() {
       <input id="lensProRooms" type="checkbox" class="border mt-1">
       <span>
         <span class="font-medium">1 Year Lens Pro for Rooms</span>
-        <span class="block text-xs text-gray-600">Check the box, then pick a room band. 1–65 rooms ($99) is selected by default.</span>
+        <span class="block text-xs text-gray-600">Check the box, then pick a room band. 1–65 rooms is selected by default.</span>
       </span>
     </label>`;
   const lensProBandSel = select("lensProBand", "Lens Pro room band", [
-    { value: "UJ8T6LN", label: "1–65 rooms — UJ8T6LN — $99" },
-    { value: "UJ8T5LN", label: "66–250 rooms — UJ8T5LN — $79" },
-    { value: "UJ8T4LN", label: "251+ rooms — UJ8T4LN — $59" }
+    { value: "UJ8T6LN", label: "1–65 rooms — UJ8T6LN" },
+    { value: "UJ8T5LN", label: "66–250 rooms — UJ8T5LN" },
+    { value: "UJ8T4LN", label: "251+ rooms — UJ8T4LN" }
   ], false);
   lensProBandSel.classList.add("hidden", "ml-6");
   lensProWrap.appendChild(lensProBandSel);
@@ -668,7 +669,7 @@ async function init() {
   lensOnboardLabel.innerHTML = `
     <input id="lensOnboard" type="checkbox" class="border mt-1">
     <span>
-      <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
+      <span class="font-medium">Poly Lens onboarding — PRO8700101AB</span>
       <span class="block text-xs text-gray-600">Register and configure up to 3 Poly hardware devices on Poly Lens cloud management portal</span>
     </span>`;
   lensProWrap.appendChild(lensOnboardLabel);
@@ -687,7 +688,7 @@ async function init() {
       Netgear Pro AV switch — click to expand
     </summary>
     <div class="px-3 pb-3 space-y-2">
-      <p class="text-gray-600">Poly StudioNet / LLN for more than one IP peripheral. Do not use a generic office switch. High-side list estimates are CDW advertised list, not Poly MSRP.
+      <p class="text-gray-600">Poly StudioNet / LLN for more than one IP peripheral. Do not use a generic office switch.
         <a href="https://support.hp.com/ie-en/document/ish_13031025-13026020-16" target="_blank" rel="noopener" class="text-blue-700 underline">HP Poly StudioNet switch article</a>
         ·
         <a href="https://downloads1.netgear.com/files/netgear/documents/AV-over-IP-Switch-Reference-Guide-110v.pdf" target="_blank" rel="noopener" class="text-blue-700 underline">Netgear AV Product Reference Guide (PDF)</a>
@@ -855,7 +856,7 @@ async function init() {
   audioLensOnboardLabel.innerHTML = `
     <input id="audioLensOnboard" type="checkbox" class="border mt-1">
     <span>
-      <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
+      <span class="font-medium">Poly Lens onboarding — PRO8700101AB</span>
       <span class="block text-xs text-gray-600">Register and configure up to 3 Poly hardware devices on Poly Lens cloud management portal</span>
     </span>`;
   audioSection.appendChild(audioLensOnboardLabel);
@@ -1250,9 +1251,7 @@ async function init() {
       const show = !!(cfg && cfg.exp);
       expWrap.classList.toggle("hidden", !show);
       if (expLabel && show) {
-        const item = getItem(cfg.exp);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        expLabel.textContent = "Include expansion mics (" + cfg.exp + ")" + price;
+        expLabel.textContent = "Include expansion mics (" + cfg.exp + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioExpMics");
@@ -1263,9 +1262,7 @@ async function init() {
       const show = audioEmVisible(family, model, platform, cfg);
       emWrap.classList.toggle("hidden", !show);
       if (emLabel && show) {
-        const item = getItem(cfg.em);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        emLabel.textContent = "Include expansion module (" + cfg.em + ")" + price;
+        emLabel.textContent = "Include expansion module (" + cfg.em + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioEm");
@@ -1285,12 +1282,9 @@ async function init() {
       const show = !!(cfg && (cfg.psu || (!isTeams && cfg.sip_psu)));
       psuWrap.classList.toggle("hidden", !show);
       if (psuLabel && show) {
-        const psuSku = cfg.psu || cfg.sip_psu;
-        const item = getItem(psuSku);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
         psuLabel.textContent = cfg.psu
-          ? "Include power supply if no PoE (" + cfg.psu + ")" + price
-          : "Include power supply if no PoE (phone+PSU " + cfg.sip_psu + ")" + price;
+          ? "Include power supply if no PoE (" + cfg.psu + ")"
+          : "Include power supply if no PoE (phone+PSU " + cfg.sip_psu + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioPsu");
@@ -1305,9 +1299,7 @@ async function init() {
       const show = !!(cfg && cfg.cat5_2m);
       cat52mWrap.classList.toggle("hidden", !show);
       if (cat52mLabel && show) {
-        const item = getItem(cfg.cat5_2m);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        cat52mLabel.textContent = "Include RJ45 CAT-5 2M (" + cfg.cat5_2m + ")" + price;
+        cat52mLabel.textContent = "Include RJ45 CAT-5 2M (" + cfg.cat5_2m + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioCat52m");
@@ -1320,9 +1312,7 @@ async function init() {
       const show = !!(cfg && cfg.cat5_7m);
       cat57mWrap.classList.toggle("hidden", !show);
       if (cat57mLabel && show) {
-        const item = getItem(cfg.cat5_7m);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        cat57mLabel.textContent = "Include RJ45 CAT-5 7.6M (" + cfg.cat5_7m + ")" + price;
+        cat57mLabel.textContent = "Include RJ45 CAT-5 7.6M (" + cfg.cat5_7m + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioCat57m");
@@ -1335,9 +1325,7 @@ async function init() {
       const show = !!(cfg && cfg.usb_micro);
       usbMicroWrap.classList.toggle("hidden", !show);
       if (usbMicroLabel && show) {
-        const item = getItem(cfg.usb_micro);
-        const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        usbMicroLabel.textContent = "Include USB-A to Micro USB 1.2M (" + cfg.usb_micro + ")" + price;
+        usbMicroLabel.textContent = "Include USB-A to Micro USB 1.2M (" + cfg.usb_micro + ")";
       }
       if (!show) {
         const cb = document.getElementById("audioUsbMicro");
