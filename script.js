@@ -1,5 +1,6 @@
-const VERSION = "v10.50";
-// script.js – HP | Poly Configurator – v10.50: analog 875M6AA+875M4AA, A2/analog QSG, SCT/Netgear accessories
+const VERSION = "v10.51";
+// script.js – HP | Poly Configurator – v10.51: retitle Gem / Bill of Materials Generator
+// v10.50: analog 875M6AA+875M4AA, A2/analog QSG, SCT/Netgear accessories
 // v10.49: Audio banner matches Video announcement; under construction
 // v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
 // v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
@@ -46,7 +47,7 @@ const SCT_KITS = [
   { sku: "RCM-URMX", purpose: "Wall mount for E60 that hides the SCT camera-end module", camera: "E60", drawing: "https://docs.soundcontrol.net/download/3383/", drawingLabel: "E60 / G62 design guide (PDF)" }
 ];
 
-document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
+document.title = 'Poly Video Conference\'s Gem: "Bill" of Materials Generator';
 
 async function init() {
   // Cache-bust so browsers/CDN never serve a stale skus_merged.json
@@ -1199,12 +1200,20 @@ async function init() {
     const hint = document.getElementById("expansionHint");
     if (!hint) return;
     const family = hostFamily();
-    if (family === "r30") { hint.innerHTML = ""; return; }
-    const analog = analogMicApplies();
-    const parts = [];
-    if (analog) parts.push("Quick start: " + qsgLink(ANALOG_QSG.href, ANALOG_QSG.label));
-    parts.push("Quick start: " + qsgLink(A2_QSG.href, A2_QSG.label));
-    hint.innerHTML = parts.join("<br>");
+    const exp = document.getElementById("expansionMic")?.value || "";
+    if (family === "r30" || !exp || exp === "None" || exp === PREEXISTING_AUDIO) {
+      hint.innerHTML = "";
+      return;
+    }
+    if (exp.includes("Analog Extension") || exp.includes("Single Analog Exp")) {
+      hint.innerHTML = "Quick start: " + qsgLink(ANALOG_QSG.href, ANALOG_QSG.label);
+      return;
+    }
+    if (exp.includes("New White A2") || exp.includes("New Black A2")) {
+      hint.innerHTML = "Quick start: " + qsgLink(A2_QSG.href, A2_QSG.label);
+      return;
+    }
+    hint.innerHTML = "";
   }
   function extraIpPeripheralSelected() {
     const exp = document.getElementById("expansionMic")?.value || "";
@@ -1369,6 +1378,7 @@ async function init() {
   document.getElementById("expansionMic")?.addEventListener("change", () => {
     updateA2QtyVisibility();
     updateNetgearVisibility();
+    refreshExpansionHint();
   });
   document.getElementById("mounting")?.addEventListener("change", refreshMountHint);
   document.getElementById("cameraMount")?.addEventListener("change", refreshCameraMountHint);
