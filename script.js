@@ -1,5 +1,6 @@
-const VERSION = "v10.51";
-// script.js – HP | Poly Configurator – v10.51: retitle Gem / Bill of Materials Generator
+const VERSION = "v10.52";
+// script.js – HP | Poly Configurator – v10.52: polarizer copy; static BOM qty (no post-generate steppers)
+// v10.51: retitle Gem / Bill of Materials Generator
 // v10.50: analog 875M6AA+875M4AA, A2/analog QSG, SCT/Netgear accessories
 // v10.49: Audio banner matches Video announcement; under construction
 // v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
@@ -432,7 +433,7 @@ async function init() {
       <input id="polarFilterOpt" type="checkbox" class="border">
       <span>Optional polarized filter (875K9AA)</span>
     </label>
-    <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
+    <p class="text-xs text-gray-600 ml-6">For X72 / E70: Reduces glare, reflections, and window washout caused by bright lighting, glass walls, polished tables, large exterior windows, and other visible in-room displays. Helps to deliver a cleaner image, improved contrast, and optimized DirectorAI tracking. Not added unless checked.</p>`;
   form.appendChild(polarFilterWrap);
 
   // Camera power option (E60 + E70) — PoE+ injector or wall PSU
@@ -1536,13 +1537,7 @@ async function init() {
 
       const isPcRow = PC_SKU_SET.has(r.sku);
       html += `<tr class="${isPcRow ? "font-semibold bg-amber-50" : ""}">
-        <td class="border px-4 py-2">
-          <div class="inline-flex items-center gap-1">
-            <button type="button" data-qty-delta="-1" data-i="${i}" class="qty-btn px-2 py-0.5 border rounded leading-none bg-gray-50 hover:bg-gray-100" aria-label="Decrease quantity">−</button>
-            <input type="number" min="0" step="1" data-i="${i}" class="qty-input w-16 border rounded px-2 py-1 text-center" value="${qty}">
-            <button type="button" data-qty-delta="1" data-i="${i}" class="qty-btn px-2 py-0.5 border rounded leading-none bg-gray-50 hover:bg-gray-100" aria-label="Increase quantity">+</button>
-          </div>
-        </td>
+        <td class="border px-4 py-2">${qty}</td>
         <td class="border px-4 py-2">${sku}</td>
         <td class="border px-4 py-2">${r.description}</td>`;
       if (includePrices) {
@@ -1577,77 +1572,8 @@ async function init() {
     }
 
     dest.innerHTML = html;
-    if (focusIdx != null) {
-      const el = dest.querySelector(`.qty-input[data-i="${focusIdx}"]`);
-      if (el) {
-        el.focus();
-        const pos = (caretPos != null && caretPos >= 0) ? Math.min(caretPos, String(el.value).length) : String(el.value).length;
-        try { el.setSelectionRange(pos, pos); } catch (e) { el.select(); }
-      }
-    }
   }
 
-  function applyQty(i, n, restoreFocus, caretPos, dest, bom) {
-    dest = dest || resultDiv;
-    bom = bom || lastBom;
-    if (!bom || !bom.results[i]) return;
-    bom.results[i].quantity = n;
-    renderBom(restoreFocus ? i : undefined, restoreFocus ? caretPos : undefined, dest, bom);
-  }
-
-  function bindQtyHandlers(dest, getBom) {
-    dest.addEventListener("click", (e) => {
-      const btn = e.target.closest(".qty-btn");
-      if (!btn || !dest.contains(btn)) return;
-      const i = Number(btn.getAttribute("data-i"));
-      const delta = Number(btn.getAttribute("data-qty-delta"));
-      const bom = getBom();
-      if (!bom || !bom.results[i]) return;
-      const current = Number(bom.results[i].quantity) || 0;
-      applyQty(i, Math.max(0, current + delta), false, undefined, dest, bom);
-    });
-    dest.addEventListener("input", (e) => {
-      if (!e.target.classList.contains("qty-input")) return;
-      const i = Number(e.target.getAttribute("data-i"));
-      const n = parseInt(e.target.value, 10);
-      if (Number.isNaN(n)) return;
-      const caret = (typeof e.target.selectionStart === "number") ? e.target.selectionStart : String(e.target.value).length;
-      applyQty(i, Math.max(0, n), true, caret, dest, getBom());
-    });
-    dest.addEventListener("change", (e) => {
-      if (!e.target.classList.contains("qty-input")) return;
-      const i = Number(e.target.getAttribute("data-i"));
-      const n = parseInt(e.target.value, 10);
-      if (Number.isNaN(n)) return;
-      const caret = (typeof e.target.selectionStart === "number") ? e.target.selectionStart : String(e.target.value).length;
-      applyQty(i, Math.max(0, n), true, caret, dest, getBom());
-    });
-  }
-  bindQtyHandlers(audioResult, () => lastAudioBom);
-  bindQtyHandlers(headsetResult, () => lastHeadsetBom);
-
-  resultDiv.addEventListener("click", (e) => {
-    const btn = e.target.closest(".qty-btn");
-    if (!btn || !resultDiv.contains(btn)) return;
-    const i = Number(btn.getAttribute("data-i"));
-    const delta = Number(btn.getAttribute("data-qty-delta"));
-    if (!lastBom || !lastBom.results[i]) return;
-    const current = Number(lastBom.results[i].quantity) || 0;
-    applyQty(i, Math.max(0, current + delta));
-  });
-
-  function handleQtyInputEvent(el, restoreFocus) {
-    const i = Number(el.getAttribute("data-i"));
-    const n = parseInt(el.value, 10);
-    if (Number.isNaN(n)) return;
-    const caret = (typeof el.selectionStart === "number") ? el.selectionStart : String(el.value).length;
-    applyQty(i, Math.max(0, n), restoreFocus, caret);
-  }
-
-  resultDiv.addEventListener("input", (e) => {
-    if (!e.target.classList.contains("qty-input")) return;
-    handleQtyInputEvent(e.target, true);
-  });
   resultDiv.addEventListener("change", (e) => {
     if (e.target.classList.contains("pc-choice-cb")) {
       const choice = e.target.getAttribute("data-pc-choice");
@@ -1656,10 +1582,7 @@ async function init() {
         return;
       }
       applyPcChoice(choice);
-      return;
     }
-    if (!e.target.classList.contains("qty-input")) return;
-    handleQtyInputEvent(e.target, true);
   });
 
   // ---------- core generate ----------
