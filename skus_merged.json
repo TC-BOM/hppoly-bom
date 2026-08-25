@@ -1676,5 +1676,9 @@
   "RCM-URMX": {
     "description": "SCT wall mount for Poly Studio E60 hiding camera-end module. Dealer quote, not Poly MSRP.",
     "msrp": null
+  },
+  "874T5AA": {
+    "description": "Poly Video IEC Power Cord",
+    "msrp": 31.05
   }
 }

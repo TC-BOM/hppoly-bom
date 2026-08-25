@@ -1,5 +1,7 @@
-const VERSION = "v10.52";
-// script.js – HP | Poly Configurator – v10.52: polarizer copy; static BOM qty (no post-generate steppers)
+const VERSION = "v10.54";
+// script.js – HP | Poly Configurator – v10.54: E70 wall power adds 874T5AA IEC cord
+// v10.53: BOM* / estimate only*; hide No Radio
+// v10.52: polarizer copy; static BOM qty (no post-generate steppers)
 // v10.51: retitle Gem / Bill of Materials Generator
 // v10.50: analog 875M6AA+875M4AA, A2/analog QSG, SCT/Netgear accessories
 // v10.49: Audio banner matches Video announcement; under construction
@@ -380,8 +382,8 @@ async function init() {
   form.appendChild(mountingWrapEl);
   const expansionMicWrapEl = select("expansionMic", "Include Expansion Mic?", [
     "None",
-    ANALOG_MIC_VALUE,
     PREEXISTING_AUDIO,
+    ANALOG_MIC_VALUE,
     "New White A2 table mic pod(s)",
     "New Black A2 table mic pod(s)"
   ]);
@@ -1179,8 +1181,8 @@ async function init() {
     if (prev.includes("Single Analog Exp")) prev = ANALOG_MIC_VALUE;
     const analog = analogMicApplies();
     const opts = [{ value: "None", label: "None" }];
-    if (analog) opts.push({ value: ANALOG_MIC_VALUE, label: "Single Analog Extension mics (875M6AA + 875M4AA)" });
     opts.push({ value: PREEXISTING_AUDIO, label: PREEXISTING_AUDIO });
+    if (analog) opts.push({ value: ANALOG_MIC_VALUE, label: "Single Analog Extension mics (875M6AA + 875M4AA)" });
     opts.push({ value: "New White A2 table mic pod(s)", label: "New White A2 table mic pod(s)" });
     opts.push({ value: "New Black A2 table mic pod(s)", label: "New Black A2 table mic pod(s)" });
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
@@ -1308,7 +1310,7 @@ async function init() {
     const wallLabel = document.getElementById("camPowerWallLabel");
     if (wallLabel) {
       if (cam === "E60") wallLabel.textContent = "E60 wall power accessory (9W1A9AA)";
-      else if (cam === "E70") wallLabel.textContent = "E70 wall / external PSU (875K6AA)";
+      else if (cam === "E70") wallLabel.textContent = "E70 wall / external PSU (875K6AA) + IEC power cord (874T5AA)";
     }
 
     // Rebuild mount options from real catalog SKUs; hide the control if none exist
@@ -1500,7 +1502,7 @@ async function init() {
     html += `<p class="text-sm italic text-gray-600 mb-2">Disclaimer: Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.</p>`;
     html += `<p class="text-sm mb-1"><a class="text-blue-600 underline" target="_blank" rel="noopener" href="${EXCEL_URL}">Quoting Guide</a>&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<a class="text-blue-600 underline" target="_blank" rel="noopener" href="${SPACES_URL}">Poly Spaces</a></p>`;
     html += `<p class="text-sm mb-3"><a class="text-blue-600 underline" target="_blank" rel="noopener" href="${EXCEL_URL}">Glen Bevcar's Collab Reference Excel cheat sheet</a>&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<a class="text-blue-600 underline" target="_blank" rel="noopener" href="${DIM_URL}">Dimensional Drawings for Poly Products</a></p>`;
-    html += `<h2 class="font-semibold mb-2">Your BOM:</h2>`;
+    html += `<h2 class="font-semibold mb-2">Your BOM<span class="italic text-red-600">*</span>:</h2>`;
     if (googleMeetNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
     }
@@ -1544,7 +1546,7 @@ async function init() {
 
     if (includePrices) {
       html += `<tr class="bg-blue-50 font-semibold">
-        <td class="border px-4 py-2" colspan="3">Estimated MSRP Total</td>
+        <td class="border px-4 py-2" colspan="3">Estimated MSRP Total<span class="italic text-red-600">*</span></td>
         <td class="border px-4 py-2">${fmtCurrency(grandTotal)}</td>
       </tr>`;
     }
@@ -1552,11 +1554,11 @@ async function init() {
     html += `</tbody></table>`;
 
     if (includePrices) {
-      html += `<p class="text-xs text-gray-600 mt-2">Total is Qty × unit MSRP for lines with a known price (${pricedLines} priced line${pricedLines === 1 ? "" : "s"}).`;
+      html += `<p class="text-gray-600 mt-2" style="font-size:125%">Total is Qty × unit MSRP for lines with a known price (${pricedLines} priced line${pricedLines === 1 ? "" : "s"}).`;
       if (unpricedLines > 0) {
         html += ` ${unpricedLines} line${unpricedLines === 1 ? "" : "s"} have no MSRP in the catalog and are excluded from the total.`;
       }
-      html += ` Prices are list MSRP and may not reflect final quote.</p>`;
+      html += ` Prices are list MSRP and may not reflect final quote. <span class="italic text-red-600" style="font-size:125%">estimate only*</span></p>`;
     }
 
 
@@ -1707,8 +1709,9 @@ async function init() {
         const e70sku = flags.jitc ? "886C9AA" : flags.taa ? "886C8AA" : "842F8AA";
         addLine(results, e70sku);
         addSupport(results, "e70", supportTerm);
-        if (wantWall && !hasSku(results, "875K6AA")) {
-          addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
+        if (wantWall) {
+          if (!hasSku(results, "875K6AA")) addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
+          if (!hasSku(results, "874T5AA")) addLine(results, "874T5AA", "Poly Video IEC Power Cord");
         }
         if (wantPoePP) addLine(results, "B5NH6AA");
         if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
