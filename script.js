@@ -1,5 +1,6 @@
-const VERSION = "v10.54";
-// script.js – HP | Poly Configurator – v10.54: E70 wall power adds 874T5AA IEC cord
+const VERSION = "v10.55";
+// script.js – HP | Poly Configurator – v10.55: welcome announcement + feedback box
+// v10.54: E70 wall power adds 874T5AA IEC cord
 // v10.53: BOM* / estimate only*; hide No Radio
 // v10.52: polarizer copy; static BOM qty (no post-generate steppers)
 // v10.51: retitle Gem / Bill of Materials Generator
@@ -327,13 +328,18 @@ async function init() {
   const form = document.createElement("form");
   form.className = "space-y-4";
 
-  // Announcement banner (support + TC10 scheduler updates)
+  // Welcome banner + feedback (kept outside the generate form so Send does not Generate)
   const promoWrap = document.createElement("div");
   promoWrap.id = "promoBox";
-  promoWrap.className = "px-3 py-1.5 border border-amber-400 rounded bg-amber-50";
+  promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 space-y-2 mb-4";
   promoWrap.innerHTML = `
-    <div class="text-sm text-amber-900">📢 Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
-  form.appendChild(promoWrap);
+    <div class="text-sm text-amber-900">📢 Welcome to the new site. Poly+ Analyze support and JITC/TAA are in. Suggestions and issues welcome. Otherwise, happy hunting!</div>
+    <label class="block text-xs text-amber-900" for="siteFeedback">Comment for James</label>
+    <textarea id="siteFeedback" rows="1" class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="A suggestion or issue…"></textarea>
+    <div class="flex items-center gap-2">
+      <button type="button" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
+      <span id="siteFeedbackStatus" class="text-xs text-amber-800"></span>
+    </div>`;
 
   // TAA / JITC
   const taaWrap = document.createElement("div");
@@ -786,8 +792,50 @@ async function init() {
   panelHeadset.appendChild(headsetForm);
   panelHeadset.appendChild(headsetResult);
 
+  panelVideo.appendChild(promoWrap);
   panelVideo.appendChild(form);
   panelVideo.appendChild(resultDiv);
+  const feedbackEl = document.getElementById("siteFeedback");
+  const feedbackSend = document.getElementById("siteFeedbackSend");
+  const feedbackStatus = document.getElementById("siteFeedbackStatus");
+  function autosizeFeedback() {
+    if (!feedbackEl) return;
+    feedbackEl.style.height = "auto";
+    feedbackEl.style.height = Math.max(40, feedbackEl.scrollHeight) + "px";
+  }
+  feedbackEl?.addEventListener("input", autosizeFeedback);
+  autosizeFeedback();
+  feedbackSend?.addEventListener("click", async () => {
+    const text = (feedbackEl?.value || "").trim();
+    if (!text) {
+      if (feedbackStatus) feedbackStatus.textContent = "Add a note first.";
+      return;
+    }
+    if (feedbackStatus) feedbackStatus.textContent = "Sending…";
+    const payload = {
+      message: text,
+      page: location.href,
+      build: VERSION,
+      _subject: "Poly BOM site comment"
+    };
+    try {
+      const res = await fetch("https://formsubmit.co/ajax/james.gamble@hp.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        if (feedbackEl) feedbackEl.value = "";
+        autosizeFeedback();
+        if (feedbackStatus) feedbackStatus.textContent = "Sent. (First time: confirm the FormSubmit email in your HP inbox.)";
+        return;
+      }
+    } catch (e) {}
+    const mailto = "mailto:james.gamble@hp.com?subject=" + encodeURIComponent("Poly BOM site comment") + "&body=" + encodeURIComponent(text);
+    window.location.href = mailto;
+    if (feedbackStatus) feedbackStatus.textContent = "Opened an email to James if send was blocked.";
+  });
+
   app.appendChild(panelVideo);
   app.appendChild(panelAudio);
   app.appendChild(panelHeadset);
