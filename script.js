@@ -1,5 +1,6 @@
-const VERSION = "v10.41";
-// script.js – HP | Poly Configurator – v10.41: hide optional checkbox MSRP on form (quote only)
+const VERSION = "v10.42";
+// script.js – HP | Poly Configurator – v10.42: split Support and Install sections (Knauf layout)
+// v10.41: hide optional checkbox MSRP on form (quote only)
 // v10.40: polarizer under camera add-on
 // v10.39: in-box mount notes + per-option QSG links
 // v10.38: live Audio phone catalog (Trio/CCX/Edge E/Rove) + G6 dock option
@@ -331,17 +332,22 @@ async function init() {
 
   form.appendChild(hwSection);
 
-  const svcSection = document.createElement("fieldset");
-  svcSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  svcSection.innerHTML = '<legend class="font-semibold px-1">Scheduling, support &amp; services</legend>';
-  svcSection.appendChild(select("schedulingPanel", "Scheduling panel (additional TC10 outside room)", [
+  const schedSection = document.createElement("fieldset");
+  schedSection.className = "space-y-3 p-4 border border-gray-200 rounded";
+  schedSection.innerHTML = '<legend class="font-semibold px-1">Scheduling</legend>';
+  schedSection.appendChild(select("schedulingPanel", "Scheduling panel (additional TC10 outside room)", [
     { value: "None", label: "None" },
     { value: "tc10_black_wall",  label: "TC10 Black — wall mount (included)" },
     { value: "tc10_white_wall",  label: "TC10 White — wall mount (included)" },
     { value: "tc10_black_glass", label: "TC10 Black — glass mount" },
     { value: "tc10_white_glass", label: "TC10 White — glass mount" }
   ]));
-  svcSection.appendChild(select("supportTerm", "Select Support term", [
+  form.appendChild(schedSection);
+
+  const supportSection = document.createElement("fieldset");
+  supportSection.className = "space-y-3 p-4 border border-gray-200 rounded";
+  supportSection.innerHTML = '<legend class="font-semibold px-1">Support</legend>';
+  supportSection.appendChild(select("supportTerm", "Select Support term", [
     { value: "",         label: "None" },
     { value: "poly1",    label: "1yr - Poly+" },
     { value: "poly3",    label: "3yr - Poly+" },
@@ -358,7 +364,7 @@ async function init() {
     <strong>Poly+</strong> — Essential support: unlimited 24/7 priority technical support, next-business-day advance hardware replacement, and ecosystem cloud partner support.<br>
     <strong>Poly+ Analyze</strong> — Premium tier that includes everything in Poly+ <em>plus</em> coverage for your entire HP Poly estate, HP Poly Lens Pro for Rooms (advanced insights), and enterprise integration / IT tools.<br>
     <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Learn more about Poly+ and Poly+ Analyze</a>`;
-  svcSection.appendChild(supportInfo);
+  supportSection.appendChild(supportInfo);
 
   // Expandable Poly+ vs Poly+ Analyze comparison table
   const featuresDetails = document.createElement("details");
@@ -466,7 +472,7 @@ async function init() {
       </table>
     </div>
   `;
-  svcSection.appendChild(featuresDetails);
+  supportSection.appendChild(featuresDetails);
 
   const lensProWrap = document.createElement("div");
   lensProWrap.className = "mt-2 space-y-2";
@@ -489,13 +495,17 @@ async function init() {
     const on = document.getElementById("lensProRooms").checked;
     lensProBandSel.classList.toggle("hidden", !on);
   });
-  svcSection.appendChild(lensProWrap);
+  supportSection.appendChild(lensProWrap);
+  form.appendChild(supportSection);
 
-  svcSection.appendChild(select("implementationHelp", "Implementation Help", [
+  const installSection = document.createElement("fieldset");
+  installSection.className = "space-y-3 p-4 border border-gray-200 rounded";
+  installSection.innerHTML = '<legend class="font-semibold px-1">Install</legend>';
+  installSection.appendChild(select("implementationHelp", "Implementation Help", [
     "None", "Remote Implementation help", "Onsite Implementation help"
   ]));
-  svcSection.appendChild(input("accessories", "Optional: any additional accessories (comma-separated SKUs)", "e.g. extra cameras, cables"));
-  form.appendChild(svcSection);
+  installSection.appendChild(input("accessories", "Optional: any additional accessories (comma-separated SKUs)", "e.g. extra cameras, cables"));
+  form.appendChild(installSection);
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
