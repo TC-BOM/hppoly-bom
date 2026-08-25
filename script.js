@@ -1,5 +1,6 @@
-const VERSION = "v10.61";
-// script.js – HP | Poly Configurator – v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
+const VERSION = "v10.62";
+// script.js – HP | Poly Configurator – v10.62: Classic/New site toggle (top-right)
+// v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
 // v10.60: Trio C60 TAA/No Radio/cables + E500/CCX700 support
 // v10.59: Voice TAA/PSU bundles, VVX, E500, CCX 700
 // v10.58: Lens Pro column on Poly+/Analyze support table
