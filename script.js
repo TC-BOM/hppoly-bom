@@ -1,5 +1,6 @@
-const VERSION = "v10.55";
-// script.js – HP | Poly Configurator – v10.55: welcome announcement + feedback box
+const VERSION = "v10.56";
+// script.js – HP | Poly Configurator – v10.56: G9+ TAA kit A2TP1AA
+// v10.55: welcome announcement + feedback box
 // v10.54: E70 wall power adds 874T5AA IEC cord
 // v10.53: BOM* / estimate only*; hide No Radio
 // v10.52: polarizer copy; static BOM qty (no post-generate steppers)
@@ -154,7 +155,7 @@ async function init() {
   };
 
   // Room PC option matrix (Studio 5 / Studio 7 / G9+). Do not invent missing SKUs.
-  const PC_SKU_SET = new Set(["DS1E8AW", "DS1G9AW", "A1ZB6AW#ABA", "DS1R6AW", "DS0W9AW", "DS1R5AW"]);
+  const PC_SKU_SET = new Set(["DS1E8AW", "DS1G9AW", "A1ZB6AW#ABA", "DS1R6AW", "DS0W9AW", "DS1R5AW", "A2TP1AA"]);
   const PC_CHOICE_ORDER = ["studio5", "studio7", "g9plus"];
   const PC_CHOICE_NAMES = { studio5: "Studio 5", studio7: "Studio 7", g9plus: "G9+" };
 
@@ -173,7 +174,7 @@ async function init() {
     const p = normalizePcPlatform(platform);
     const restricted = pcFlagsRestricted(flags);
     if (p === "teams") {
-      if (restricted) return { studio5: "DS1R6AW", studio7: "DS0W9AW", g9plus: null };
+      if (restricted) return { studio5: "DS1R6AW", studio7: "DS0W9AW", g9plus: "A2TP1AA" };
       return { studio5: "DS1E8AW", studio7: "DS1G9AW", g9plus: "A1ZB6AW#ABA" };
     }
     if (p === "zoom") {
@@ -1492,6 +1493,25 @@ async function init() {
     else lastBom.results.push(line);
 
     lastBom.pcChoice = choice;
+    const kitHasTc10 = sku === "A2TP1AA";
+    const inRoomTc10 = pickTc10("black");
+    const decQty = (arr, lineSku) => {
+      const line = arr.find(r => r.sku === lineSku);
+      if (!line) return;
+      if ((line.quantity || 1) > 1) line.quantity -= 1;
+      else arr.splice(arr.indexOf(line), 1);
+    };
+    if (kitHasTc10 && lastBom.hasInRoomTc10) {
+      decQty(lastBom.results, inRoomTc10);
+      const term = lastBom.supportTerm;
+      const sSku = term && SUPPORT_MAP.tc10 && SUPPORT_MAP.tc10[term];
+      if (sSku) decQty(lastBom.results, sSku);
+      lastBom.hasInRoomTc10 = false;
+    } else if (!kitHasTc10 && !lastBom.hasInRoomTc10) {
+      addLine(lastBom.results, inRoomTc10);
+      addSupport(lastBom.results, "tc10", lastBom.supportTerm);
+      lastBom.hasInRoomTc10 = true;
+    }
     const supportTerm = lastBom.supportTerm;
     if (lastBom.pcPlatform === "teams") {
       if (supportTerm && !resultsHaveSupport(lastBom.results, "g9plus_mtr")) {
@@ -1524,6 +1544,7 @@ async function init() {
       let label = PC_CHOICE_NAMES[choice] || choice;
       if (sku) {
         label += " — " + sku;
+        if (sku === "A2TP1AA") label += " (includes TC10)";
         if (includePrices) {
           const item = getItem(sku);
           label += " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
@@ -1682,6 +1703,7 @@ async function init() {
 
     let pcChoice = null;
     let pcPlatform = null;
+    let hasInRoomTc10 = false;
 
     if (typeOfSystem === "Windows PC based solution") {
       if (platform === "Microsoft Teams" || platform === "Zoom") {
@@ -1693,7 +1715,9 @@ async function init() {
           if (pcPlatform === "teams") addSupport(results, "g9plus_mtr", supportTerm);
           else addSupport(results, "zoom_pc", supportTerm);
         }
-        addInRoomTc10();
+        const g9TaaKit = pcChoice && pcOpts[pcChoice] === "A2TP1AA";
+        if (!g9TaaKit) addInRoomTc10();
+        hasInRoomTc10 = !g9TaaKit;
       }
       // Google Meet: USB bar only, no PC, no TC10
     } else if (typeOfSystem === "Android appliance based solution") {
@@ -1861,6 +1885,7 @@ async function init() {
       pcPlatform,
       pcChoice,
       pcFlags: { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr },
+      hasInRoomTc10: !!hasInRoomTc10,
       supportTerm
     };
     renderBom();
