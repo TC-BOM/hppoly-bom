@@ -1,5 +1,8 @@
-const VERSION = "v10.58";
-// script.js – HP | Poly Configurator – v10.58: Lens Pro column on Poly+/Analyze support table
+const VERSION = "v10.61";
+// script.js – HP | Poly Configurator – v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
+// v10.60: Trio C60 TAA/No Radio/cables + E500/CCX700 support
+// v10.59: Voice TAA/PSU bundles, VVX, E500, CCX 700
+// v10.58: Lens Pro column on Poly+/Analyze support table
 // v10.57: in-box mounts; E70 clamp off; TC10 order; footer Please Note; no suggestion box
 // v10.56: G9+ TAA kit A2TP1AA (includes TC10); Suggestions for the site
 // v10.55: welcome announcement + feedback box
@@ -125,8 +128,10 @@ async function init() {
     trio_8300:   { poly1: "P66800112", poly3: "P66800312", poly5: "UM5V1PB", analyze1: "UQ7S3PB", analyze3: "UQ7S4PB", analyze5: null },
     ccx_350:     { poly1: "P49690112", poly3: "P49690312", poly5: null,     analyze1: "UQ7C4PB", analyze3: "UQ7C5PB", analyze5: null },
     ccx_400:     { poly1: "P49700112", poly3: "P49700312", poly5: null,     analyze1: "UQ7C9PB", analyze3: "UQ7D0PB", analyze5: null },
+    ccx_500:     { poly1: "P49720160", poly3: "P49720362", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     ccx_505:     { poly1: "P49735112", poly3: "P49735312", poly5: null,     analyze1: "UQ7D9PB", analyze3: "UQ7E0PB", analyze5: null },
     ccx_600:     { poly1: "P49780112", poly3: "P49780312", poly5: null,     analyze1: "UQ7E4PB", analyze3: "UQ7E5PB", analyze5: null },
+    ccx_700:     { poly1: "P49740160", poly3: "P49740362", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     ccx_em60:    { poly1: "U73W3PP",   poly3: "U73W4PP",   poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     edge_e100:   { poly1: "P86980112", poly3: "P86980312", poly5: "UM5T1PB", analyze1: "UQ7G8PB", analyze3: "UQ7G9PB", analyze5: "UQ7H1PB" },
     edge_e220:   { poly1: "P86990112", poly3: "P86990312", poly5: "UM5T2PB", analyze1: "UQ7H4PB", analyze3: "UQ7H5PB", analyze5: "UQ7H7PB" },
@@ -135,7 +140,8 @@ async function init() {
     edge_e350:   { poly1: "P87010112", poly3: "P87010312", poly5: "UM5T4PB", analyze1: "UQ7K2PB", analyze3: "UQ7K3PB", analyze5: "UQ7K5PB" },
     edge_e400:   { poly1: "P87835112", poly3: "P87835312", poly5: "UM5T8PB", analyze1: "UQ7K8PB", analyze3: "UQ7K9PB", analyze5: "UQ7L1PB" },
     edge_e450:   { poly1: "P87030112", poly3: "P87030312", poly5: "UM5T5PB", analyze1: "UQ7L4PB", analyze3: "UQ7L5PB", analyze5: "UQ7L7PB" },
-    edge_e550:   { poly1: "P87050112", poly3: "P87050312", poly5: "UM5T6PB", analyze1: "UQ7M6PB", analyze3: null,     analyze5: "UQ7M9PB" },
+    edge_e500:   { poly1: null,       poly3: null,       poly5: null,     analyze1: "UQ7M4PB", analyze3: "UQ7M5PB", analyze5: null },
+    edge_e550:   { poly1: "P87050112", poly3: "P87050312", poly5: "UM5T6PB", analyze1: "UQ7M6PB", analyze3: "UQ7N1PB", analyze5: "UQ7M9PB" },
     edge_em:     { poly1: "P87020112", poly3: "P87020312", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     rove_20:     { poly1: "P88090112", poly3: "P88090312", poly5: "UM5U3PB", analyze1: null,     analyze3: null,     analyze5: null },
     rove_20_b1:  { poly1: "P88080112", poly3: "P88080312", poly5: "UM5U2PB", analyze1: null,     analyze3: null,     analyze5: null },
@@ -653,6 +659,15 @@ async function init() {
     const on = document.getElementById("lensProRooms").checked;
     lensProBandSel.classList.toggle("hidden", !on);
   });
+  const lensOnboardLabel = document.createElement("label");
+  lensOnboardLabel.className = "inline-flex items-start gap-2";
+  lensOnboardLabel.innerHTML = `
+    <input id="lensOnboard" type="checkbox" class="border mt-1">
+    <span>
+      <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
+      <span class="block text-xs text-gray-600">Includes registering up to 3 Poly devices.</span>
+    </span>`;
+  lensProWrap.appendChild(lensOnboardLabel);
   form.appendChild(lensProWrap);
 
   form.appendChild(select("implementationHelp", "Implementation Help", [
@@ -747,7 +762,22 @@ async function init() {
   audioSection.className = "space-y-3 p-4 border border-gray-200 rounded";
   audioSection.innerHTML = '<legend class="font-semibold px-1">Audio</legend>';
   audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
-  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
+  const audioTaaWrap = document.createElement("div");
+  audioTaaWrap.className = "space-y-1";
+  audioTaaWrap.innerHTML = `
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        <input id="audioTaa" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold">TAA / GSA</span>
+      </label>
+      <label id="audioNoRadioWrap" class="hidden inline-flex items-center gap-2 cursor-pointer">
+        <input id="audioNoRadio" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold">No Radio</span>
+      </label>
+    </div>
+    <p class="text-xs text-gray-600">TAA uses GSA/TAA SKU when one exists. No Radio uses the No Radio SKU when one exists. No JITC phone SKUs in this catalog.</p>`;
+  audioSection.appendChild(audioTaaWrap);
+  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove", "VVX"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
   const audioNote = document.createElement("p");
   audioNote.id = "audioPlatformNote";
@@ -766,9 +796,22 @@ async function init() {
   audioAccWrap.innerHTML = `
     <label id="audioExpWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioExpMics" type="checkbox" class="border"><span id="audioExpLabel">Include expansion mics</span></label>
     <label id="audioEmWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm" type="checkbox" class="border"><span id="audioEmLabel">Include expansion module</span></label>
-    <label id="audioPsuWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioPsu" type="checkbox" class="border"><span id="audioPsuLabel">Include power supply (if no PoE)</span></label>`;
+    <label id="audioEm2Wrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm2" type="checkbox" class="border"><span id="audioEm2Label">Include second expansion module (E500/E550, max 2)</span></label>
+    <label id="audioPsuWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioPsu" type="checkbox" class="border"><span id="audioPsuLabel">Include power supply (if no PoE)</span></label>
+    <label id="audioCat52mWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioCat52m" type="checkbox" class="border"><span id="audioCat52mLabel">Include RJ45 CAT-5 2M (85X04AA)</span></label>
+    <label id="audioCat57mWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioCat57m" type="checkbox" class="border"><span id="audioCat57mLabel">Include RJ45 CAT-5 7.6M (85X05AA)</span></label>
+    <label id="audioUsbMicroWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioUsbMicro" type="checkbox" class="border"><span id="audioUsbMicroLabel">Include USB-A to Micro USB 1.2M (85X06AA)</span></label>`;
   audioSection.appendChild(audioAccWrap);
   audioSection.appendChild(select("audioSupportTerm", "Select Support term", SUPPORT_OPTS));
+  const audioLensOnboardLabel = document.createElement("label");
+  audioLensOnboardLabel.className = "flex items-start gap-2 text-sm";
+  audioLensOnboardLabel.innerHTML = `
+    <input id="audioLensOnboard" type="checkbox" class="border mt-1">
+    <span>
+      <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
+      <span class="block text-xs text-gray-600">Includes registering up to 3 Poly devices.</span>
+    </span>`;
+  audioSection.appendChild(audioLensOnboardLabel);
   audioForm.appendChild(audioSection);
   const audioActions = document.createElement("div");
   audioActions.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
@@ -843,26 +886,46 @@ async function init() {
 
   const AUDIO_CATALOG = {
     Trio: {
-      C60:  { teams: "849B6AA#ABA", sip: "849B4AA#ABA", support: "trio_c60",  exp: "85X02AA", psu: "85X03AA#ABA" },
+      C60:  { teams: "849B6AA#ABA", sip: "849B4AA#ABA", support: "trio_c60",  exp: "85X02AA", psu: "85X03AA#ABA",
+        teams_taa: "849B1AA",
+        sip_taa: "849B3AA",
+        teams_nr: "830A1AA",
+        sip_nr: "830A2AA",
+        teams_nr_taa: "84C21AA",
+        sip_nr_taa: "849B2AA",
+        cat5_2m: "85X04AA",
+        cat5_7m: "85X05AA",
+        usb_micro: "85X06AA" },
       "8300": { teams: null, sip: "849A0AA#AC3", support: "trio_8300", exp: "85X00AA", psu: "85W92AA#ABA",
-        teamsNote: "Trio 8300 is OpenSIP only (not native Teams). BOM uses the OpenSIP SKU." }
+        sip_taa: "849A2AA",
+        teamsNote: "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU." }
     },
     CCX: {
-      "350": { teams: "848Z7AA#AC3", sip: null, support: "ccx_350", em: "8F3R9AA", psu: "86H66AA#ABA",
+      "350": { teams: "848Z7AA#AC3", sip: null, support: "ccx_350", psu: "86H66AA#ABA",
+        teams_taa: "8F3G3AA",
         sipNote: "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet." },
-      "400": { teams: "848Z8AA#AC3", sip: "849A1AA#AC3", support: "ccx_400", em: "8F3R9AA" },
-      "505": { teams: "82Z79AA", sip: "82Z82AA", support: "ccx_505", em: "8F3R9AA", psu: "86P04AA#ABA" },
-      "600": { teams: "82Z84AA", sip: "82Z85AA", support: "ccx_600", em: "8F3R9AA", psu: "86P04AA#ABA" }
+      "400": { teams: "848Z8AA#AC3", sip: "849A1AA#AC3", support: "ccx_400",
+        teams_taa: "848Z9AA", sip_psu: "84C14AA" },
+      "500": { teams: "82Z76AA", sip: null, support: "ccx_500", psu: "86P04AA#ABA",
+        sipNote: "No confirmed Open SIP commercial PN for CCX 500 (not invented).",
+        teamsNote: "CCX 500 Teams is phased out; CCX 505 Teams (82Z79AA) is the replacement. Price is reseller list, not HP.com." },
+      "505": { teams: "82Z79AA", sip: "82Z82AA", support: "ccx_505", em: "8F3R9AA", psu: "86P04AA#ABA",
+        teams_taa: "849A5AA", sip_psu: "84C16AA" },
+      "600": { teams: "82Z84AA", sip: "82Z85AA", support: "ccx_600", em: "8F3R9AA", psu: "86P04AA#ABA",
+        teams_taa: "849A8AA", sip_psu: "84C17AA" },
+      "700": { teams: null, sip: "82Z83AA", support: "ccx_700", em: "8F3R9AA", psu: "86P04AA#ABA",
+        teamsNote: "CCX 700 is OpenSIP / Zoom Phone / ZPA only — not native Teams." }
     },
     "Edge E": {
-      E100: { sip: "82M86AA", support: "edge_e100", psu: "86H66AA#ABA", em: "85W93AA" },
-      E220: { sip: "82M87AA", support: "edge_e220", psu: "86H66AA#ABA", em: "85W93AA" },
-      E300: { sip: "82M92AA", support: "edge_e300", psu: "86H66AA#ABA", em: "85W93AA" },
-      E320: { sip: "82M88AA", support: "edge_e320", psu: "86H66AA#ABA", em: "85W93AA" },
-      E350: { sip: "82M89AA", support: "edge_e350", psu: "86H66AA#ABA", em: "85W93AA" },
-      E400: { sip: "82M93AA", support: "edge_e400", psu: "86H66AA#ABA", em: "85W93AA" },
-      E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA" },
-      E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA" }
+      E100: { sip: "82M86AA", support: "edge_e100", psu: "86H66AA#ABA", sip_taa: "8F3G5AA", sip_psu: "89B49AA" },
+      E220: { sip: "82M87AA", support: "edge_e220", psu: "86H66AA#ABA", sip_taa: "8F3G6AA", sip_psu: "89B50AA" },
+      E300: { sip: "82M92AA", support: "edge_e300", psu: "86H66AA#ABA", sip_taa: "8F3H1AA", sip_psu: "89B51AA" },
+      E320: { sip: "82M88AA", support: "edge_e320", psu: "86H66AA#ABA", sip_taa: "8F3G7AA", sip_psu: "89B52AA" },
+      E350: { sip: "82M89AA", support: "edge_e350", psu: "86H66AA#ABA", sip_taa: "8F3G8AA", sip_psu: "89B53AA" },
+      E400: { sip: "82M93AA", support: "edge_e400", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3H2AA", sip_psu: "89B54AA" },
+      E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3G9AA", sip_psu: "89B55AA" },
+      E500: { sip: "82M94AA", support: "edge_e500", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2 },
+      E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2, sip_taa: "8F3H0AA", sip_psu: "89B57AA" }
     },
     Rove: {
       "20": { sip: "8F3E4AA#ABA", support: "rove_20" },
@@ -872,6 +935,11 @@ async function init() {
       B4: { sip: "84H78AA#ABA", support: "rove_b4" },
       R8: { sip: "84H79AA#ABA", support: "rove_r8" },
       "20 + B1 kit": { sip: "8F3E1AA#ABA", support: "rove_20_b1" }
+    },
+    VVX: {
+      "250": { sip: "89B66AA", support: null },
+      "350": { sip: "89B69AA", support: null },
+      "450": { sip: "89B76AA", support: null }
     }
   };
   function audioCfg() {
@@ -879,26 +947,96 @@ async function init() {
     const model = document.getElementById("audioModel")?.value || "";
     return (AUDIO_CATALOG[family] || {})[model] || null;
   }
+  // Per family+model+platform field notes. Do not use one CCX-wide Zoom/Teams sentence. Not Zoom Rooms.
+  const NOTE_TEAMS_NATIVE = "Native Teams (Android + Teams Admin Center).";
+  const NOTE_TEAMS_SIP_GW = "Teams SIP Gateway is calling only (no calendar, hot desk, boss/admin). BOM uses the OpenSIP SKU.";
+  const NOTE_ZPA = "Native Zoom on CCX is Zoom Phone Appliance (ZPA), not Zoom Phone SIP and not Zoom Rooms. Hardware line is the OpenSIP SKU (no Zoom-branded HP PN). ZPA on CCX 400/500 needs Rev K or later. Zoom does not support PVOS 9.x for ZPA (use 8.1.8.x).";
+  const NOTE_ZOOM_SIP = "Zoom Phone SIP (not ZPA, not Zoom Rooms). Different stack from CCX Zoom Phone Appliance. BOM uses the OpenSIP SKU.";
+  const NOTE_PVOS_SWITCH = "On PVOS 7+ this model can switch Generic / Teams / Zoom Phone from the web UI. Factory -019/-025 SKUs were historical profile locks only (not sellable lines and they do not hide the other stack). BOM still uses the OpenSIP SKU as the hardware line.";
+  const NOTE_OPENSIP_FAMILY = "OpenSIP family (Zoom Phone SIP + Teams SIP Gateway). No native Teams Android.";
+  const NOTE_CCX500_PHASE = "CCX 500 Teams is phased out; CCX 505 Teams (82Z79AA) is the replacement. Price is reseller list, not HP.com.";
+  const NOTE_CCX500_NOSIP = "No confirmed Open SIP commercial PN for CCX 500 (not invented).";
+  const EM60_PSU = "86H66AA#ABA";
+  function audioEmVisible(family, model, platform, cfg) {
+    if (!cfg || !cfg.em) return false;
+    if (family === "Edge E") return true;
+    if (family !== "CCX") return false;
+    if (model !== "505" && model !== "600" && model !== "700") return false;
+    if (platform === "Zoom") return false;
+    if (model === "700" && platform === "Microsoft Teams") return false;
+    return platform === "Microsoft Teams" || platform === "OpenSIP";
+  }
+  function audioFieldNote(family, model, platform) {
+    const isTeams = platform === "Microsoft Teams";
+    const isZoom = platform === "Zoom";
+    const isOpenSip = platform === "OpenSIP";
+    if (isTeams) {
+      if (family === "CCX") {
+        if (model === "700") return "CCX 700 is OpenSIP / Zoom Phone Appliance only. A Teams profile exists but Microsoft does not support it — never BOM 700 as Teams.";
+        if (model === "500") return NOTE_TEAMS_NATIVE + " " + NOTE_CCX500_PHASE;
+        if (model === "350" || model === "400" || model === "505" || model === "600") return NOTE_TEAMS_NATIVE;
+      }
+      if (family === "Trio") {
+        if (model === "C60") return NOTE_TEAMS_NATIVE + " TAA/NR C60 uses the same Teams stack.";
+        if (model === "8300") return "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU.";
+      }
+      if (family === "Edge E") return "Edge E is not native Teams. " + NOTE_TEAMS_SIP_GW;
+      if (family === "Rove") return "Rove is not native Teams. " + NOTE_TEAMS_SIP_GW;
+      if (family === "VVX") return "VVX is not native Teams. Teams SIP Gateway is calling only (no calendar, hot desk, boss/admin). BOM uses the OpenSIP SKU.";
+    }
+    if (isZoom) {
+      if (family === "CCX") {
+        if (model === "350") return "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet. Do not offer a ZPA path.";
+        if (model === "500") return NOTE_ZPA + " " + NOTE_CCX500_NOSIP;
+        if (model === "400" || model === "505" || model === "600" || model === "700") return NOTE_ZPA;
+      }
+      if (family === "Trio" && model === "C60") return NOTE_ZOOM_SIP;
+      if (family === "Trio" && model === "8300") return "Trio 8300 is not Zoom Phone certified; OpenSIP SKU only.";
+      if (family === "Edge E" || family === "Rove") return NOTE_ZOOM_SIP;
+      if (family === "VVX") return "Zoom Phone marks VVX EOL; BOM still uses the OpenSIP SKU from the HP Active catalog.";
+    }
+    if (isOpenSip) {
+      if (family === "CCX") {
+        if (model === "350") return "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet. Cannot switch; Teams-only (no Generic).";
+        if (model === "500") return "CCX 500 is not OpenSIP-default. " + NOTE_CCX500_NOSIP + " PVOS 7+ can switch Generic / Teams / Zoom Phone from the web UI.";
+        if (model === "400" || model === "505" || model === "600") return NOTE_PVOS_SWITCH;
+        if (model === "700") return "CCX 700 is Generic (OpenSIP) + Zoom Phone Appliance. A Teams profile exists but Microsoft does not support it — never BOM 700 as Teams.";
+      }
+      if (family === "Trio" && model === "C60") return NOTE_PVOS_SWITCH;
+      if (family === "Trio" && model === "8300") return "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU.";
+      if (family === "Edge E" || family === "Rove") return NOTE_OPENSIP_FAMILY;
+      if (family === "VVX") return "VVX is OpenSIP only; BOM uses the OpenSIP SKU.";
+    }
+    return "";
+  }
   function updateAudioNotesAndAcc() {
     const platform = document.getElementById("audioPlatform")?.value || "";
     const family = document.getElementById("audioFamily")?.value || "";
     const cfg = audioCfg();
     const note = document.getElementById("audioPlatformNote");
     const isTeams = platform === "Microsoft Teams";
-    const isSip = platform === "Zoom" || platform === "OpenSIP";
+    const model = document.getElementById("audioModel")?.value || "";
     let msg = "";
     if (cfg) {
-      if (family === "Edge E" && isTeams) {
-        msg = "No Edge E native Teams SKU. Edge E is OpenSIP only — basic Teams calling via MS SIP Gateway. BOM uses the OpenSIP SKU.";
-      } else if (cfg.teamsNote && isTeams) {
-        msg = cfg.teamsNote;
-      } else if (cfg.sipNote && isSip) {
-        msg = cfg.sipNote;
-      } else if (family === "CCX" && isSip) {
-        msg = "No Zoom-branded CCX SKU. Zoom Phone uses the OpenSIP/SIP SKU.";
-      } else if (family === "Rove" && isTeams) {
-        msg = "Rove DECT is OpenSIP (not native Teams). BOM uses the OpenSIP SKU.";
+      msg = audioFieldNote(family, model, platform);
+      const taaOn = !!document.getElementById("audioTaa")?.checked;
+      const hasTaa = isTeams ? !!(cfg.teams_taa || cfg.sip_taa) : !!cfg.sip_taa;
+      if (taaOn && !hasTaa) {
+        const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
+        msg = msg ? msg + " " + taaMsg : taaMsg;
       }
+      const nrOn = !!document.getElementById("audioNoRadio")?.checked;
+      const hasNr = isTeams
+        ? (taaOn ? !!cfg.teams_nr_taa : !!cfg.teams_nr)
+        : (taaOn ? !!cfg.sip_nr_taa : !!cfg.sip_nr);
+      if (nrOn && !hasNr) {
+        const nrMsg = "No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.";
+        msg = msg ? msg + " " + nrMsg : nrMsg;
+      }
+    }
+    if (cfg && audioEmVisible(family, model, platform, cfg) && family === "CCX" && (model === "600" || model === "700")) {
+      const rev = "CCX 600/700 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
+      msg = msg ? msg + " " + rev : rev;
     }
     if (note) {
       note.textContent = msg;
@@ -924,7 +1062,7 @@ async function init() {
       }
     }
     if (emWrap) {
-      const show = !!(cfg && cfg.em);
+      const show = audioEmVisible(family, model, platform, cfg);
       emWrap.classList.toggle("hidden", !show);
       if (emLabel && show) {
         const item = getItem(cfg.em);
@@ -936,16 +1074,82 @@ async function init() {
         if (cb) cb.checked = false;
       }
     }
+    const em2Wrap = document.getElementById("audioEm2Wrap");
+    if (em2Wrap) {
+      const show2 = !!(family === "Edge E" && cfg && cfg.em && cfg.emMax === 2);
+      em2Wrap.classList.toggle("hidden", !show2);
+      if (!show2) {
+        const cb2 = document.getElementById("audioEm2");
+        if (cb2) cb2.checked = false;
+      }
+    }
     if (psuWrap) {
-      const show = !!(cfg && cfg.psu);
+      const show = !!(cfg && (cfg.psu || cfg.sip_psu));
       psuWrap.classList.toggle("hidden", !show);
       if (psuLabel && show) {
-        const item = getItem(cfg.psu);
+        const psuSku = cfg.psu || cfg.sip_psu;
+        const item = getItem(psuSku);
         const price = item && item.msrp != null ? " — $" + item.msrp : "";
-        psuLabel.textContent = "Include power supply if no PoE (" + cfg.psu + ")" + price;
+        psuLabel.textContent = cfg.psu
+          ? "Include power supply if no PoE (" + cfg.psu + ")" + price
+          : "Include power supply if no PoE (phone+PSU " + cfg.sip_psu + ")" + price;
       }
       if (!show) {
         const cb = document.getElementById("audioPsu");
+        if (cb) cb.checked = false;
+      }
+    }
+    const nrWrap = document.getElementById("audioNoRadioWrap");
+    if (nrWrap) {
+      const showNr = !!(cfg && (cfg.teams_nr || cfg.sip_nr || cfg.teams_nr_taa || cfg.sip_nr_taa));
+      nrWrap.classList.toggle("hidden", !showNr);
+      if (!showNr) {
+        const cb = document.getElementById("audioNoRadio");
+        if (cb) cb.checked = false;
+      }
+    }
+    const cat52mWrap = document.getElementById("audioCat52mWrap");
+    const cat52mLabel = document.getElementById("audioCat52mLabel");
+    if (cat52mWrap) {
+      const show = !!(cfg && cfg.cat5_2m);
+      cat52mWrap.classList.toggle("hidden", !show);
+      if (cat52mLabel && show) {
+        const item = getItem(cfg.cat5_2m);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        cat52mLabel.textContent = "Include RJ45 CAT-5 2M (" + cfg.cat5_2m + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioCat52m");
+        if (cb) cb.checked = false;
+      }
+    }
+    const cat57mWrap = document.getElementById("audioCat57mWrap");
+    const cat57mLabel = document.getElementById("audioCat57mLabel");
+    if (cat57mWrap) {
+      const show = !!(cfg && cfg.cat5_7m);
+      cat57mWrap.classList.toggle("hidden", !show);
+      if (cat57mLabel && show) {
+        const item = getItem(cfg.cat5_7m);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        cat57mLabel.textContent = "Include RJ45 CAT-5 7.6M (" + cfg.cat5_7m + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioCat57m");
+        if (cb) cb.checked = false;
+      }
+    }
+    const usbMicroWrap = document.getElementById("audioUsbMicroWrap");
+    const usbMicroLabel = document.getElementById("audioUsbMicroLabel");
+    if (usbMicroWrap) {
+      const show = !!(cfg && cfg.usb_micro);
+      usbMicroWrap.classList.toggle("hidden", !show);
+      if (usbMicroLabel && show) {
+        const item = getItem(cfg.usb_micro);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        usbMicroLabel.textContent = "Include USB-A to Micro USB 1.2M (" + cfg.usb_micro + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioUsbMicro");
         if (cb) cb.checked = false;
       }
     }
@@ -963,6 +1167,8 @@ async function init() {
   document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
   document.getElementById("audioPlatform")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioTaa")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioNoRadio")?.addEventListener("change", updateAudioNotesAndAcc);
   rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
@@ -1573,7 +1779,7 @@ async function init() {
 
       const isPcRow = PC_SKU_SET.has(r.sku);
       html += `<tr class="${isPcRow ? "font-semibold bg-amber-50" : ""}">
-        <td class="border px-4 py-2">${qty}</td>
+        <td class="border px-4 py-2"><input type="number" min="0" class="bom-qty w-16 border rounded px-2 py-1 text-center" data-idx="${i}" value="${qty}"></td>
         <td class="border px-4 py-2">${sku}</td>
         <td class="border px-4 py-2">${r.description}</td>`;
       if (includePrices) {
@@ -1602,8 +1808,30 @@ async function init() {
     }
 
     dest.innerHTML = html;
+    if (focusIdx != null) {
+      const el = dest.querySelector(`.bom-qty[data-idx="${focusIdx}"]`);
+      if (el) {
+        el.focus();
+        const pos = (caretPos != null && caretPos >= 0) ? Math.min(caretPos, String(el.value).length) : String(el.value).length;
+        try { el.setSelectionRange(pos, pos); } catch (e) { /* number inputs may not support selectionRange */ }
+      }
+    }
   }
 
+  function handleBomQty(e, dest, getBom) {
+    if (!e.target.classList.contains("bom-qty")) return;
+    const idx = Number(e.target.getAttribute("data-idx"));
+    const n = parseInt(e.target.value, 10);
+    if (Number.isNaN(n) || n < 0) return;
+    const bom = getBom();
+    if (!bom || !bom.results[idx]) return;
+    bom.results[idx].quantity = n;
+    applyLensProBand(bom.results[idx]);
+    const caret = (typeof e.target.selectionStart === "number") ? e.target.selectionStart : String(e.target.value).length;
+    renderBom(idx, caret, dest, bom);
+  }
+  resultDiv.addEventListener("input", (e) => handleBomQty(e, resultDiv, () => lastBom));
+  audioResult.addEventListener("input", (e) => handleBomQty(e, audioResult, () => lastAudioBom));
   resultDiv.addEventListener("change", (e) => {
     if (e.target.classList.contains("pc-choice-cb")) {
       const choice = e.target.getAttribute("data-pc-choice");
@@ -1612,8 +1840,11 @@ async function init() {
         return;
       }
       applyPcChoice(choice);
+      return;
     }
+    handleBomQty(e, resultDiv, () => lastBom);
   });
+  audioResult.addEventListener("change", (e) => handleBomQty(e, audioResult, () => lastAudioBom));
 
   // ---------- core generate ----------
   btn.addEventListener("click", () => generate());
@@ -1808,6 +2039,9 @@ async function init() {
       const sku = document.getElementById("lensProBand")?.value || "UJ8T6LN";
       addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
+    if (document.getElementById("lensOnboard")?.checked) {
+      addLine(results, "PRO8700101AB");
+    }
 
     document.querySelectorAll("input.netgearKit:checked").forEach(cb => {
       const sku = cb.dataset.sku || "";
@@ -1878,7 +2112,34 @@ async function init() {
       return;
     }
     const isTeams = platform === "Microsoft Teams";
-    const sku = isTeams ? (cfg.teams || cfg.sip) : (cfg.sip || cfg.teams);
+    if (family === "CCX" && model === "700" && isTeams) {
+      lastAudioBom = null;
+      mockError(audioResult, audioFieldNote(family, model, platform) || "CCX 700 is not BOM'd as Teams.");
+      return;
+    }
+    const taa = !!document.getElementById("audioTaa")?.checked;
+    const nr = !!document.getElementById("audioNoRadio")?.checked;
+    const psuOn = !!document.getElementById("audioPsu")?.checked;
+    let sku = null;
+    let usedTaaSku = false;
+    let usedSipPsu = false;
+    let usedNrSku = false;
+    if (isTeams) {
+      if (nr && taa && cfg.teams_nr_taa) { sku = cfg.teams_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.teams_nr) { sku = cfg.teams_nr; usedNrSku = true; }
+      else if (taa && cfg.teams_taa) { sku = cfg.teams_taa; usedTaaSku = true; }
+      else if (cfg.teams) sku = cfg.teams;
+      else if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
+      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
+      else sku = cfg.sip;
+    } else {
+      if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
+      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
+      else if (psuOn && cfg.sip_psu) { sku = cfg.sip_psu; usedSipPsu = true; }
+      else sku = cfg.sip || cfg.teams;
+    }
     if (!sku) {
       lastAudioBom = null;
       mockError(audioResult, cfg.sipNote || cfg.teamsNote || "No SKU for this platform/model (not invented).");
@@ -1888,19 +2149,36 @@ async function init() {
     addLine(results, sku);
     addSupport(results, cfg.support, supportTerm);
     if (document.getElementById("audioExpMics")?.checked && cfg.exp) addLine(results, cfg.exp);
-    if (document.getElementById("audioEm")?.checked && cfg.em) {
-      addLine(results, cfg.em);
-      if (family === "CCX") addSupport(results, "ccx_em60", supportTerm);
-      if (family === "Edge E") addSupport(results, "edge_em", supportTerm);
+    let emQty = 0;
+    if (document.getElementById("audioEm")?.checked && audioEmVisible(family, model, platform, cfg)) {
+      emQty = (family === "Edge E" && cfg.emMax === 2 && document.getElementById("audioEm2")?.checked) ? 2 : 1;
+      addLine(results, cfg.em, undefined, emQty);
+      if (family === "CCX") {
+        addSupport(results, "ccx_em60", supportTerm, emQty);
+        addLine(results, EM60_PSU); // phone does not power EM60
+      }
+      if (family === "Edge E") addSupport(results, "edge_em", supportTerm, emQty);
     }
-    if (document.getElementById("audioPsu")?.checked && cfg.psu) addLine(results, cfg.psu);
+    if (psuOn && cfg.psu && !usedSipPsu) addLine(results, cfg.psu);
+    if (document.getElementById("audioCat52m")?.checked && cfg.cat5_2m) addLine(results, cfg.cat5_2m);
+    if (document.getElementById("audioCat57m")?.checked && cfg.cat5_7m) addLine(results, cfg.cat5_7m);
+    if (document.getElementById("audioUsbMicro")?.checked && cfg.usb_micro) addLine(results, cfg.usb_micro);
+    if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
     const notes = [];
-    if (family === "Edge E" && isTeams) {
-      notes.push("Edge E has no native Teams SKU. OpenSIP SKU used (basic Teams calling via MS SIP Gateway).");
+    const fieldNote = audioFieldNote(family, model, platform);
+    if (fieldNote) notes.push(fieldNote);
+    if (family === "CCX" && emQty && (model === "600" || model === "700")) {
+      notes.push("CCX 600/700 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60).");
     }
-    if (cfg.teamsNote && isTeams) notes.push(cfg.teamsNote);
-    if (family === "CCX" && !isTeams) notes.push("No Zoom-branded CCX SKU; OpenSIP/SIP SKU used for Zoom Phone.");
-    if (family === "Rove" && isTeams) notes.push("Rove DECT is OpenSIP (not native Teams).");
+    if (family === "Edge E" && emQty === 2) {
+      notes.push("Second Edge E expansion module needs 802.3at PoE+ or a PSU on the host.");
+    }
+    if (taa && !usedTaaSku) {
+      notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
+    }
+    if (nr && !usedNrSku) {
+      notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
+    }
     const map = SUPPORT_MAP[cfg.support] || {};
     if (supportTerm && !map[supportTerm]) {
       notes.push("No " + supportTerm + " SKU mapped for this model (not invented).");

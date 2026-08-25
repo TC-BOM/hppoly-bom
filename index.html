@@ -10,6 +10,17 @@
     body {
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
+    input.bom-qty {
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    input.bom-qty::-webkit-inner-spin-button,
+    input.bom-qty::-webkit-outer-spin-button {
+      display: none;
+      appearance: none;
+      -webkit-appearance: none;
+      margin: 0;
+    }
   </style>
 </head>
 <body class="bg-white text-gray-900">
@@ -29,7 +40,7 @@
   <script>
   (function(){
     var s=document.createElement('script');
-    s.src='script.js?v=10.58&ts='+Date.now();
+    s.src='script.js?v=10.61&ts='+Date.now();
     s.defer=true;
     document.currentScript.parentNode.insertBefore(s, document.currentScript);
   })();

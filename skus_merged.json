@@ -811,11 +811,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount — White",
+    "description": "Poly TC10 Glass Mount \u2014 White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount — Black",
+    "description": "Poly TC10 Glass Mount \u2014 Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -851,15 +851,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
@@ -1684,5 +1684,275 @@
   "A2TP1AA": {
     "description": "Poly Studio Base Kit G9 Plus for Microsoft Teams HP Mini IP PC w/TC10 TAA",
     "msrp": 3249.95
+  },
+  "8F3G5AA": {
+    "description": "Poly Edge E100 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 205.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3G6AA": {
+    "description": "Poly Edge E220 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 215.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3H1AA": {
+    "description": "Poly Edge E300 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 296.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3G7AA": {
+    "description": "Poly Edge E320 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 323.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3G8AA": {
+    "description": "Poly Edge E350 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 350.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3H2AA": {
+    "description": "Poly Edge E400 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 367.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3G9AA": {
+    "description": "Poly Edge E450 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 469.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3H0AA": {
+    "description": "Poly Edge E550 IP Phone and PoE-enabled GSA/TAA",
+    "msrp": 507.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B49AA": {
+    "description": "Poly Edge E100 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 187.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B50AA": {
+    "description": "Poly Edge E220 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 198.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B51AA": {
+    "description": "Poly Edge E300 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 264.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B52AA": {
+    "description": "Poly Edge E320 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 288.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B53AA": {
+    "description": "Poly Edge E350 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 310.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B54AA": {
+    "description": "Poly Edge E400 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 321.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B55AA": {
+    "description": "Poly Edge E450 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 407.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "89B57AA": {
+    "description": "Poly Edge E550 IP Phone and PoE-enabled with Power Supply",
+    "msrp": 439.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "8F3G3AA": {
+    "description": "Poly CCX 350 Business Media Phone for Microsoft Teams and PoE-enabled GSA/TAA",
+    "msrp": 599.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "848Z9AA": {
+    "description": "Poly CCX 400 Business Media Phone for Microsoft Teams and PoE-enabled GSA/TAA",
+    "msrp": 529.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "849A5AA": {
+    "description": "Poly CCX 505 Business Media Phone for Microsoft Teams and PoE-enabled GSA/TAA",
+    "msrp": 649.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "849A8AA": {
+    "description": "Poly CCX 600 Business Media Phone for Microsoft Teams and PoE-enabled GSA/TAA",
+    "msrp": 849.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "84C14AA": {
+    "description": "Poly CCX 400 Business Media Phone with Open SIP with Power Supply",
+    "msrp": 429.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "84C16AA": {
+    "description": "Poly CCX 505 Business Media Phone with Open SIP with Power Supply",
+    "msrp": 609.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "84C17AA": {
+    "description": "Poly CCX 600 Business Media Phone with Open SIP with Power Supply",
+    "msrp": 779.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "89B66AA": {
+    "description": "Poly VVX 250 4-Line IP Phone and PoE-enabled with Power Supply",
+    "msrp": 255.95,
+    "family": "vvx",
+    "platform": "opensip"
+  },
+  "89B69AA": {
+    "description": "Poly VVX 350 6-Line IP Phone and PoE-enabled with Power Supply",
+    "msrp": 336.95,
+    "family": "vvx",
+    "platform": "opensip"
+  },
+  "89B76AA": {
+    "description": "Poly VVX 450 12-Line IP Phone and PoE-enabled with Power Supply",
+    "msrp": 390.95,
+    "family": "vvx",
+    "platform": "opensip"
+  },
+  "82M94AA": {
+    "description": "Poly Edge E500 IP Phone and PoE-enabled",
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82Z83AA": {
+    "description": "Poly CCX 700 Business Media Phone with Open SIP and PoE-enabled",
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "849A2AA": {
+    "description": "Poly Trio 8300 IP Conference Phone and PoE-enabled GSA/TAA",
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "849B3AA": {
+    "description": "Poly Trio C60 IP Conference Phone Full Radio and PoE-enabled GSA/TAA",
+    "msrp": 1249.95,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "830A2AA": {
+    "description": "Poly Trio C60 IP Conference Phone and PoE-enabled No Radio",
+    "msrp": 1149.95,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "849B2AA": {
+    "description": "Poly Trio C60 IP Conference Phone and PoE-enabled No Radio GSA/TAA",
+    "msrp": 1249.95,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "849B6AA": {
+    "description": "Poly Trio C60 IP Conference Phone for Microsoft Teams Full Radio and PoE-enabled",
+    "msrp": 1199.95,
+    "family": "trio",
+    "platform": "teams"
+  },
+  "849B1AA": {
+    "description": "Poly Trio C60 IP Conference Phone for Microsoft Teams Full Radio and PoE-enabled GSA/TAA",
+    "msrp": 1249.95,
+    "family": "trio",
+    "platform": "teams"
+  },
+  "830A1AA": {
+    "description": "Poly Trio C60 IP Conference Phone for Microsoft Teams and PoE-enabled No Radio",
+    "msrp": 1149.95,
+    "family": "trio",
+    "platform": "teams"
+  },
+  "84C21AA": {
+    "description": "Poly Trio C60 IP Conference Phone for Microsoft Teams and PoE-enabled No Radio GSA/TAA",
+    "msrp": 1249.95,
+    "family": "trio",
+    "platform": "teams"
+  },
+  "85X03AA": {
+    "description": "Poly Trio C60 Power Supply with Power Cord and CAT-5",
+    "msrp": 107.95
+  },
+  "85X04AA": {
+    "description": "Poly Trio RJ45 Shielded Cable CAT-5 (2M)",
+    "msrp": 23.7,
+    "family": "trio"
+  },
+  "85X05AA": {
+    "description": "Poly Trio RJ45 Shielded Cable CAT-5 (7.6M)",
+    "msrp": 36.65,
+    "family": "trio"
+  },
+  "85X06AA": {
+    "description": "Poly Trio USB-A to Micro USB Cable (1.2M)",
+    "msrp": 18.85,
+    "family": "trio"
+  },
+  "UQ7M4PB": {
+    "description": "1 Year Partner Poly+ Analyze Edge E500 IP Phone Service",
+    "msrp": 23.75
+  },
+  "UQ7M5PB": {
+    "description": "3 Year Partner Poly+ Analyze Edge E500 IP Phone Service",
+    "msrp": 64.0
+  },
+  "P49740160": {
+    "description": "1 Year Partner Poly+ CCX 700 Business Media Phone Service",
+    "msrp": 18.5
+  },
+  "P49740362": {
+    "description": "3 Year Partner Poly+ CCX 700 Business Media Phone Service",
+    "msrp": 50.0
+  },
+  "UQ7N1PB": {
+    "description": "3 Year Partner Poly+ Analyze Edge E550 Service",
+    "msrp": 64.0
+  },
+  "82Z76AA": {
+    "description": "Poly CCX 500 Business Media Phone for Microsoft Teams and PoE-enabled",
+    "msrp": 539.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "P49720160": {
+    "description": "1 Year Partner Poly+ CCX 500 Business Media Phone Service",
+    "msrp": 15.75
+  },
+  "P49720362": {
+    "description": "3 Year Partner Poly+ CCX 500 Business Media Phone Service",
+    "msrp": 42.25
+  },
+  "PRO8700101AB": {
+    "description": "Poly Onboarding Service for Poly Lens Includes registering up to three (3) Poly devices",
+    "msrp": 202.95
   }
 }
