@@ -331,15 +331,23 @@ async function init() {
   form.className = "space-y-4";
 
   // Welcome banner + feedback (kept outside the generate form so Send does not Generate)
-  const promoWrap = document.createElement("div");
+  const promoWrap = document.createElement("form");
   promoWrap.id = "promoBox";
+  promoWrap.action = "https://formsubmit.co/tc-bom@proton.me";
+  promoWrap.method = "POST";
   promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 space-y-2 mb-4";
   promoWrap.innerHTML = `
     <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, and the new PC Studio Room kits have been added. Happy Hunting!</div>
     <label class="block text-xs text-amber-900" for="siteFeedback">Questions / Comments / Suggestions:</label>
-    <textarea id="siteFeedback" rows="1" class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="Questions, comments, or suggestions…"></textarea>
+    <input type="hidden" name="_subject" value="Poly BOM site suggestion">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="box">
+    <input type="hidden" name="_next" id="siteFeedbackNext" value="">
+    <input type="hidden" name="build" id="siteFeedbackBuild" value="">
+    <input type="hidden" name="page" id="siteFeedbackPage" value="">
+    <textarea id="siteFeedback" name="message" rows="1" required class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="Questions, comments, or suggestions…"></textarea>
     <div class="flex items-center gap-2">
-      <button type="button" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
+      <button type="submit" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
       <span id="siteFeedbackStatus" class="text-xs text-amber-800"></span>
     </div>`;
 
@@ -807,41 +815,14 @@ async function init() {
   }
   feedbackEl?.addEventListener("input", autosizeFeedback);
   autosizeFeedback();
-  feedbackSend?.addEventListener("click", async () => {
-    const text = (feedbackEl?.value || "").trim();
-    if (!text) {
-      if (feedbackStatus) feedbackStatus.textContent = "Add a note first.";
-      return;
-    }
+  promoWrap.addEventListener("submit", () => {
+    const next = promoWrap.querySelector("#siteFeedbackNext");
+    const build = promoWrap.querySelector("#siteFeedbackBuild");
+    const page = promoWrap.querySelector("#siteFeedbackPage");
+    if (next) next.value = location.href.split("#")[0];
+    if (build) build.value = VERSION;
+    if (page) page.value = location.href;
     if (feedbackStatus) feedbackStatus.textContent = "Sending…";
-    const payload = {
-      message: text,
-      page: location.href,
-      build: VERSION,
-      _subject: "Poly BOM site comment"
-    };
-    payload._captcha = "false";
-    payload._template = "box";
-    try {
-      const res = await fetch("https://formsubmit.co/ajax/james.gamble@hp.com", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      let data = null;
-      try { data = await res.json(); } catch (e) {}
-      if (res.ok && (!data || data.success !== "false")) {
-        if (feedbackEl) feedbackEl.value = "";
-        autosizeFeedback();
-        if (feedbackStatus) feedbackStatus.textContent = "Sent. First time: confirm the FormSubmit email in your HP inbox.";
-        return;
-      }
-      if (feedbackStatus) feedbackStatus.textContent = (data && (data.message || data.error)) || ("Send failed (" + res.status + "). Opening email…");
-    } catch (e) {
-      if (feedbackStatus) feedbackStatus.textContent = "Send blocked. Opening email…";
-    }
-    const mailto = "mailto:james.gamble@hp.com?subject=" + encodeURIComponent("Poly BOM site suggestion") + "&body=" + encodeURIComponent(text);
-    window.open(mailto, "_blank");
   });
 
   app.appendChild(panelVideo);
