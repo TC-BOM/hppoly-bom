@@ -1,5 +1,6 @@
-const VERSION = "v10.40";
-// script.js – HP | Poly Configurator – v10.40: polarizer under camera add-on
+const VERSION = "v10.41";
+// script.js – HP | Poly Configurator – v10.41: hide optional checkbox MSRP on form (quote only)
+// v10.40: polarizer under camera add-on
 // v10.39: in-box mount notes + per-option QSG links
 // v10.38: live Audio phone catalog (Trio/CCX/Edge E/Rove) + G6 dock option
 // v10.37: polarized filter moved to Hardware options (E70/X72/V72)
@@ -260,7 +261,7 @@ async function init() {
   polarFilterWrap.innerHTML = `
     <label class="flex items-center gap-2 text-sm">
       <input id="polarFilterOpt" type="checkbox" class="border">
-      <span>Optional polarized filter (875K9AA) — $181</span>
+      <span>Optional polarized filter (875K9AA)</span>
     </label>
     <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
   hwSection.appendChild(polarFilterWrap);
@@ -274,11 +275,11 @@ async function init() {
     <p class="text-xs text-gray-600 mb-1">E60 and E70 need PoE+ (Class 4 / 30W). Leave unchecked if the switch already provides PoE+.</p>
     <label class="flex items-center gap-2 mt-1 text-sm">
       <input id="camPowerWall" type="checkbox" class="border">
-      <span id="camPowerWallLabel">Wall power accessory (SKU) — $0</span>
+      <span id="camPowerWallLabel">Wall power accessory (SKU)</span>
     </label>
     <label class="flex items-center gap-2 mt-1 text-sm">
       <input id="camPowerPoePP" type="checkbox" class="border">
-      <span>45W PoE++ adapter (B5NH6AA) — $102</span>
+      <span>45W PoE++ adapter (B5NH6AA)</span>
     </label>`;
   hwSection.appendChild(cameraPowerWrap);
 
@@ -323,7 +324,7 @@ async function init() {
   g6DockWrap.innerHTML = `
     <label class="flex items-center gap-2 text-sm">
       <input id="g6DockOpt" type="checkbox" class="border">
-      <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA) — $394</span>
+      <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA)</span>
     </label>
     <p class="text-xs text-gray-600 ml-6">Optional for Windows PC based rooms. Not added unless checked.</p>`;
   hwSection.appendChild(g6DockWrap);
@@ -1014,8 +1015,8 @@ async function init() {
     if (powerWrap) powerWrap.classList.toggle("hidden", !show);
     const wallLabel = document.getElementById("camPowerWallLabel");
     if (wallLabel) {
-      if (cam === "E60") wallLabel.textContent = "E60 wall power accessory (9W1A9AA) — $25.65";
-      else if (cam === "E70") wallLabel.textContent = "E70 wall / external PSU (875K6AA) — $162";
+      if (cam === "E60") wallLabel.textContent = "E60 wall power accessory (9W1A9AA)";
+      else if (cam === "E70") wallLabel.textContent = "E70 wall / external PSU (875K6AA)";
     }
 
     // Rebuild mount options from real catalog SKUs; hide the control if none exist
