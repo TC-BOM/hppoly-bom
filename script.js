@@ -1,5 +1,6 @@
-const VERSION = "v10.35";
-// script.js – HP | Poly Configurator – v10.35: TAA Google Meet does not add TC10; V72 A2 max 4
+const VERSION = "v10.36";
+// script.js – HP | Poly Configurator – v10.36: dedupe host mount lists (one VESA per family; X32/V12 wall+VESA is one kit)
+// v10.35: TAA Google Meet does not add TC10; V72 A2 max 4
 // v10.34: camera power options cleaned up (drop PoE+ injector; unified labels)
 // v10.33: Lens Pro Rooms checkbox reveals 3-band dropdown (default 1–65)
 // v10.32: resource links (Spaces, dimensional drawings, Glen Bevcar Excel) + AI disclaimer
@@ -717,26 +718,19 @@ async function init() {
     wrap.classList.remove("hidden");
     const opts = [{ value: "None", label: "None" }];
     if (family === "v12" || family === "x32") {
-      opts.push({ value: "Wall", label: "Wall (875L6AA VESA + wall kit)" });
-      opts.push({ value: "VESA style display mount", label: "VESA (875L6AA VESA + wall kit)" });
+      opts.push({ value: "Wall", label: "Wall / VESA kit (875L6AA)" });
       opts.push({ value: "Table", label: "Table stand (875L5AA)" });
       opts.push({ value: "Inverted wall", label: "Inverted wall (875L7AA)" });
-      if (family === "v12") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      setMountHint(hint, "X30/X32/V12: 875L6AA is the combined wall+VESA kit. 875L7AA is inverted wall. USB VESA (875R9AA) is listed for V12.", family);
+      setMountHint(hint, "X32/V12: 875L6AA is the combined wall + VESA kit (one SKU). 875L7AA is inverted wall.", family);
     } else if (family === "v52" || family === "x52") {
       opts.push({ value: "Wall", label: "Wall (875L8AA)" });
       opts.push({ value: "VESA style display mount", label: "VESA (875L9AA)" });
       opts.push({ value: "Table", label: "Table stand (875M0AA)" });
-      if (family === "v52") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      setMountHint(hint, family === "v52" ? "USB VESA (875R9AA) is the Studio USB VESA mount." : "", family);
+      setMountHint(hint, "X52/V52: wall, VESA, and table stand are distinct SKUs.", family);
     } else if (family === "v72" || family === "x72") {
-      // No dedicated wall SKU in catalog for X72/V72
       opts.push({ value: "VESA style display mount", label: "VESA (875L2AA)" });
       opts.push({ value: "Table", label: "Table stand (875L3AA)" });
-      if (family === "v72") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      setMountHint(hint, family === "v72"
-        ? "No dedicated wall SKU for X72/V72. USB VESA (875R9AA) is listed for V72."
-        : "No wall-mount SKU in this catalog for X72 / V72; VESA or table only.", family);
+      setMountHint(hint, "No dedicated wall SKU for X72 / V72; VESA or table only.", family);
     }
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
@@ -1355,16 +1349,13 @@ async function init() {
         if (mounting === "Table") addLine(results, "875L5AA");
         else if (mounting === "Wall" || mounting === "VESA style display mount") addLine(results, "875L6AA");
         else if (mounting === "Inverted wall") addLine(results, "875L7AA");
-        else if (mounting === "USB VESA") addLine(results, "875R9AA");
       } else if (isX52 || isV52) {
         if (mounting === "Wall") addLine(results, "875L8AA");
         else if (mounting === "VESA style display mount") addLine(results, "875L9AA");
         else if (mounting === "Table") addLine(results, "875M0AA");
-        else if (mounting === "USB VESA") addLine(results, "875R9AA");
       } else if (isX72 || isV72) {
         if (mounting === "VESA style display mount") addLine(results, "875L2AA");
         else if (mounting === "Table") addLine(results, "875L3AA");
-        else if (mounting === "USB VESA") addLine(results, "875R9AA");
       }
     }
 
