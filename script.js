@@ -1,5 +1,6 @@
-const VERSION = "v10.46";
-// script.js – HP | Poly Configurator – v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
+const VERSION = "v10.47";
+// script.js – HP | Poly Configurator – v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
+// v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
 // v10.45: Knauf-style flat home form; HEADSETS tab greyed out
 // v10.44: shrink announcement banner
 // v10.43: unique HP Documents QSG PDFs per mount option
@@ -111,6 +112,7 @@ async function init() {
     g6_dock:     { poly1: "US2A4PV",   poly3: "US2A5PV",   poly5: null,     analyze1: null,     analyze3: null,     analyze5: null }
   };
 
+
   const addSupport = (arr, key, term, qty = 1) => {
     if (!term) return;
     const map = SUPPORT_MAP[key];
@@ -118,6 +120,65 @@ async function init() {
     const sku = map[term];
     if (sku) addLine(arr, sku, undefined, qty);
   };
+
+  // Room PC option matrix (Studio 5 / Studio 7 / G9+). Do not invent missing SKUs.
+  const PC_SKU_SET = new Set(["DS1E8AW", "DS1G9AW", "A1ZB6AW#ABA", "DS1R6AW", "DS0W9AW", "DS1R5AW"]);
+  const PC_CHOICE_ORDER = ["studio5", "studio7", "g9plus"];
+  const PC_CHOICE_NAMES = { studio5: "Studio 5", studio7: "Studio 7", g9plus: "G9+" };
+
+  function normalizePcPlatform(platform) {
+    if (platform === "Microsoft Teams" || platform === "teams") return "teams";
+    if (platform === "Zoom" || platform === "zoom") return "zoom";
+    return null;
+  }
+  function pcFlagsRestricted(flags) {
+    flags = flags || {};
+    // Align with host pickHost: TAA/JITC path only. NR-only keeps commercial PCs
+    // (TAA NO RADIO Studio 5/7 SKUs require TAA or JITC; do not mix with a commercial bar).
+    return !!(flags.taa || flags.jitc);
+  }
+  function getPcOptionMatrix(platform, flags) {
+    const p = normalizePcPlatform(platform);
+    const restricted = pcFlagsRestricted(flags);
+    if (p === "teams") {
+      if (restricted) return { studio5: "DS1R6AW", studio7: "DS0W9AW", g9plus: null };
+      return { studio5: "DS1E8AW", studio7: "DS1G9AW", g9plus: "A1ZB6AW#ABA" };
+    }
+    if (p === "zoom") {
+      if (restricted) return { studio5: null, studio7: null, g9plus: null };
+      return { studio5: null, studio7: "DS1R5AW", g9plus: null };
+    }
+    return { studio5: null, studio7: null, g9plus: null };
+  }
+  function defaultPcChoice(platform, flags, roomSize) {
+    const p = normalizePcPlatform(platform);
+    const opts = getPcOptionMatrix(p, flags);
+    const restricted = pcFlagsRestricted(flags);
+    let choice = null;
+    if (p === "teams") {
+      if (restricted) choice = (roomSize === "Small" || roomSize === "Medium") ? "studio5" : "studio7";
+      else choice = "g9plus";
+    } else if (p === "zoom") {
+      choice = restricted ? null : "studio7";
+    }
+    if (choice && !opts[choice]) return null;
+    return choice;
+  }
+  function supportSkusFor(key) {
+    const map = SUPPORT_MAP[key];
+    if (!map) return [];
+    return Object.keys(map).map(k => map[k]).filter(Boolean);
+  }
+  function resultsHaveSupport(arr, key) {
+    const skus = new Set(supportSkusFor(key));
+    return arr.some(x => skus.has(x.sku));
+  }
+  function removeSupportKey(arr, key) {
+    const skus = new Set(supportSkusFor(key));
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (skus.has(arr[i].sku)) arr.splice(i, 1);
+    }
+  }
 
   const LENS_PRO_SKUS = ["UJ8T6LN", "UJ8T5LN", "UJ8T4LN"];
   function lensProSkuForQty(n) {
@@ -1084,7 +1145,14 @@ async function init() {
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
     const info = document.getElementById("expansionInfo");
     const restrict = family === "v12" || family === "x32" || family === "v52" || family === "x52";
-    if (info) info.classList.toggle("hidden", !restrict);
+    if (info) {
+      info.classList.toggle("hidden", !restrict);
+      if (family === "v12" || family === "x32") {
+        info.textContent = "Note: IP table/ceiling mics are not supported with V12 or X32. Use A2 mics.";
+      } else if (family === "v52" || family === "x52") {
+        info.textContent = "Note: IP table/ceiling mics are not supported with X52 or V52. Use Analog or A2 mics.";
+      }
+    }
   }
   function extraIpPeripheralSelected() {
     const exp = document.getElementById("expansionMic")?.value || "";
@@ -1258,6 +1326,84 @@ async function init() {
     });
   }
 
+
+  function applyPcChoice(choice) {
+    if (!lastBom || !lastBom.results) return;
+    const opts = getPcOptionMatrix(lastBom.pcPlatform, lastBom.pcFlags);
+    const sku = opts[choice];
+    if (!sku) return;
+
+    let pcIdx = -1;
+    let qty = 1;
+    for (let i = 0; i < lastBom.results.length; i++) {
+      if (PC_SKU_SET.has(lastBom.results[i].sku)) {
+        if (pcIdx < 0) {
+          pcIdx = i;
+          qty = lastBom.results[i].quantity;
+        }
+      }
+    }
+    for (let i = lastBom.results.length - 1; i >= 0; i--) {
+      if (PC_SKU_SET.has(lastBom.results[i].sku)) lastBom.results.splice(i, 1);
+    }
+
+    const item = getItem(sku);
+    const line = {
+      sku,
+      description: (item && item.description) ? item.description : "(Custom item)",
+      msrp: (item && item.msrp != null) ? item.msrp : "",
+      quantity: qty
+    };
+    if (pcIdx >= 0 && pcIdx <= lastBom.results.length) lastBom.results.splice(pcIdx, 0, line);
+    else lastBom.results.push(line);
+
+    lastBom.pcChoice = choice;
+    const supportTerm = lastBom.supportTerm;
+    if (lastBom.pcPlatform === "teams") {
+      if (supportTerm && !resultsHaveSupport(lastBom.results, "g9plus_mtr")) {
+        addSupport(lastBom.results, "g9plus_mtr", supportTerm);
+      }
+      removeSupportKey(lastBom.results, "zoom_pc");
+    } else if (lastBom.pcPlatform === "zoom") {
+      removeSupportKey(lastBom.results, "g9plus_mtr");
+      if (supportTerm && !resultsHaveSupport(lastBom.results, "zoom_pc")) {
+        addSupport(lastBom.results, "zoom_pc", supportTerm);
+      }
+    }
+    renderBom();
+  }
+
+  function renderPcPickerHtml(bom) {
+    if (bom.pcPlatform !== "teams" && bom.pcPlatform !== "zoom") return "";
+    const opts = getPcOptionMatrix(bom.pcPlatform, bom.pcFlags);
+    const includePrices = !!bom.includePrices;
+    const allNull = !opts.studio5 && !opts.studio7 && !opts.g9plus;
+    let html = `<div class="p-3 border-2 border-amber-400 rounded bg-amber-50 mb-3" id="pcPickerBox">`;
+    html += `<div class="font-bold mb-2">Room compute (pick one)</div>`;
+    if (allNull) {
+      html += `<p class="text-sm text-amber-900 mb-2">No TAA/No-Radio Zoom compute SKU in this catalog (do not invent).</p>`;
+    }
+    PC_CHOICE_ORDER.forEach(choice => {
+      const sku = opts[choice];
+      const disabled = !sku;
+      const checked = bom.pcChoice === choice && !!sku;
+      let label = PC_CHOICE_NAMES[choice] || choice;
+      if (sku) {
+        label += " — " + sku;
+        if (includePrices) {
+          const item = getItem(sku);
+          label += " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
+        }
+      }
+      const grey = disabled ? "opacity-40 text-gray-400 cursor-not-allowed" : "cursor-pointer";
+      html += `<label class="flex items-center gap-2 py-0.5 ${grey}">`;
+      html += `<input type="checkbox" class="pc-choice-cb" data-pc-choice="${choice}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}>`;
+      html += `<span>${label}</span></label>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
   function renderBom(focusIdx, caretPos, dest, bom) {
     dest = dest || resultDiv;
     bom = bom || lastBom;
@@ -1274,6 +1420,7 @@ async function init() {
     if (googleMeetNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
     }
+    html += renderPcPickerHtml(bom);
     html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
     html += `<th class="border px-4 py-2 text-left">Qty</th>`;
     html += `<th class="border px-4 py-2 text-left">SKU</th>`;
@@ -1297,7 +1444,8 @@ async function init() {
         unpricedLines++;
       }
 
-      html += `<tr>
+      const isPcRow = PC_SKU_SET.has(r.sku);
+      html += `<tr class="${isPcRow ? "font-semibold bg-amber-50" : ""}">
         <td class="border px-4 py-2">
           <div class="inline-flex items-center gap-1">
             <button type="button" data-qty-delta="-1" data-i="${i}" class="qty-btn px-2 py-0.5 border rounded leading-none bg-gray-50 hover:bg-gray-100" aria-label="Decrease quantity">−</button>
@@ -1411,6 +1559,15 @@ async function init() {
     handleQtyInputEvent(e.target, true);
   });
   resultDiv.addEventListener("change", (e) => {
+    if (e.target.classList.contains("pc-choice-cb")) {
+      const choice = e.target.getAttribute("data-pc-choice");
+      if (!e.target.checked) {
+        e.target.checked = true;
+        return;
+      }
+      applyPcChoice(choice);
+      return;
+    }
     if (!e.target.classList.contains("qty-input")) return;
     handleQtyInputEvent(e.target, true);
   });
@@ -1464,20 +1621,18 @@ async function init() {
       addSupport(results, "tc10", supportTerm);
     };
 
+    let pcChoice = null;
+    let pcPlatform = null;
+
     if (typeOfSystem === "Windows PC based solution") {
-      if (platform === "Microsoft Teams") {
-        if (flags.taa) {
-          if (roomSize === "Small" || roomSize === "Medium") addLine(results, "DS1R6AW");
-          else addLine(results, "DS0W9AW");
-        } else {
-          addLine(results, "A1ZB6AW#ABA");
-        }
-        addSupport(results, "g9plus_mtr", supportTerm);
-        addInRoomTc10();
-      } else if (platform === "Zoom") {
-        if (!flags.taa) {
-          addLine(results, "DS1R5AW"); // replaces 9C422AW#ABA; no TAA Zoom PC
-          addSupport(results, "zoom_pc", supportTerm);
+      if (platform === "Microsoft Teams" || platform === "Zoom") {
+        pcPlatform = normalizePcPlatform(platform);
+        const pcOpts = getPcOptionMatrix(pcPlatform, flags);
+        pcChoice = defaultPcChoice(pcPlatform, flags, roomSize);
+        if (pcChoice && pcOpts[pcChoice]) {
+          addLine(results, pcOpts[pcChoice]);
+          if (pcPlatform === "teams") addSupport(results, "g9plus_mtr", supportTerm);
+          else addSupport(results, "zoom_pc", supportTerm);
         }
         addInRoomTc10();
       }
@@ -1629,7 +1784,13 @@ async function init() {
     lastBom = {
       results,
       includePrices,
-      googleMeetNote: !!(needsPlatform && platform === "Google Meet")
+      googleMeetNote: !!(needsPlatform && platform === "Google Meet"),
+      typeOfSystem,
+      platform,
+      pcPlatform,
+      pcChoice,
+      pcFlags: { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr },
+      supportTerm
     };
     renderBom();
   }

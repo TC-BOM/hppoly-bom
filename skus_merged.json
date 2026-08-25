@@ -742,6 +742,14 @@
     "description": "HP Poly Studio 7 Room Compute Teams Rooms TAA No Radio",
     "msrp": 4439.0
   },
+  "DS1E8AW": {
+    "description": "HP Poly Studio 5 Room Compute with Microsoft Teams Rooms",
+    "msrp": 2499
+  },
+  "DS1G9AW": {
+    "description": "HP Poly Studio 7 Room Compute with Microsoft Teams Rooms",
+    "msrp": 3699
+  },
   "99T10AA": {
     "description": "Poly Studio G62 Video Conferencing System GSA/TAA",
     "msrp": 3352.0
