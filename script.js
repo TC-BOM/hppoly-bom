@@ -1,5 +1,6 @@
-const VERSION = "v10.64";
-// script.js – HP | Poly Configurator – v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
+const VERSION = "v10.65";
+// script.js – HP | Poly Configurator – v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
+// v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
 // v10.62: Classic/New site toggle (top-right)
 // v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
 // v10.60: Trio C60 TAA/No Radio/cables + E500/CCX700 support
@@ -435,11 +436,13 @@ async function init() {
   polarFilterWrap.id = "polarFilterWrap";
   polarFilterWrap.className = "hidden mt-2";
   polarFilterWrap.innerHTML = `
-    <label class="flex items-center gap-2 text-sm">
-      <input id="polarFilterOpt" type="checkbox" class="border">
-      <span>Optional polarized filter (875K9AA)</span>
-    </label>
-    <p class="text-xs text-gray-600 ml-6">For X72 / E70: Reduces glare, reflections, and window washout caused by bright lighting, glass walls, polished tables, large exterior windows, and other visible in-room displays. Helps to deliver a cleaner image, improved contrast, and optimized DirectorAI tracking. Not added unless checked.</p>`;
+    <label class="inline-flex items-start gap-2">
+      <input id="polarFilterOpt" type="checkbox" class="border mt-1">
+      <span>
+        <span class="font-medium">Optional polarized filter (875K9AA)</span>
+        <span class="block text-xs text-gray-600">For X72 / E70: Reduces glare, reflections, and window washout caused by bright lighting, glass walls, polished tables, large exterior windows, and other visible in-room displays. Helps to deliver a cleaner image, improved contrast, and optimized DirectorAI tracking. Not added unless checked.</span>
+      </span>
+    </label>`;
   form.appendChild(polarFilterWrap);
 
   // Camera power option (E60 + E70) — PoE+ injector or wall PSU
@@ -449,13 +452,13 @@ async function init() {
   cameraPowerWrap.innerHTML = `
     <p class="font-medium">Optional camera power</p>
     <p class="text-xs text-gray-600 mb-1">E60 and E70 need PoE+ (Class 4 / 30W). Leave unchecked if the switch already provides PoE+.</p>
-    <label class="flex items-center gap-2 mt-1 text-sm">
+    <label class="inline-flex items-center gap-2 mt-1">
       <input id="camPowerWall" type="checkbox" class="border">
-      <span id="camPowerWallLabel">Wall power accessory (SKU)</span>
+      <span id="camPowerWallLabel" class="font-medium">Wall power accessory (SKU)</span>
     </label>
-    <label class="flex items-center gap-2 mt-1 text-sm">
+    <label class="inline-flex items-center gap-2 mt-1">
       <input id="camPowerPoePP" type="checkbox" class="border">
-      <span>45W PoE++ adapter (B5NH6AA)</span>
+      <span class="font-medium">45W PoE++ adapter (B5NH6AA)</span>
     </label>`;
   form.appendChild(cameraPowerWrap);
 
@@ -477,11 +480,13 @@ async function init() {
   g6DockWrap.id = "g6DockWrap";
   g6DockWrap.className = "hidden mt-2";
   g6DockWrap.innerHTML = `
-    <label class="flex items-center gap-2 text-sm">
-      <input id="g6DockOpt" type="checkbox" class="border">
-      <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA)</span>
-    </label>
-    <p class="text-xs text-gray-600 ml-6">Optional for BYOD USB bar rooms. Not added unless checked.</p>`;
+    <label class="inline-flex items-start gap-2">
+      <input id="g6DockOpt" type="checkbox" class="border mt-1">
+      <span>
+        <span class="font-medium">HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA)</span>
+        <span class="block text-xs text-gray-600">Optional for BYOD USB bar rooms. Not added unless checked.</span>
+      </span>
+    </label>`;
   form.appendChild(g6DockWrap);
 
 
@@ -664,7 +669,7 @@ async function init() {
     <input id="lensOnboard" type="checkbox" class="border mt-1">
     <span>
       <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
-      <span class="block text-xs text-gray-600">Includes registering up to 3 Poly devices.</span>
+      <span class="block text-xs text-gray-600">Register and configure up to 3 Poly hardware devices on Poly Lens cloud management portal</span>
     </span>`;
   lensProWrap.appendChild(lensOnboardLabel);
   form.appendChild(lensProWrap);
@@ -785,6 +790,49 @@ async function init() {
   audioSection.appendChild(audioRadioWrap);
   audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
+  const rovePicker = document.createElement("div");
+  rovePicker.id = "rovePicker";
+  rovePicker.className = "hidden space-y-3";
+  rovePicker.innerHTML = `
+    <p class="text-xs text-gray-600">Rove is DECT (no Wi-Fi/Bluetooth on the handset radios).</p>
+    <div>
+      <label class="block font-medium">Base <span class="text-red-600">*</span></label>
+      <select id="roveBase" class="border p-2 w-full">
+        <option value="">--</option>
+        <option value="B1">B1</option>
+        <option value="B2">B2</option>
+        <option value="B4">B4</option>
+      </select>
+      <p class="text-xs text-gray-600 mt-1">You cannot pair B2 with B4 (or B1).</p>
+    </div>
+    <div id="roveBaseQtyWrap" class="hidden">
+      <label class="block font-medium">Number of bases</label>
+      <select id="roveBaseQty" class="border p-2 w-full"></select>
+      <p id="roveBaseQtyHint" class="text-xs text-gray-600 mt-1"></p>
+    </div>
+    <div id="roveHandsetWrap" class="hidden space-y-2">
+      <div class="font-medium">Handsets</div>
+      <p class="text-xs text-gray-600">Mixed Rove 20/30/40 OK (shared registration pool). Total cannot exceed the registration cap.</p>
+      <div>
+        <label class="block font-medium">Rove 20</label>
+        <select id="roveQty20" class="border p-2 w-full"></select>
+      </div>
+      <div>
+        <label class="block font-medium">Rove 30</label>
+        <select id="roveQty30" class="border p-2 w-full"></select>
+      </div>
+      <div>
+        <label class="block font-medium">Rove 40</label>
+        <select id="roveQty40" class="border p-2 w-full"></select>
+      </div>
+      <p id="roveHandsetHint" class="text-xs text-gray-600"></p>
+    </div>
+    <div id="roveR8Wrap" class="hidden">
+      <label class="block font-medium">R8 repeater (optional)</label>
+      <select id="roveQtyR8" class="border p-2 w-full"></select>
+      <p id="roveR8Hint" class="text-xs text-gray-600 mt-1"></p>
+    </div>`;
+  audioSection.appendChild(rovePicker);
   const audioNote = document.createElement("p");
   audioNote.id = "audioPlatformNote";
   audioNote.className = "text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded hidden";
@@ -803,12 +851,12 @@ async function init() {
   audioSection.appendChild(audioAccWrap);
   audioSection.appendChild(select("audioSupportTerm", "Select Support term", SUPPORT_OPTS));
   const audioLensOnboardLabel = document.createElement("label");
-  audioLensOnboardLabel.className = "flex items-start gap-2 text-sm";
+  audioLensOnboardLabel.className = "inline-flex items-start gap-2";
   audioLensOnboardLabel.innerHTML = `
     <input id="audioLensOnboard" type="checkbox" class="border mt-1">
     <span>
       <span class="font-medium">Poly Lens onboarding — PRO8700101AB — $202.95</span>
-      <span class="block text-xs text-gray-600">Includes registering up to 3 Poly devices.</span>
+      <span class="block text-xs text-gray-600">Register and configure up to 3 Poly hardware devices on Poly Lens cloud management portal</span>
     </span>`;
   audioSection.appendChild(audioLensOnboardLabel);
   audioForm.appendChild(audioSection);
@@ -926,20 +974,152 @@ async function init() {
       E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3G9AA", sip_psu: "89B55AA", wifi: true, bt: true },
       E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2, sip_taa: "8F3H0AA", sip_psu: "89B57AA", wifi: true, bt: true }
     },
-    Rove: {
-      "20": { sip: "8F3E4AA#ABA", support: "rove_20", wifi: false, bt: false },
-      "30": { sip: "84H76AA#ABA", support: "rove_30", wifi: false, bt: false },
-      "40": { sip: "84H77AA#ABA", support: "rove_40", wifi: false, bt: false },
-      B2: { sip: "84H80AA#ABA", support: "rove_b2", wifi: false, bt: false },
-      B4: { sip: "84H78AA#ABA", support: "rove_b4", wifi: false, bt: false },
-      R8: { sip: "84H79AA#ABA", support: "rove_r8", wifi: false, bt: false },
-      "20 + B1 kit": { sip: "8F3E1AA#ABA", support: "rove_20_b1", wifi: false, bt: false }
-    }
+    // Rove models live in the Rove picker (not this generic list)
   };
   function audioCfg() {
     const family = document.getElementById("audioFamily")?.value || "";
     const model = document.getElementById("audioModel")?.value || "";
     return (AUDIO_CATALOG[family] || {})[model] || null;
+  }
+  // NA 1920–1930 catalog keys only. No EU 8J8W*, no 85W96AA, no 84H81AA (30+B2 kit).
+  const ROVE_PARTS = {
+    kit_b1: { sku: "8F3E1AA#ABA", support: "rove_20_b1" },
+    b2:     { sku: "84H80AA#ABA", support: "rove_b2" },
+    b4:     { sku: "84H78AA#ABA", support: "rove_b4" },
+    h20:    { sku: "8F3E4AA#ABA", support: "rove_20" },
+    h30:    { sku: "84H76AA#ABA", support: "rove_30" },
+    h40:    { sku: "84H77AA#ABA", support: "rove_40" },
+    r8:     { sku: "84H79AA#ABA", support: "rove_r8" }
+  };
+  function roveSelInt(id, fallback) {
+    const n = parseInt(document.getElementById(id)?.value || String(fallback), 10);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  function roveBaseQtyMax(base) {
+    if (base === "B1") return 1;
+    if (base === "B2") return 2;
+    if (base === "B4") return 10;
+    return 0;
+  }
+  function roveHandsetMax(base, baseQty) {
+    if (base === "B1") return 10;
+    if (base === "B2") return 20; // even if 2 bases — dual-cell is coverage, not 40 registrations
+    if (base === "B4") return Math.min(30 * Math.max(1, baseQty || 1), 1000);
+    return 0;
+  }
+  function roveR8Max(base) {
+    if (base === "B1") return 3;
+    if (base === "B2") return 6;
+    if (base === "B4") return 3; // simple BOM 0–3, not 3 * base_qty
+    return 0;
+  }
+  function roveFillSelect(sel, min, max, value) {
+    if (!sel) return min;
+    const lo = Math.max(0, min | 0);
+    const hi = Math.max(lo, max | 0);
+    let v = Number.isFinite(value) ? value : lo;
+    if (v < lo) v = lo;
+    if (v > hi) v = hi;
+    sel.innerHTML = "";
+    for (let n = lo; n <= hi; n++) {
+      const opt = document.createElement("option");
+      opt.value = String(n);
+      opt.textContent = String(n);
+      sel.appendChild(opt);
+    }
+    sel.value = String(v);
+    return v;
+  }
+  function clampRoveHandsets(base, maxH, q20, q30, q40, clampId) {
+    const min20 = base === "B1" ? 1 : 0;
+    if (base === "B1" && q20 < 1) q20 = 1;
+    q20 = Math.max(min20, q20 | 0);
+    q30 = Math.max(0, q30 | 0);
+    q40 = Math.max(0, q40 | 0);
+    let sum = q20 + q30 + q40;
+    if (sum > maxH) {
+      const overflow = sum - maxH;
+      if (clampId === "roveQty20") q20 = Math.max(min20, q20 - overflow);
+      else if (clampId === "roveQty30") q30 = Math.max(0, q30 - overflow);
+      else if (clampId === "roveQty40") q40 = Math.max(0, q40 - overflow);
+    }
+    sum = q20 + q30 + q40;
+    if (sum > maxH) {
+      let left = sum - maxH;
+      const take40 = Math.min(q40, left); q40 -= take40; left -= take40;
+      const take30 = Math.min(q30, left); q30 -= take30; left -= take30;
+      q20 = Math.max(min20, q20 - left);
+    }
+    return { q20, q30, q40 };
+  }
+  let roveUpdating = false;
+  let roveLastHandset = "roveQty20";
+  function syncRovePicker(changedId) {
+    if (roveUpdating) return;
+    const family = document.getElementById("audioFamily")?.value || "";
+    const picker = document.getElementById("rovePicker");
+    const modelWrap = document.getElementById("audioModelWrap");
+    const isRove = family === "Rove";
+    if (picker) picker.classList.toggle("hidden", !isRove);
+    if (modelWrap) modelWrap.classList.toggle("hidden", isRove);
+    if (!isRove) return;
+    const base = document.getElementById("roveBase")?.value || "";
+    const hasBase = !!base;
+    const qtyWrap = document.getElementById("roveBaseQtyWrap");
+    const hsWrap = document.getElementById("roveHandsetWrap");
+    const r8Wrap = document.getElementById("roveR8Wrap");
+    if (qtyWrap) qtyWrap.classList.toggle("hidden", !hasBase);
+    if (hsWrap) hsWrap.classList.toggle("hidden", !hasBase);
+    if (r8Wrap) r8Wrap.classList.toggle("hidden", !hasBase);
+    if (!hasBase) return;
+    roveUpdating = true;
+    try {
+      const bMax = roveBaseQtyMax(base);
+      let bQty = roveSelInt("roveBaseQty", 1);
+      bQty = roveFillSelect(document.getElementById("roveBaseQty"), 1, bMax, bQty);
+      const hint = document.getElementById("roveBaseQtyHint");
+      if (hint) {
+        if (base === "B1") hint.textContent = "B1 is a single-cell base (qty locked at 1).";
+        else if (base === "B2") hint.textContent = "B2 dual-cell max is 2. Dual-cell is coverage, NOT 40 registrations.";
+        else if (base === "B4") hint.textContent = "B4: 254 is legal; this UI caps base qty at 10.";
+        else hint.textContent = "";
+      }
+      const maxH = roveHandsetMax(base, bQty);
+      const min20 = base === "B1" ? 1 : 0;
+      let q20 = roveSelInt("roveQty20", min20);
+      let q30 = roveSelInt("roveQty30", 0);
+      let q40 = roveSelInt("roveQty40", 0);
+      if (changedId === "roveBase" && (q20 + q30 + q40) === 0) q20 = 1;
+      const clamped = clampRoveHandsets(base, maxH, q20, q30, q40, changedId || roveLastHandset);
+      q20 = clamped.q20; q30 = clamped.q30; q40 = clamped.q40;
+      q20 = roveFillSelect(document.getElementById("roveQty20"), min20, maxH, q20);
+      q30 = roveFillSelect(document.getElementById("roveQty30"), 0, maxH, q30);
+      q40 = roveFillSelect(document.getElementById("roveQty40"), 0, maxH, q40);
+      const hsHint = document.getElementById("roveHandsetHint");
+      if (hsHint) {
+        const used = q20 + q30 + q40;
+        let cap = "Registration cap: " + maxH;
+        if (base === "B1") cap += " (includes the B1 kit handset)";
+        if (base === "B2") cap += " (20 even with 2 bases)";
+        hsHint.textContent = cap + ". Using " + used + ".";
+      }
+      const maxR = roveR8Max(base);
+      let qR8 = roveSelInt("roveQtyR8", 0);
+      roveFillSelect(document.getElementById("roveQtyR8"), 0, maxR, qR8);
+      const r8Hint = document.getElementById("roveR8Hint");
+      if (r8Hint) {
+        if (base === "B4") r8Hint.textContent = "Simple BOM: 0–3 R8 (not 3 × base qty).";
+        else r8Hint.textContent = "Optional. Max " + maxR + " for this base.";
+      }
+    } finally {
+      roveUpdating = false;
+    }
+  }
+  function addRovePart(results, part, qty, supportTerm, usedKeys) {
+    if (!qty || !part) return;
+    addLine(results, part.sku, undefined, qty);
+    addSupport(results, part.support, supportTerm, qty);
+    if (usedKeys && part.support && !usedKeys.includes(part.support)) usedKeys.push(part.support);
   }
   function audioWantRadios() {
     return {
@@ -1015,7 +1195,14 @@ async function init() {
     const isTeams = platform === "Microsoft Teams";
     const model = document.getElementById("audioModel")?.value || "";
     let msg = "";
-    if (cfg) {
+    if (family === "Rove") {
+      msg = audioFieldNote(family, "", platform);
+      const taaOn = !!document.getElementById("audioTaa")?.checked;
+      if (taaOn) {
+        const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
+        msg = msg ? msg + " " + taaMsg : taaMsg;
+      }
+    } else if (cfg) {
       msg = audioFieldNote(family, model, platform);
       const taaOn = !!document.getElementById("audioTaa")?.checked;
       const hasTaa = isTeams ? !!(cfg.teams_taa || cfg.sip_taa) : !!cfg.sip_taa;
@@ -1037,7 +1224,7 @@ async function init() {
       const rev = "CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
       msg = msg ? msg + " " + rev : rev;
     }
-    if (!cfg) {
+    if (!cfg && family !== "Rove") {
       const familySel = document.getElementById("audioFamily")?.value || "";
       if (familySel) {
         const radios = audioWantRadios();
@@ -1160,7 +1347,21 @@ async function init() {
   }
   function rebuildAudioModel() {
     const family = document.getElementById("audioFamily")?.value || "";
+    const isRove = family === "Rove";
+    const modelWrap = document.getElementById("audioModelWrap");
+    if (modelWrap) modelWrap.classList.toggle("hidden", isRove);
+    const picker = document.getElementById("rovePicker");
+    if (picker) picker.classList.toggle("hidden", !isRove);
     const sel = document.getElementById("audioModel");
+    if (isRove) {
+      if (sel) {
+        sel.innerHTML = '<option value="">--</option>';
+        sel.value = "";
+      }
+      syncRovePicker();
+      updateAudioNotesAndAcc();
+      return;
+    }
     if (!sel) return;
     const prev = sel.value;
     const radios = audioWantRadios();
@@ -1176,6 +1377,12 @@ async function init() {
   document.getElementById("audioTaa")?.addEventListener("change", updateAudioNotesAndAcc);
   document.getElementById("audioWifi")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioBt")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("roveBase")?.addEventListener("change", () => { syncRovePicker("roveBase"); updateAudioNotesAndAcc(); });
+  document.getElementById("roveBaseQty")?.addEventListener("change", () => { syncRovePicker("roveBaseQty"); });
+  document.getElementById("roveQty20")?.addEventListener("change", () => { roveLastHandset = "roveQty20"; syncRovePicker("roveQty20"); });
+  document.getElementById("roveQty30")?.addEventListener("change", () => { roveLastHandset = "roveQty30"; syncRovePicker("roveQty30"); });
+  document.getElementById("roveQty40")?.addEventListener("change", () => { roveLastHandset = "roveQty40"; syncRovePicker("roveQty40"); });
+  document.getElementById("roveQtyR8")?.addEventListener("change", () => { syncRovePicker("roveQtyR8"); });
   rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
@@ -2106,10 +2313,81 @@ async function init() {
     const missing = [];
     if (!platform) missing.push("Platform");
     if (!family) missing.push("Family");
-    if (!model) missing.push("Model");
+    const isRove = family === "Rove";
+    if (isRove) {
+      const basePick = document.getElementById("roveBase")?.value || "";
+      if (!basePick) missing.push("Base");
+    } else if (!model) {
+      missing.push("Model");
+    }
     if (missing.length) {
       lastAudioBom = null;
       mockError(audioResult, "Please select " + missing.join(", ") + " to generate a BOM.");
+      return;
+    }
+    if (isRove) {
+      const base = document.getElementById("roveBase")?.value || "";
+      let bQty = roveSelInt("roveBaseQty", 1);
+      const bMax = roveBaseQtyMax(base);
+      bQty = Math.max(1, Math.min(bMax || 1, bQty));
+      const maxH = roveHandsetMax(base, bQty);
+      const maxR = roveR8Max(base);
+      let q20 = roveSelInt("roveQty20", base === "B1" ? 1 : 0);
+      let q30 = roveSelInt("roveQty30", 0);
+      let q40 = roveSelInt("roveQty40", 0);
+      let qR8 = Math.max(0, Math.min(maxR, roveSelInt("roveQtyR8", 0)));
+      const hs = clampRoveHandsets(base, maxH, q20, q30, q40, roveLastHandset);
+      q20 = hs.q20; q30 = hs.q30; q40 = hs.q40;
+      if (q20 + q30 + q40 < 1) {
+        lastAudioBom = null;
+        mockError(audioResult, "Please add at least 1 handset.");
+        return;
+      }
+      const results = [];
+      const usedKeys = [];
+      if (base === "B1") {
+        addRovePart(results, ROVE_PARTS.kit_b1, 1, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h20, q20 - 1, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h30, q30, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h40, q40, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.r8, qR8, supportTerm, usedKeys);
+      } else if (base === "B2") {
+        addRovePart(results, ROVE_PARTS.b2, bQty, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h20, q20, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h30, q30, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h40, q40, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.r8, qR8, supportTerm, usedKeys);
+      } else if (base === "B4") {
+        addRovePart(results, ROVE_PARTS.b4, bQty, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h20, q20, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h30, q30, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.h40, q40, supportTerm, usedKeys);
+        addRovePart(results, ROVE_PARTS.r8, qR8, supportTerm, usedKeys);
+      } else {
+        lastAudioBom = null;
+        mockError(audioResult, "Please select Base to generate a BOM.");
+        return;
+      }
+      if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
+      const notes = [];
+      const fieldNote = audioFieldNote("Rove", "", platform);
+      if (fieldNote) notes.push(fieldNote);
+      const taa = !!document.getElementById("audioTaa")?.checked;
+      if (taa) notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
+      const seenSupportNote = new Set();
+      usedKeys.forEach(key => {
+        const map = SUPPORT_MAP[key] || {};
+        if (supportTerm && !map[supportTerm]) {
+          const n = "No " + supportTerm + " SKU mapped for this model (not invented).";
+          if (!seenSupportNote.has(n)) { seenSupportNote.add(n); notes.push(n); }
+        }
+      });
+      lastAudioBom = {
+        results,
+        includePrices,
+        footnote: notes.length ? notes.join(" ") : null
+      };
+      renderBom(undefined, undefined, audioResult, lastAudioBom);
       return;
     }
     const cfg = audioCfg();
