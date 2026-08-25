@@ -1,5 +1,6 @@
-const VERSION = "v10.66";
-// script.js – HP | Poly Configurator – v10.66: strip MSRP from form option labels (quote only)
+const VERSION = "v10.67";
+// script.js – HP | Poly Configurator – v10.67: Audio TAA/JITC blue box (match Video)
+// v10.66: strip MSRP from form option labels (quote only)
 // v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
 // v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
 // v10.62: Classic/New site toggle (top-right)
@@ -766,21 +767,25 @@ async function init() {
   const audioSection = document.createElement("fieldset");
   audioSection.className = "space-y-3 p-4 border border-gray-200 rounded";
   audioSection.innerHTML = '<legend class="font-semibold px-1">Audio</legend>';
-  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
   const audioTaaWrap = document.createElement("div");
-  audioTaaWrap.className = "space-y-1";
+  audioTaaWrap.className = "p-3 border-2 border-blue-300 rounded bg-blue-50 space-y-1";
   audioTaaWrap.innerHTML = `
-    <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
       <label class="inline-flex items-center gap-2 cursor-pointer">
         <input id="audioTaa" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold">TAA / GSA</span>
+        <span class="font-semibold text-blue-900">TAA / GSA</span>
       </label>
-      <label id="audioNoRadioWrap" class="hidden inline-flex items-center gap-2 cursor-pointer">
-        <input id="audioNoRadio" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold">No Radio</span>
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        <input id="audioJitc" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold text-blue-900">JITC</span>
       </label>
     </div>
-    <p class="text-xs text-gray-600">TAA uses GSA/TAA SKU when one exists. No JITC phone SKUs in this catalog.</p>`;
+    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>
+    <p class="text-xs text-blue-800">No JITC phone SKUs in this catalog.</p>
+    <label id="audioNoRadioWrap" class="hidden inline-flex items-center gap-2 cursor-pointer">
+      <input id="audioNoRadio" type="checkbox" class="w-4 h-4 border">
+      <span class="font-semibold">No Radio</span>
+    </label>`;
   audioSection.appendChild(audioTaaWrap);
   const audioRadioWrap = document.createElement("div");
   audioRadioWrap.className = "space-y-1";
@@ -789,6 +794,7 @@ async function init() {
     <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>
     <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are built-in on matching SKUs (no extra lines). The model list only shows phones that match these radios. Uncheck both for no-radio / DECT models.</p>`;
   audioSection.appendChild(audioRadioWrap);
+  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
   audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
   const rovePicker = document.createElement("div");
@@ -1198,14 +1204,14 @@ async function init() {
     let msg = "";
     if (family === "Rove") {
       msg = audioFieldNote(family, "", platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked;
+      const taaOn = !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
       if (taaOn) {
         const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
         msg = msg ? msg + " " + taaMsg : taaMsg;
       }
     } else if (cfg) {
       msg = audioFieldNote(family, model, platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked;
+      const taaOn = !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
       const hasTaa = isTeams ? !!(cfg.teams_taa || cfg.sip_taa) : !!cfg.sip_taa;
       if (taaOn && !hasTaa) {
         const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
@@ -1362,7 +1368,20 @@ async function init() {
   document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
   document.getElementById("audioPlatform")?.addEventListener("change", updateAudioNotesAndAcc);
-  document.getElementById("audioTaa")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioJitc")?.addEventListener("change", () => {
+    if (document.getElementById("audioJitc")?.checked) {
+      const taa = document.getElementById("audioTaa");
+      if (taa) taa.checked = true;
+    }
+    updateAudioNotesAndAcc();
+  });
+  document.getElementById("audioTaa")?.addEventListener("change", () => {
+    if (!document.getElementById("audioTaa")?.checked) {
+      const jitc = document.getElementById("audioJitc");
+      if (jitc) jitc.checked = false;
+    }
+    updateAudioNotesAndAcc();
+  });
   document.getElementById("audioWifi")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioBt")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("roveBase")?.addEventListener("change", () => { syncRovePicker("roveBase"); updateAudioNotesAndAcc(); });
@@ -2360,8 +2379,10 @@ async function init() {
       const notes = [];
       const fieldNote = audioFieldNote("Rove", "", platform);
       if (fieldNote) notes.push(fieldNote);
-      const taa = !!document.getElementById("audioTaa")?.checked;
+      const jitc = !!document.getElementById("audioJitc")?.checked;
+      const taa = !!document.getElementById("audioTaa")?.checked || jitc;
       if (taa) notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
+      if (jitc) notes.push("No JITC phone SKU (not invented). TAA SKU used when one exists.");
       const seenSupportNote = new Set();
       usedKeys.forEach(key => {
         const map = SUPPORT_MAP[key] || {};
@@ -2385,7 +2406,8 @@ async function init() {
       return;
     }
     const isTeams = platform === "Microsoft Teams";
-    const taa = !!document.getElementById("audioTaa")?.checked;
+    const jitc = !!document.getElementById("audioJitc")?.checked;
+    const taa = !!document.getElementById("audioTaa")?.checked || jitc;
     const wifi = !!document.getElementById("audioWifi")?.checked;
     const bt = !!document.getElementById("audioBt")?.checked;
     const nr = !wifi && !bt;
@@ -2445,6 +2467,9 @@ async function init() {
     }
     if (taa && !usedTaaSku) {
       notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
+    }
+    if (jitc) {
+      notes.push("No JITC phone SKU (not invented). TAA SKU used when one exists.");
     }
     if (nr && (cfg.wifi || cfg.bt) && !usedNrSku) {
       notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
