@@ -1,5 +1,7 @@
-const VERSION = "v10.29";
-// script.js – HP | Poly Configurator – v10.29: optional E60/E70 power checkboxes + post-quote polarized filter
+const VERSION = "v10.32";
+// script.js – HP | Poly Configurator – v10.32: resource links (Spaces, dimensional drawings, Glen Bevcar Excel) + AI disclaimer
+// v10.31: VIDEO | AUDIO | HEADSETS tabs (audio/headset mock catalogs)
+// v10.30: Netgear Pro AV switch disclaimer + optional switch picker; mount QSG links while selecting mounts
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
 
 document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
@@ -243,6 +245,29 @@ async function init() {
     </select>
     <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
   hwSection.appendChild(cameraMountWrap);
+
+  // Netgear Pro AV switch (LLN / StudioNet) — G62 / X52 / V52 / X72 / V72, and X32 if A2/IP extras
+  const netgearWrap = document.createElement("div");
+  netgearWrap.id = "netgearWrap";
+  netgearWrap.className = "hidden p-3 border-2 border-amber-400 rounded bg-blue-50 space-y-2";
+  netgearWrap.innerHTML = `
+    <div class="font-semibold text-amber-900">Netgear Pro AV switch required for more than one IP device</div>
+    <p class="text-sm text-blue-950">If this room has more than one IP-connected peripheral (extra camera + A2 mics, IP table/ceiling mics, etc.) on G62, X52/V52, or X72/V72, Poly requires a dedicated Netgear Pro AV switch on the LLN / StudioNet path. Do not use a generic office switch. Currently documented model: GSM4210PD. From October 2025 the Poly profile also covers M4250 / M4300 / M4350. High-side list estimates below are CDW advertised list, not Poly MSRP.</p>
+    <p class="text-xs">
+      <a href="https://support.hp.com/ie-en/document/ish_13031025-13026020-16" target="_blank" rel="noopener" class="text-blue-700 underline">HP article: HP Poly increasing the number of supported Netgear network switch models for Poly StudioNet</a>
+      ·
+      <a href="https://downloads1.netgear.com/files/netgear/documents/AV-over-IP-Switch-Reference-Guide-110v.pdf" target="_blank" rel="noopener" class="text-blue-700 underline">Netgear AV Product Reference Guide (PDF)</a>
+    </p>
+    <label class="block font-medium">Netgear Pro AV switch</label>
+    <select id="netgearSwitch" class="border p-2 w-full">
+      <option value="None">None — using existing supported switch / not adding to BOM</option>
+      <option value="GSM4210PD-100NAS">GSM4210PD-100NAS — 8-port PoE+ desktop (~$865 high-side)</option>
+      <option value="GSM4210PX-100NAS">GSM4210PX-100NAS — 8-port PoE+ 220W (~$1,362)</option>
+      <option value="GSM4212PX-100NAS">GSM4212PX-100NAS — 10-port PoE+ (~$1,910)</option>
+      <option value="GSM4230PX-100NAS">GSM4230PX-100NAS — 26-port PoE+ (~$2,752)</option>
+      <option value="GSM4248PX-100NAS">GSM4248PX-100NAS — 40-port PoE+ (~$4,521)</option>
+    </select>`;
+  hwSection.appendChild(netgearWrap);
   form.appendChild(hwSection);
 
   const svcSection = document.createElement("fieldset");
@@ -418,15 +443,127 @@ async function init() {
   resultDiv.id = "result";
   resultDiv.className = "mt-6 space-y-4";
   let lastBom = null;
+  let lastAudioBom = null;
+  let lastHeadsetBom = null;
 
-  app.appendChild(form);
-  app.appendChild(resultDiv);
+  const MOCK_BANNER = `
+    <div class="p-3 border-2 border-amber-400 rounded bg-amber-50 space-y-1">
+      <div class="font-semibold text-amber-900">Under construction. Mock catalog only — a few popular SKUs so you can click through. Support SKU mapping is not loaded yet. Do not use for a live quote.</div>
+    </div>`;
+  const SUPPORT_OPTS = [
+    { value: "",         label: "None" },
+    { value: "poly1",    label: "1yr - Poly+" },
+    { value: "poly3",    label: "3yr - Poly+" },
+    { value: "poly5",    label: "5yr - Poly+" },
+    { value: "analyze1", label: "1yr - Poly+ Analyze" },
+    { value: "analyze3", label: "3yr - Poly+ Analyze" },
+    { value: "analyze5", label: "5yr - Poly+ Analyze" }
+  ];
+
+  const panelVideo = document.createElement("div");
+  panelVideo.id = "panelVideo";
+  const panelAudio = document.createElement("div");
+  panelAudio.id = "panelAudio";
+  panelAudio.className = "hidden space-y-4";
+  const panelHeadset = document.createElement("div");
+  panelHeadset.id = "panelHeadset";
+  panelHeadset.className = "hidden space-y-4";
+
+  const audioForm = document.createElement("form");
+  audioForm.className = "space-y-4";
+  audioForm.innerHTML = MOCK_BANNER;
+  const audioSection = document.createElement("fieldset");
+  audioSection.className = "space-y-3 p-4 border border-gray-200 rounded";
+  audioSection.innerHTML = '<legend class="font-semibold px-1">Audio (mock)</legend>';
+  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
+  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E"], true));
+  audioSection.appendChild(select("audioModel", "Model", [], true));
+  const audioRadioWrap = document.createElement("div");
+  audioRadioWrap.className = "space-y-1";
+  audioRadioWrap.innerHTML = `
+    <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are included radios on these mock SKUs and do not add extra lines.</p>
+    <label class="inline-flex items-center gap-2"><input id="audioWifi" type="checkbox" class="border" checked><span>Wi-Fi</span></label>
+    <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>`;
+  audioSection.appendChild(audioRadioWrap);
+  audioSection.appendChild(select("audioSupportTerm", "Select Support term", SUPPORT_OPTS));
+  audioForm.appendChild(audioSection);
+  const audioActions = document.createElement("div");
+  audioActions.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
+  audioActions.innerHTML = `
+    <label class="inline-flex items-center gap-2 shrink-0 whitespace-nowrap"><input id="audioIncludePrices" type="checkbox" class="border"> Include Prices (MSRP)</label>
+    <button type="button" id="audioGenerateBtn" class="px-4 py-2 bg-blue-600 text-white rounded shrink-0">Generate BOM</button>`;
+  audioForm.appendChild(audioActions);
+  const audioResult = document.createElement("div");
+  audioResult.id = "audioResult";
+  audioResult.className = "mt-6 space-y-4";
+  panelAudio.appendChild(audioForm);
+  panelAudio.appendChild(audioResult);
+
+  const headsetForm = document.createElement("form");
+  headsetForm.className = "space-y-4";
+  headsetForm.innerHTML = MOCK_BANNER;
+  const headsetSection = document.createElement("fieldset");
+  headsetSection.className = "space-y-3 p-4 border border-gray-200 rounded";
+  headsetSection.innerHTML = '<legend class="font-semibold px-1">Headsets (mock)</legend>';
+  headsetSection.appendChild(select("headsetPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
+  headsetSection.appendChild(select("headsetConn", "Connectivity", ["Wire", "Bluetooth", "DECT"], true));
+  headsetSection.appendChild(select("headsetWear", "Wearing style", ["Over-ear", "On-ear", "In-ear"]));
+  headsetSection.appendChild(select("headsetPrice", "Price range", ["Under $200", "$200–300", "$300+"]));
+  headsetSection.appendChild(select("headsetSupportTerm", "Select Support term", SUPPORT_OPTS));
+  headsetForm.appendChild(headsetSection);
+  const headsetActions = document.createElement("div");
+  headsetActions.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
+  headsetActions.innerHTML = `
+    <label class="inline-flex items-center gap-2 shrink-0 whitespace-nowrap"><input id="headsetIncludePrices" type="checkbox" class="border"> Include Prices (MSRP)</label>
+    <button type="button" id="headsetGenerateBtn" class="px-4 py-2 bg-blue-600 text-white rounded shrink-0">Generate BOM</button>`;
+  headsetForm.appendChild(headsetActions);
+  const headsetResult = document.createElement("div");
+  headsetResult.id = "headsetResult";
+  headsetResult.className = "mt-6 space-y-4";
+  panelHeadset.appendChild(headsetForm);
+  panelHeadset.appendChild(headsetResult);
+
+  panelVideo.appendChild(form);
+  panelVideo.appendChild(resultDiv);
+  app.appendChild(panelVideo);
+  app.appendChild(panelAudio);
+  app.appendChild(panelHeadset);
 
   // Single compact legalese at bottom of page only
   const legalFooter = document.createElement("p");
   legalFooter.className = "mt-6 text-[11px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
-  legalFooter.innerHTML = `<strong>Estimate only.</strong> Subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.`;
+  legalFooter.innerHTML = `<strong>Estimate only.</strong> Subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
   app.appendChild(legalFooter);
+
+  function setActiveTab(name) {
+    panelVideo.classList.toggle("hidden", name !== "video");
+    panelAudio.classList.toggle("hidden", name !== "audio");
+    panelHeadset.classList.toggle("hidden", name !== "headset");
+    [["tabVideo", "video"], ["tabAudio", "audio"], ["tabHeadset", "headset"]].forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle("opacity-100", name === key);
+      el.classList.toggle("opacity-30", name !== key);
+      el.classList.add("text-gray-900");
+    });
+  }
+  document.getElementById("tabBar")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn");
+    if (!btn) return;
+    setActiveTab(btn.getAttribute("data-panel"));
+  });
+
+  function rebuildAudioModel() {
+    const family = document.getElementById("audioFamily")?.value || "";
+    const sel = document.getElementById("audioModel");
+    if (!sel) return;
+    const prev = sel.value;
+    const models = family === "Trio" ? ["C60"] : family === "CCX" ? ["505", "600"] : family === "Edge E" ? ["E450"] : [];
+    sel.innerHTML = '<option value="">--</option>' + models.map(m => `<option value="${m}">${m}</option>`).join("");
+    sel.value = models.includes(prev) ? prev : "";
+  }
+  document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
+  rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
   // Max A2 table mics per host (HP Poly Studio A2 admin guide)
@@ -523,6 +660,29 @@ async function init() {
     if (!wrap || !sel) return;
     const family = hostFamily();
     const prev = sel.value || "None";
+    function mountQsgHtml(fam) {
+      let href = "";
+      let label = "";
+      if (fam === "v12" || fam === "x32") {
+        href = "https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html";
+        label = "Mounting quick start / hardware install";
+      } else if (fam === "v52" || fam === "x52") {
+        href = "https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/Poly-Studio-X52-V52-Accessories-Quick-Start-Guide/ta-p/9119238";
+        label = "X52/V52 mount quick start guides (wall, VESA, stand, clamp)";
+      } else if (fam === "v72" || fam === "x72") {
+        href = "https://docs.poly.com/bundle/studio-x72-ug/page/poly-studio-x-hardware-installation.html";
+        label = "X72/V72 mounting quick start (HP Support / user guide)";
+      }
+      if (!href) return "";
+      return `Mounting quick start: <a target="_blank" rel="noopener" class="text-blue-700 underline" href="${href}">${label}</a>`;
+    }
+    function setMountHint(el, sentence, fam) {
+      if (!el) return;
+      const qsg = mountQsgHtml(fam);
+      if (sentence && qsg) el.innerHTML = sentence + "<br>" + qsg;
+      else if (qsg) el.innerHTML = qsg;
+      else el.textContent = sentence || "";
+    }
     // Hide until host is known; G62 kit already includes mount (no extra SKU in this generator)
     if (!family || family === "g62") {
       wrap.classList.add("hidden");
@@ -543,21 +703,21 @@ async function init() {
       opts.push({ value: "Table", label: "Table stand (875L5AA)" });
       opts.push({ value: "Inverted wall", label: "Inverted wall (875L7AA)" });
       if (family === "v12") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      if (hint) hint.textContent = "X30/X32/V12: 875L6AA is the combined wall+VESA kit. 875L7AA is inverted wall. USB VESA (875R9AA) is listed for V12.";
+      setMountHint(hint, "X30/X32/V12: 875L6AA is the combined wall+VESA kit. 875L7AA is inverted wall. USB VESA (875R9AA) is listed for V12.", family);
     } else if (family === "v52" || family === "x52") {
       opts.push({ value: "Wall", label: "Wall (875L8AA)" });
       opts.push({ value: "VESA style display mount", label: "VESA (875L9AA)" });
       opts.push({ value: "Table", label: "Table stand (875M0AA)" });
       if (family === "v52") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      if (hint) hint.textContent = family === "v52" ? "USB VESA (875R9AA) is the Studio USB VESA mount." : "";
+      setMountHint(hint, family === "v52" ? "USB VESA (875R9AA) is the Studio USB VESA mount." : "", family);
     } else if (family === "v72" || family === "x72") {
       // No dedicated wall SKU in catalog for X72/V72
       opts.push({ value: "VESA style display mount", label: "VESA (875L2AA)" });
       opts.push({ value: "Table", label: "Table stand (875L3AA)" });
       if (family === "v72") opts.push({ value: "USB VESA", label: "USB VESA mount (875R9AA)" });
-      if (hint) hint.textContent = family === "v72"
+      setMountHint(hint, family === "v72"
         ? "No dedicated wall SKU for X72/V72. USB VESA (875R9AA) is listed for V72."
-        : "No wall-mount SKU in this catalog for X72 / V72; VESA or table only.";
+        : "No wall-mount SKU in this catalog for X72 / V72; VESA or table only.", family);
     }
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
@@ -576,12 +736,34 @@ async function init() {
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
   }
+  function extraIpPeripheralSelected() {
+    const exp = document.getElementById("expansionMic")?.value || "";
+    const cam = document.getElementById("cameraChoice")?.value || "None";
+    const ipMic = exp.includes("New White A2") || exp.includes("New Black A2")
+      || exp.includes("Existing IP table") || exp.includes("Existing IP Ceiling");
+    const extraCam = canShowCameraAddOn() && (cam === "E60" || cam === "E70");
+    return ipMic || extraCam;
+  }
+  function updateNetgearVisibility() {
+    const wrap = document.getElementById("netgearWrap");
+    if (!wrap) return;
+    const family = hostFamily();
+    const hostOk = family === "g62" || family === "x32" || family === "x52"
+      || family === "v52" || family === "x72" || family === "v72";
+    const show = !!(hostOk && extraIpPeripheralSelected());
+    wrap.classList.toggle("hidden", !show);
+    if (!show) {
+      const sel = document.getElementById("netgearSwitch");
+      if (sel) sel.value = "None";
+    }
+  }
   function refreshDependentControls() {
     updatePlatformVisibility();
     updateMountingOptions();
     updateExpansionOptions();
     updateCameraVisibility();
     updateA2QtyVisibility();
+    updateNetgearVisibility();
   }
   function canShowCameraAddOn() {
     const t = document.getElementById("typeOfSystem")?.value || "";
@@ -643,8 +825,14 @@ async function init() {
   ["platform", "typeOfSystem", "roomSize"].forEach(id => {
     document.getElementById(id)?.addEventListener("change", refreshDependentControls);
   });
-  document.getElementById("cameraChoice")?.addEventListener("change", updateCameraAccessoryVisibility);
-  document.getElementById("expansionMic")?.addEventListener("change", updateA2QtyVisibility);
+  document.getElementById("cameraChoice")?.addEventListener("change", () => {
+    updateCameraAccessoryVisibility();
+    updateNetgearVisibility();
+  });
+  document.getElementById("expansionMic")?.addEventListener("change", () => {
+    updateA2QtyVisibility();
+    updateNetgearVisibility();
+  });
   refreshDependentControls();
 
   // ---------- promo button ----------
@@ -667,16 +855,25 @@ async function init() {
       const camSel = document.getElementById("cameraChoice");
       if (camSel) camSel.value = "E70";
       updateCameraAccessoryVisibility();
+      updateNetgearVisibility();
       generate();
       const res = document.getElementById("result");
       if (res) res.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
-  function renderBom(focusIdx, caretPos) {
-    if (!lastBom) return;
-    const { results, includePrices, googleMeetNote } = lastBom;
+  function renderBom(focusIdx, caretPos, dest, bom) {
+    dest = dest || resultDiv;
+    bom = bom || lastBom;
+    if (!bom) return;
+    const { results, includePrices, googleMeetNote } = bom;
+    const EXCEL_URL = "https://hpdigitalroom.sales.ext.hp.com/ls/220d4a87-7110-4c75-83aa-53af74106f7b/Yv7NSgCbYloyQ79p";
+    const SPACES_URL = "https://www.hp.com/us-en/poly/spaces.html";
+    const DIM_URL = "https://h30434.www3.hp.com/t5/Meeting-Room-Solutions/Dimensional-Drawings-for-Poly-Products-and-accessories/td-p/8738366";
     let html = `<p class="text-xs text-gray-500 mb-1">Build ${VERSION} — generated ${new Date().toLocaleDateString()}</p>`;
+    html += `<p class="text-sm italic text-gray-600 mb-2">Disclaimer: Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.</p>`;
+    html += `<p class="text-sm mb-1"><a class="text-blue-600 underline" target="_blank" rel="noopener" href="${EXCEL_URL}">Quoting Guide</a>&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<a class="text-blue-600 underline" target="_blank" rel="noopener" href="${SPACES_URL}">Poly Spaces</a></p>`;
+    html += `<p class="text-sm mb-3"><a class="text-blue-600 underline" target="_blank" rel="noopener" href="${EXCEL_URL}">Glen Bevcar's Collab Reference Excel cheat sheet</a>&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;<a class="text-blue-600 underline" target="_blank" rel="noopener" href="${DIM_URL}">Dimensional Drawings for Poly Products</a></p>`;
     html += `<h2 class="font-semibold mb-2">Your BOM:</h2>`;
     if (googleMeetNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
@@ -737,7 +934,7 @@ async function init() {
       html += ` Prices are list MSRP and may not reflect final quote.</p>`;
     }
 
-    if (lastBom.showPolarFilter) {
+    if (bom.showPolarFilter) {
       const polarChecked = hasSku(results, "875K9AA") ? " checked" : "";
       html += `<div class="mt-3 p-2 border border-amber-300 rounded bg-amber-50 text-sm text-amber-900">
         <label class="flex items-start gap-2">
@@ -750,9 +947,16 @@ async function init() {
       </div>`;
     }
 
-    resultDiv.innerHTML = html;
+    if (bom.footnote) {
+      html += `<p class="text-xs text-amber-800 mt-2">${bom.footnote}</p>`;
+    }
+    if (bom.closestNote) {
+      html += `<p class="text-xs text-gray-600 mt-2">${bom.closestNote}</p>`;
+    }
+
+    dest.innerHTML = html;
     if (focusIdx != null) {
-      const el = resultDiv.querySelector(`.qty-input[data-i="${focusIdx}"]`);
+      const el = dest.querySelector(`.qty-input[data-i="${focusIdx}"]`);
       if (el) {
         el.focus();
         const pos = (caretPos != null && caretPos >= 0) ? Math.min(caretPos, String(el.value).length) : String(el.value).length;
@@ -761,12 +965,45 @@ async function init() {
     }
   }
 
-  function applyQty(i, n, restoreFocus, caretPos) {
-    if (!lastBom || !lastBom.results[i]) return;
-    lastBom.results[i].quantity = n;
-    applyLensProBand(lastBom.results[i]);
-    renderBom(restoreFocus ? i : undefined, restoreFocus ? caretPos : undefined);
+  function applyQty(i, n, restoreFocus, caretPos, dest, bom) {
+    dest = dest || resultDiv;
+    bom = bom || lastBom;
+    if (!bom || !bom.results[i]) return;
+    bom.results[i].quantity = n;
+    applyLensProBand(bom.results[i]);
+    renderBom(restoreFocus ? i : undefined, restoreFocus ? caretPos : undefined, dest, bom);
   }
+
+  function bindQtyHandlers(dest, getBom) {
+    dest.addEventListener("click", (e) => {
+      const btn = e.target.closest(".qty-btn");
+      if (!btn || !dest.contains(btn)) return;
+      const i = Number(btn.getAttribute("data-i"));
+      const delta = Number(btn.getAttribute("data-qty-delta"));
+      const bom = getBom();
+      if (!bom || !bom.results[i]) return;
+      const current = Number(bom.results[i].quantity) || 0;
+      applyQty(i, Math.max(0, current + delta), false, undefined, dest, bom);
+    });
+    dest.addEventListener("input", (e) => {
+      if (!e.target.classList.contains("qty-input")) return;
+      const i = Number(e.target.getAttribute("data-i"));
+      const n = parseInt(e.target.value, 10);
+      if (Number.isNaN(n)) return;
+      const caret = (typeof e.target.selectionStart === "number") ? e.target.selectionStart : String(e.target.value).length;
+      applyQty(i, Math.max(0, n), true, caret, dest, getBom());
+    });
+    dest.addEventListener("change", (e) => {
+      if (!e.target.classList.contains("qty-input")) return;
+      const i = Number(e.target.getAttribute("data-i"));
+      const n = parseInt(e.target.value, 10);
+      if (Number.isNaN(n)) return;
+      const caret = (typeof e.target.selectionStart === "number") ? e.target.selectionStart : String(e.target.value).length;
+      applyQty(i, Math.max(0, n), true, caret, dest, getBom());
+    });
+  }
+  bindQtyHandlers(audioResult, () => lastAudioBom);
+  bindQtyHandlers(headsetResult, () => lastHeadsetBom);
 
   resultDiv.addEventListener("click", (e) => {
     const btn = e.target.closest(".qty-btn");
@@ -1153,6 +1390,11 @@ async function init() {
       addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
 
+    const netgearSku = document.getElementById("netgearSwitch")?.value || "";
+    if (netgearSku && netgearSku.startsWith("GSM")) {
+      addLine(results, netgearSku);
+    }
+
     lastBom = {
       results,
       includePrices,
@@ -1162,6 +1404,93 @@ async function init() {
     lastBom.polarOn = false;
     renderBom();
   }
+
+  function mockError(el, msg) {
+    el.innerHTML = `<div class="text-red-700 bg-red-50 border border-red-200 p-3 rounded">${msg}</div>`;
+  }
+
+  document.getElementById("audioGenerateBtn")?.addEventListener("click", () => {
+    const platform = document.getElementById("audioPlatform")?.value || "";
+    const family = document.getElementById("audioFamily")?.value || "";
+    const model = document.getElementById("audioModel")?.value || "";
+    const supportTerm = document.getElementById("audioSupportTerm")?.value || "";
+    const includePrices = !!document.getElementById("audioIncludePrices")?.checked;
+    const missing = [];
+    if (!platform) missing.push("Platform");
+    if (!family) missing.push("Family");
+    if (!model) missing.push("Model");
+    if (missing.length) {
+      lastAudioBom = null;
+      mockError(audioResult, "Please select " + missing.join(", ") + " to generate a BOM.");
+      return;
+    }
+    let sku = null;
+    let err = null;
+    if (family === "Trio") {
+      sku = (platform === "Microsoft Teams") ? "849B6AA#ABA" : "849B4AA";
+    } else if (family === "CCX") {
+      if (platform === "Microsoft Teams") {
+        if (model === "505") sku = "82Z79AA";
+        else if (model === "600") sku = "82Z84AA";
+      } else {
+        err = "This mock has no OpenSIP/Zoom CCX SKU yet.";
+      }
+    } else if (family === "Edge E") {
+      if (platform === "Zoom" || platform === "OpenSIP") sku = "82M90AA";
+      else err = "This mock has no Teams Edge SKU yet.";
+    }
+    if (err) {
+      lastAudioBom = null;
+      mockError(audioResult, err);
+      return;
+    }
+    const results = [];
+    addLine(results, sku);
+    lastAudioBom = {
+      results,
+      includePrices,
+      footnote: supportTerm ? "Phone/headset Poly+ SKUs not in this mock yet." : null
+    };
+    renderBom(undefined, undefined, audioResult, lastAudioBom);
+  });
+
+  document.getElementById("headsetGenerateBtn")?.addEventListener("click", () => {
+    const platform = document.getElementById("headsetPlatform")?.value || "";
+    const conn = document.getElementById("headsetConn")?.value || "";
+    const supportTerm = document.getElementById("headsetSupportTerm")?.value || "";
+    const priceBand = document.getElementById("headsetPrice")?.value || "";
+    const includePrices = !!document.getElementById("headsetIncludePrices")?.checked;
+    const missing = [];
+    if (!platform) missing.push("Platform");
+    if (!conn) missing.push("Connectivity");
+    if (missing.length) {
+      lastHeadsetBom = null;
+      mockError(headsetResult, "Please select " + missing.join(", ") + " to generate a BOM.");
+      return;
+    }
+    let sku = null;
+    if (conn === "Wire") sku = "8X223AA";
+    else if (conn === "Bluetooth") sku = (platform === "Microsoft Teams") ? "77Y98AA" : "76U49AA";
+    else if (conn === "DECT") sku = "77T33AA#ABA";
+    const results = [];
+    addLine(results, sku);
+    let closestNote = null;
+    const unit = results[0] && typeof results[0].msrp === "number" ? results[0].msrp : null;
+    if (priceBand && unit != null) {
+      const inBand = priceBand === "Under $200" ? unit < 200
+        : priceBand === "$200–300" ? (unit >= 200 && unit <= 300)
+        : priceBand === "$300+" ? unit > 300
+        : true;
+      if (!inBand) closestNote = "closest mock SKU in this catalog";
+    }
+    lastHeadsetBom = {
+      results,
+      includePrices,
+      footnote: supportTerm ? "Phone/headset Poly+ SKUs not in this mock yet." : null,
+      closestNote
+    };
+    renderBom(undefined, undefined, headsetResult, lastHeadsetBom);
+  });
 }
 
 window.onload = init;

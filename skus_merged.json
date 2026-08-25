@@ -60,15 +60,15 @@
     "msrp": 275.0
   },
   "875L3AA": {
-    "description": "Poly Studio X70/X72/V72 Table Stand",
+    "description": "Studio X70/X72/V72 table stand",
     "msrp": 143.0
   },
   "875L5AA": {
-    "description": "Poly Studio X30/X32/V12 Table Stand",
+    "description": "Studio V12 /X32 table stand",
     "msrp": 61.0
   },
   "875L6AA": {
-    "description": "Poly Studio X30/X32/V12 VESA and Wall Mount",
+    "description": "Studio X32/V32/V12 WALL + VESA mount kit",
     "msrp": 121.0
   },
   "875L8AA": {
@@ -80,7 +80,7 @@
     "msrp": 274.0
   },
   "875M0AA": {
-    "description": "Poly Studio X50/X52/V52 Table Stand",
+    "description": "Studio X50/X52/V52 table stand",
     "msrp": 119.0
   },
   "875M4AA": {
@@ -804,11 +804,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount — White",
+    "description": "Poly TC10 Glass Mount \u2014 White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount — Black",
+    "description": "Poly TC10 Glass Mount \u2014 Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -882,5 +882,73 @@
   "B42BFAA": {
     "description": "Poly USB-C 65W Power Adapter and Power Cord Kit",
     "msrp": 49.70
+  },
+  "GSM4210PD-100NAS": {
+    "description": "Netgear AV Line M4250-9G1F-PoE+ (8x PoE+). High-side list estimate.",
+    "msrp": 864.81
+  },
+  "GSM4210PX-100NAS": {
+    "description": "Netgear AV Line M4250-8G2XF-PoE+ (8x PoE+ 220W). High-side list estimate.",
+    "msrp": 1362.05
+  },
+  "GSM4212PX-100NAS": {
+    "description": "Netgear AV Line M4250-10G2XF-PoE+. High-side list estimate.",
+    "msrp": 1910.47
+  },
+  "GSM4230PX-100NAS": {
+    "description": "Netgear AV Line M4250-26G4XF-PoE+. High-side list estimate.",
+    "msrp": 2751.71
+  },
+  "GSM4248PX-100NAS": {
+    "description": "Netgear AV Line M4250-40G8XF-PoE+. High-side list estimate.",
+    "msrp": 4520.67
+  },
+  "849B4AA": {
+    "description": "Poly Trio C60 IP Conference Phone OpenSIP / Zoom (PoE, Wi-Fi, Bluetooth)",
+    "msrp": null,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "82Z79AA": {
+    "description": "Poly CCX 505 Business Media Phone for Microsoft Teams (PoE, Wi-Fi, Bluetooth)",
+    "msrp": 579.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "82Z84AA": {
+    "description": "Poly CCX 600 Business Media Phone for Microsoft Teams (PoE, Wi-Fi, Bluetooth)",
+    "msrp": 749.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "82M90AA": {
+    "description": "Poly Edge E450 IP Phone (PoE, Wi-Fi, Bluetooth; Zoom / OpenSIP)",
+    "msrp": 355.95,
+    "family": "edge",
+    "platform": "zoom"
+  },
+  "8X223AA": {
+    "description": "Poly Blackwire 8225 stereo USB-C/A (UC)",
+    "msrp": 174.45,
+    "family": "headset",
+    "conn": "wire"
+  },
+  "77Y98AA": {
+    "description": "Poly Voyager 4320-M UC USB-A stereo (Microsoft Teams)",
+    "msrp": 233.95,
+    "family": "headset",
+    "conn": "bluetooth"
+  },
+  "76U49AA": {
+    "description": "Poly Voyager 4320 UC USB-A stereo",
+    "msrp": 233.95,
+    "family": "headset",
+    "conn": "bluetooth"
+  },
+  "77T33AA#ABA": {
+    "description": "Poly Savi 8220 UC DECT stereo USB-A",
+    "msrp": 291.48,
+    "family": "headset",
+    "conn": "dect"
   }
 }
