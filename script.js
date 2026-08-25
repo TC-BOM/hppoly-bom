@@ -333,7 +333,7 @@ async function init() {
     <div class="text-sm text-amber-900">📢 Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
   form.appendChild(promoWrap);
 
-  // TAA / JITC / No Radio
+  // TAA / JITC
   const taaWrap = document.createElement("div");
   taaWrap.className = "p-3 border-2 border-blue-300 rounded bg-blue-50 space-y-1";
   taaWrap.innerHTML = `
@@ -346,12 +346,8 @@ async function init() {
         <input id="optJitc" type="checkbox" class="w-4 h-4 border">
         <span class="font-semibold text-blue-900">JITC</span>
       </label>
-      <label class="inline-flex items-center gap-2 cursor-pointer">
-        <input id="optNoRadio" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold text-blue-900">No Radio</span>
-      </label>
     </div>
-    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC. No Radio is independent.</p>`;
+    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>`;
 
   form.appendChild(taaWrap);
 
