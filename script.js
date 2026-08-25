@@ -330,26 +330,12 @@ async function init() {
   const form = document.createElement("form");
   form.className = "space-y-4";
 
-  // Welcome banner + feedback (kept outside the generate form so Send does not Generate)
-  const promoWrap = document.createElement("form");
+  // Welcome banner only (feedback box removed: no safe GitHub Issues post from public Pages)
+  const promoWrap = document.createElement("div");
   promoWrap.id = "promoBox";
-  promoWrap.action = "https://formsubmit.co/tc-bom@proton.me";
-  promoWrap.method = "POST";
-  promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 space-y-2 mb-4";
+  promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 mb-4";
   promoWrap.innerHTML = `
-    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, and the new PC Studio Room kits have been added. Happy Hunting!</div>
-    <label class="block text-xs text-amber-900" for="siteFeedback">Questions / Comments / Suggestions:</label>
-    <input type="hidden" name="_subject" value="Poly BOM site suggestion">
-    <input type="hidden" name="_captcha" value="false">
-    <input type="hidden" name="_template" value="box">
-    <input type="hidden" name="_next" id="siteFeedbackNext" value="">
-    <input type="hidden" name="build" id="siteFeedbackBuild" value="">
-    <input type="hidden" name="page" id="siteFeedbackPage" value="">
-    <textarea id="siteFeedback" name="message" rows="1" required class="border border-amber-300 rounded p-2 w-full text-sm bg-white resize-none overflow-hidden leading-snug" placeholder="Questions, comments, or suggestions…"></textarea>
-    <div class="flex items-center gap-2">
-      <button type="submit" id="siteFeedbackSend" class="px-3 py-1 text-sm bg-amber-800 text-white rounded">Send</button>
-      <span id="siteFeedbackStatus" class="text-xs text-amber-800"></span>
-    </div>`;
+    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, and the new PC Studio Room kits have been added. Happy Hunting!</div>`;
 
   // TAA / JITC
   const taaWrap = document.createElement("div");
@@ -805,25 +791,6 @@ async function init() {
   panelVideo.appendChild(promoWrap);
   panelVideo.appendChild(form);
   panelVideo.appendChild(resultDiv);
-  const feedbackEl = promoWrap.querySelector("#siteFeedback");
-  const feedbackSend = promoWrap.querySelector("#siteFeedbackSend");
-  const feedbackStatus = promoWrap.querySelector("#siteFeedbackStatus");
-  function autosizeFeedback() {
-    if (!feedbackEl) return;
-    feedbackEl.style.height = "auto";
-    feedbackEl.style.height = Math.max(40, feedbackEl.scrollHeight) + "px";
-  }
-  feedbackEl?.addEventListener("input", autosizeFeedback);
-  autosizeFeedback();
-  promoWrap.addEventListener("submit", () => {
-    const next = promoWrap.querySelector("#siteFeedbackNext");
-    const build = promoWrap.querySelector("#siteFeedbackBuild");
-    const page = promoWrap.querySelector("#siteFeedbackPage");
-    if (next) next.value = location.href.split("#")[0];
-    if (build) build.value = VERSION;
-    if (page) page.value = location.href;
-    if (feedbackStatus) feedbackStatus.textContent = "Sending…";
-  });
 
   app.appendChild(panelVideo);
   app.appendChild(panelAudio);
@@ -832,7 +799,7 @@ async function init() {
   // Single compact legalese at bottom of page only
   const legalFooter = document.createElement("p");
   legalFooter.className = "mt-6 w-full text-[15px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
-  legalFooter.innerHTML = `<span class="italic text-red-600">*</span><strong>Please note:</strong> Estimate only, subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
+  legalFooter.innerHTML = `<span class="italic text-red-600">*</span><strong class="underline">Please Note:</strong> Estimate only, SKUs + pricing are subject to change. Created with AI tools that seem to have a track record of accuracy, but please be aware there could be mistakes. Double-check SKUs, pricing, and support with your HP Poly team.`;
   app.appendChild(legalFooter);
 
   function setActiveTab(name) {
