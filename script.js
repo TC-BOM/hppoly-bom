@@ -1,5 +1,6 @@
-const VERSION = "v10.32";
-// script.js – HP | Poly Configurator – v10.32: resource links (Spaces, dimensional drawings, Glen Bevcar Excel) + AI disclaimer
+const VERSION = "v10.33";
+// script.js – HP | Poly Configurator – v10.33: Lens Pro Rooms checkbox reveals 3-band dropdown (default 1–65)
+// v10.32: resource links (Spaces, dimensional drawings, Glen Bevcar Excel) + AI disclaimer
 // v10.31: VIDEO | AUDIO | HEADSETS tabs (audio/headset mock catalogs)
 // v10.30: Netgear Pro AV switch disclaimer + optional switch picker; mount QSG links while selecting mounts
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
@@ -408,15 +409,26 @@ async function init() {
   svcSection.appendChild(featuresDetails);
 
   const lensProWrap = document.createElement("div");
-  lensProWrap.className = "mt-2";
+  lensProWrap.className = "mt-2 space-y-2";
   lensProWrap.innerHTML = `
     <label class="inline-flex items-start gap-2">
       <input id="lensProRooms" type="checkbox" class="border mt-1">
       <span>
         <span class="font-medium">1 Year Lens Pro for Rooms</span>
-        <span class="block text-xs text-gray-600">Volume priced per room: $99 (1–65), $79 (66–250), $59 (251+). Starts at 1 room; change qty on the generated BOM.</span>
+        <span class="block text-xs text-gray-600">Check the box, then pick a room band. 1–65 rooms ($99) is selected by default.</span>
       </span>
     </label>`;
+  const lensProBandSel = select("lensProBand", "Lens Pro room band", [
+    { value: "UJ8T6LN", label: "1–65 rooms — UJ8T6LN — $99" },
+    { value: "UJ8T5LN", label: "66–250 rooms — UJ8T5LN — $79" },
+    { value: "UJ8T4LN", label: "251+ rooms — UJ8T4LN — $59" }
+  ], false);
+  lensProBandSel.classList.add("hidden", "ml-6");
+  lensProWrap.appendChild(lensProBandSel);
+  lensProWrap.querySelector("#lensProRooms").addEventListener("change", () => {
+    const on = document.getElementById("lensProRooms").checked;
+    lensProBandSel.classList.toggle("hidden", !on);
+  });
   svcSection.appendChild(lensProWrap);
 
   svcSection.appendChild(select("implementationHelp", "Implementation Help", [
@@ -970,7 +982,6 @@ async function init() {
     bom = bom || lastBom;
     if (!bom || !bom.results[i]) return;
     bom.results[i].quantity = n;
-    applyLensProBand(bom.results[i]);
     renderBom(restoreFocus ? i : undefined, restoreFocus ? caretPos : undefined, dest, bom);
   }
 
@@ -1386,7 +1397,7 @@ async function init() {
     accessories.forEach(sku => addLine(results, sku, sku));
 
     if (document.getElementById("lensProRooms")?.checked) {
-      const sku = lensProSkuForQty(1);
+      const sku = document.getElementById("lensProBand")?.value || "UJ8T6LN";
       addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
 
