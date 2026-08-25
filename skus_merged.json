@@ -47,8 +47,8 @@
     "msrp": 165.0
   },
   "875K5AA": {
-    "description": "Poly TC10 (black)",
-    "msrp": 1284.0
+    "description": "Poly TC10 Touch Controller Black",
+    "msrp": 1269
   },
   "875K8AA": {
     "description": "E70 display clamp",
@@ -275,12 +275,12 @@
     "msrp": 906.95
   },
   "P88120112": {
-    "description": "1yr Poly+ HP Mini Conferencing PC with Zoom Room",
-    "msrp": 72.95
+    "description": "1 Year Poly+ HP Mini Conferencing PC with Zoom Room",
+    "msrp": 80.95
   },
   "P88120312": {
-    "description": "3yr Poly+ HP Mini Conferencing PC with Zoom Room",
-    "msrp": 196.95
+    "description": "3 Year Poly+ HP Mini Conferencing PC with Zoom Room",
+    "msrp": 216.95
   },
   "P88140112": {
     "description": "1 yr PolyPlus Zoom Room PC solution small room",
@@ -803,11 +803,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount — White",
+    "description": "Poly TC10 Glass Mount \u2014 White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount — Black",
+    "description": "Poly TC10 Glass Mount \u2014 Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -843,15 +843,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
@@ -1568,5 +1568,69 @@
   "UQ7R5PB": {
     "description": "5y Poly+ Analyze RoveR8 DECT",
     "msrp": 106.0
+  },
+  "DS1R5AW": {
+    "description": "HP Poly Studio 7 Room Compute with Zoom Rooms",
+    "msrp": 3699
+  },
+  "UR8H3PVNK": {
+    "description": "3 Year Poly+ Analyze HP Mini Conferencing PC with Zoom Room",
+    "msrp": 257.95
+  },
+  "UR8H2PV": {
+    "description": "1 Year Poly+ Analyze HP Mini Conferencing PC with Zoom Room",
+    "msrp": 95.95
+  },
+  "9U3U1AA": {
+    "description": "Poly Studio R30 USB Video Bar and BT Remote with HP USB-C Dock G5 (ABA)",
+    "msrp": 999.95
+  },
+  "783S4AA": {
+    "description": "Poly Studio P15/R30 Wall Mount",
+    "msrp": 61
+  },
+  "875L1AA": {
+    "description": "Poly Studio P15/R30 VESA Mount",
+    "msrp": 72.35
+  },
+  "U73U4PV": {
+    "description": "3 Year Poly+ Poly R30 USB Video Bar with BT Remote and HP USB-C Dock G5",
+    "msrp": 294.95
+  },
+  "U73U3PV": {
+    "description": "1 Year Poly+ Poly R30 USB Video Bar with BT Remote and HP USB-C Dock G5",
+    "msrp": 108.95
+  },
+  "UR8B3PV": {
+    "description": "3 Year Poly+ Analyze R30 USB Video Bar with BT Remote and HP USB-C Dock G5",
+    "msrp": 349.95
+  },
+  "UR8B2PV": {
+    "description": "1 Year Poly+ Analyze R30 USB Video Bar with BT Remote and HP USB-C Dock G5",
+    "msrp": 129.95
+  },
+  "980F1AA": {
+    "description": "Poly Studio R30 USB Video Bar No Radio GSA/TAA",
+    "msrp": 927
+  },
+  "9X478AA": {
+    "description": "HP Thunderbolt 4 100W TAA G6 Dock",
+    "msrp": 284
+  },
+  "980F2AA": {
+    "description": "Poly Studio R30 USB Video Bar No Radio GSA/TAA JITC",
+    "msrp": 927
+  },
+  "8D8K7AA": {
+    "description": "Poly Studio X52 All-In-One Video Bar No Radio GSA/TAA",
+    "msrp": 5243
+  },
+  "8D8K8AA": {
+    "description": "Poly Studio X52 All-In-One Video Bar No Radio TAA JITC",
+    "msrp": 5243
+  },
+  "99T09AA": {
+    "description": "Poly Studio G62 Video Conferencing System",
+    "msrp": 2682
   }
 }

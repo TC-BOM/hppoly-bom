@@ -1,5 +1,6 @@
-const VERSION = "v10.45";
-// script.js – HP | Poly Configurator – v10.45: Knauf-style flat home form; HEADSETS tab greyed out
+const VERSION = "v10.46";
+// script.js – HP | Poly Configurator – v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
+// v10.45: Knauf-style flat home form; HEADSETS tab greyed out
 // v10.44: shrink announcement banner
 // v10.43: unique HP Documents QSG PDFs per mount option
 // v10.42: split Support and Install sections (Knauf layout)
@@ -39,7 +40,15 @@ async function init() {
   };
   const hasSku = (arr, sku) => arr.some(x => x.sku === sku);
   function bomOffersPolarFilter(results) {
-    const skus = ["842F8AA","886C9AA","886C8AA","A4MA2AA","A4MA1AA","A4LZ8AA#ABA","AV1E4AA","AV1E3AA#ABA"];
+    const family = hostFamily();
+    if (family === "x72" || family === "v72") return true;
+    const cam = document.getElementById("cameraChoice")?.value;
+    if (cam === "E70") return true;
+    const skus = [
+      "842F8AA","886C9AA","886C8AA",
+      "A4LZ8AA","A4LZ8AA#ABA","A4MA1AA","A4MA2AA","A4MA4AA","A4MA6AA",
+      "AV1E3AA","AV1E3AA#ABA","AV1E4AA","AV1E6AA"
+    ];
     return results.some(x => skus.includes(x.sku));
   }
   const addLine = (arr, sku, fallback = "(Custom item)", qty = 1) => {
@@ -63,7 +72,8 @@ async function init() {
   const SUPPORT_MAP = {
     tc10:       { poly1: "P37760112", poly3: "P37760312", poly5: "UF4W1PV", analyze1: "UR5F3PV", analyze3: "UR5F4PV", analyze5: "UR5F6PV" },
     g9plus_mtr: { poly1: "P88230112", poly3: "P88230312", poly5: "UJ9E5PV", analyze1: "UR5J9PV", analyze3: "UR5K0PV", analyze5: "UR5K2PV" },
-    zoom_pc:    { poly1: "P88120112", poly3: "P88120312", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
+    zoom_pc:    { poly1: "P88120112", poly3: "P88120312", poly5: null,     analyze1: "UR8H2PV", analyze3: "UR8H3PVNK", analyze5: null },
+    r30:        { poly1: "U73U3PV",   poly3: "U73U4PV",   poly5: null,     analyze1: "UR8B2PV", analyze3: "UR8B3PV", analyze5: null },
     g62:        { poly1: "U86WDPV",   poly3: "U77D3PV",   poly5: "UL5V0PV", analyze1: "UR4H9PV", analyze3: "UR4J0PV", analyze5: "UR4J2PV" },
     e70:        { poly1: "P87090112", poly3: "P87090312", poly5: "UF4W3PV", analyze1: "UR7Z1PV", analyze3: "UR7Z2PV", analyze5: null },
     e60:        { poly1: "U86LCPV",   poly3: "U86LDPV",   poly5: "UF4W2PV", analyze1: "UR7X9PV", analyze3: "UR7Y0PV", analyze5: "UR7Y2PV" },
@@ -128,11 +138,67 @@ async function init() {
   }
 
   const SCHEDULING_MAP = {
-    tc10_black_wall:  { commercialTc10: "875K5AA", taaTc10: "973F9AA", glassMount: null,      label: "TC10 Black scheduling panel (wall mount included)" },
-    tc10_white_wall:  { commercialTc10: "973G1AA", taaTc10: "9A135AA", glassMount: null,      label: "TC10 White scheduling panel (wall mount included)" },
-    tc10_black_glass: { commercialTc10: "875K5AA", taaTc10: "973F9AA", glassMount: "874P9AA", label: "TC10 Black scheduling panel + glass mount" },
-    tc10_white_glass: { commercialTc10: "973G1AA", taaTc10: "9A135AA", glassMount: "874P6AA", label: "TC10 White scheduling panel + glass mount" }
+    tc10_black_wall:  { color: "black", glassMount: null,      label: "TC10 Black scheduling panel (wall mount included)" },
+    tc10_white_wall:  { color: "white", glassMount: null,      label: "TC10 White scheduling panel (wall mount included)" },
+    tc10_black_glass: { color: "black", glassMount: "874P9AA", label: "TC10 Black scheduling panel + glass mount" },
+    tc10_white_glass: { color: "white", glassMount: "874P6AA", label: "TC10 White scheduling panel + glass mount" }
   };
+
+  const HOST_SKUS = {
+    v12:     { commercial: "A9DD8AA", taa: "B95SPAA", taa_nr: "B95SNAA" },
+    v52:     { commercial: "A09D4AA", taa: "A09D5AA", jitc: "A09D6AA", taa_nr: "A09D8AA", jitc_nr: "A09D9AA" },
+    v72:     { commercial: "AV1E3AA", jitc: "AV1E4AA", jitc_nr: "AV1E6AA" },
+    x32:     { commercial: "A3SV5AA#ABA", taa: "A3SV9AA", jitc: "A3SW0AA", taa_nr: "A3SW1AA", jitc_nr: "A3SW2AA" },
+    x52:     { commercial: "8D8K2AA", taa: "8D8K3AA", jitc: "8D8K4AA", taa_nr: "8D8K7AA", jitc_nr: "8D8K8AA" },
+    x72:     { commercial: "A4LZ8AA", taa: "A4MA1AA", jitc: "A4MA2AA", taa_nr: "A4MA4AA", jitc_nr: "A4MA6AA" },
+    g62:     { commercial: "99T09AA", taa: "99T10AA", jitc: "99T11AA", taa_nr: "99T12AA", jitc_nr: "99T13AA" },
+    g62_kit: { commercial: "A01KCAA", taa: "A01KBAA", jitc: "A01K9AA", taa_nr: "99T21AA", jitc_nr: "A01K7AA" },
+    r30:     { commercial: "9U3U1AA", taa: "980F1AA", jitc: "980F2AA", taa_nr: "980F1AA", jitc_nr: "980F2AA" }
+  };
+  function pickHost(family, flags) {
+    const row = HOST_SKUS[family];
+    if (!row) return null;
+    flags = flags || {};
+    const wantJitc = !!flags.jitc;
+    const wantTaa = !!flags.taa;
+    const wantNr = !!flags.nr;
+    const order = [];
+    const push = k => { if (!order.includes(k)) order.push(k); };
+    if (wantJitc && wantNr) push("jitc_nr");
+    if (wantJitc) push("jitc");
+    if (wantTaa && wantNr) push("taa_nr");
+    if (wantTaa) push("taa");
+    // TAA-compliant JITC fallback when no TAA-only SKU (e.g. V72 TAA → AV1E4AA)
+    if (wantTaa && !wantJitc) {
+      if (wantNr) push("jitc_nr");
+      push("jitc");
+    }
+    // If nr but no *_nr key, non-nr of same compliance is already in order
+    push("commercial");
+    for (const k of order) {
+      if (row[k]) return row[k];
+    }
+    return null;
+  }
+  function complianceFlags() {
+    const jitc = !!document.getElementById("optJitc")?.checked;
+    const taaBox = !!document.getElementById("optTaa")?.checked;
+    const nr = !!document.getElementById("optNoRadio")?.checked;
+    return { taa: taaBox || jitc, jitc, nr };
+  }
+  function pickTc10(color) {
+    const flags = complianceFlags();
+    if (color === "white") {
+      if (flags.nr && (flags.taa || flags.jitc)) return "93S70AA";
+      // commercial white missing → 973G1AA (do not invent)
+      return "973G1AA";
+    }
+    if (flags.jitc && flags.nr) return "973G0AA";
+    if (flags.jitc) return "973F9AA";
+    if (flags.taa && flags.nr) return "977L7AA";
+    if (flags.taa) return "973F9AA"; // no TAA black-with-radio in doc; JITC black is the listed TAA black
+    return "875K5AA";
+  }
 
   // ---------- UI ----------
   const app = document.getElementById("app");
@@ -177,15 +243,25 @@ async function init() {
     <div class="text-sm text-amber-900">Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
   form.appendChild(promoWrap);
 
-  // TAA / JITC
+  // TAA / JITC / No Radio
   const taaWrap = document.createElement("div");
   taaWrap.className = "p-3 border-2 border-blue-300 rounded bg-blue-50 space-y-1";
   taaWrap.innerHTML = `
-    <label class="inline-flex items-center gap-2 cursor-pointer">
-      <input id="taaJitc" type="checkbox" class="w-4 h-4 border">
-      <span class="font-semibold text-blue-900">TAA / JITC compliant configuration only</span>
-    </label>
-    <p class="text-xs text-blue-800 ml-6">When checked, only TAA/JITC-compliant SKUs are used. Standard commercial hardware is excluded. Support terms still apply.</p>`;
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        <input id="optTaa" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold text-blue-900">TAA / GSA</span>
+      </label>
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        <input id="optJitc" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold text-blue-900">JITC</span>
+      </label>
+      <label class="inline-flex items-center gap-2 cursor-pointer">
+        <input id="optNoRadio" type="checkbox" class="w-4 h-4 border">
+        <span class="font-semibold text-blue-900">No Radio</span>
+      </label>
+    </div>
+    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC. No Radio is independent.</p>`;
 
   form.appendChild(taaWrap);
 
@@ -203,6 +279,7 @@ async function init() {
   platformWrap.appendChild(platformHint);
   form.appendChild(platformWrap);
   form.appendChild(select("roomSize", "Select Room Size", [
+    { value: "Huddle", label: "Huddle — BYOD only. Poly Studio R30 USB bar + dock" },
     { value: "Small",  label: "Small — Up to 12' from front of room to furthest person to cover" },
     { value: "Medium", label: "Medium — Up to 16' from front of room to furthest person to cover" },
     { value: "Large",  label: "Large — Up to 25' from front of room to furthest person to cover" },
@@ -770,6 +847,7 @@ async function init() {
     const t = document.getElementById("typeOfSystem")?.value || "";
     const r = document.getElementById("roomSize")?.value || "";
     const isUSB = (t === "BYOD USB Bar only" || t === "Windows PC based solution");
+    if (r === "Huddle") return 0;
     if (r === "Very large") return isUSB ? 4 : 8; // V72 vs G62
     if (r === "Large") return 4;      // X72 / V72
     if (r === "Medium") return 4;     // X52 / V52
@@ -822,6 +900,7 @@ async function init() {
     const t = document.getElementById("typeOfSystem")?.value || "";
     const r = document.getElementById("roomSize")?.value || "";
     if (!t || !r) return null;
+    if (r === "Huddle") return t === "BYOD USB Bar only" ? "r30" : null;
     const usb = isUsbOrPc(t);
     if (r === "Small") return usb ? "v12" : "x32";
     if (r === "Medium") return usb ? "v52" : "x52";
@@ -834,7 +913,43 @@ async function init() {
     const family = hostFamily();
     return family === "v52" || family === "x52" || family === "v72" || family === "x72";
   }
+  function updateGoogleMeetOption() {
+    const t = document.getElementById("typeOfSystem")?.value || "";
+    const sel = document.getElementById("platform");
+    if (!sel) return;
+    const meet = [...sel.options].find(o => o.value === "Google Meet");
+    if (!meet) return;
+    const disable = t === "Windows PC based solution";
+    meet.disabled = disable;
+    meet.style.color = disable ? "#9ca3af" : "";
+    if (disable && sel.value === "Google Meet") sel.value = "";
+  }
+  function updateHuddleAvailability() {
+    const t = document.getElementById("typeOfSystem")?.value || "";
+    const sel = document.getElementById("roomSize");
+    if (!sel) return;
+    const huddle = [...sel.options].find(o => o.value === "Huddle");
+    if (!huddle) return;
+    const byod = t === "BYOD USB Bar only";
+    huddle.disabled = !byod;
+    huddle.style.color = huddle.disabled ? "#9ca3af" : "";
+    if (!byod && sel.value === "Huddle") sel.value = "";
+  }
+  function updateSupportTermOptions() {
+    const sel = document.getElementById("supportTerm");
+    if (!sel) return;
+    const family = hostFamily();
+    const disable5 = family === "r30";
+    [...sel.options].forEach(opt => {
+      if (opt.value === "poly5" || opt.value === "analyze5") {
+        opt.disabled = disable5;
+        opt.style.color = disable5 ? "#9ca3af" : "";
+      }
+    });
+    if (disable5 && (sel.value === "poly5" || sel.value === "analyze5")) sel.value = "";
+  }
   function updatePlatformVisibility() {
+    updateGoogleMeetOption();
     const t = document.getElementById("typeOfSystem")?.value || "";
     const show = t === "Windows PC based solution";
     const wrap = document.getElementById("platformWrap");
@@ -844,11 +959,11 @@ async function init() {
     if (!hint) return;
     if (!show) { hint.textContent = ""; return; }
     if (p === "Google Meet") {
-      hint.textContent = "No Google Meet compute SKU is in this catalog. The BOM will include the USB bar only (no room PC or TC10).";
+      hint.textContent = "Google Meet is not available for Windows PC rooms.";
     } else if (!p) {
-      hint.textContent = "Required for Windows PC solutions. Zoom and Teams add a room compute plus in-room TC10.";
+      hint.textContent = "Required for Windows PC solutions. Zoom and Teams add a room compute plus in-room TC10. Google Meet is not available for Windows PC rooms.";
     } else {
-      hint.textContent = "Windows room compute and in-room TC10 are added for Zoom and Teams.";
+      hint.textContent = "Windows room compute and in-room TC10 are added for Zoom and Teams. Google Meet is not available for Windows PC rooms.";
     }
   }
   function qsgLink(href, label) {
@@ -881,7 +996,9 @@ async function init() {
       else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580192_en-US-1.pdf", "X70/X72/V72 stand quick start (PDF)");
       else qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9576018_en-US-1.pdf", "X70 wall mount quick start (PDF)");
     } else if (family === "g62") {
-      included = "G62 commercial kit includes the mount; no extra bar-mount SKU is added.";
+      included = "G62 default is the video bar without a mounting plate (99T09AA commercial / TAA variants). Choose Mounting plate kit to use the G62 plate kit SKU instead of adding a separate plate.";
+    } else if (family === "r30") {
+      included = "R30 includes in-box mounting. Wall and VESA are extra P15/R30 mounts.";
     }
     hint.innerHTML = included + (qsg ? "<br>Quick start: " + qsg : "");
   }
@@ -909,7 +1026,7 @@ async function init() {
     if (!wrap || !sel) return;
     const family = hostFamily();
     const prev = sel.value || "None";
-    if (!family || family === "g62") {
+    if (!family) {
       wrap.classList.add("hidden");
       sel.innerHTML = `<option value="None">None</option>`;
       sel.value = "None";
@@ -918,7 +1035,14 @@ async function init() {
     }
     wrap.classList.remove("hidden");
     const opts = [{ value: "None", label: "None — use in-box mount" }];
-    if (family === "v12" || family === "x32") {
+    if (family === "r30") {
+      opts[0] = { value: "None", label: "None — in-box / no extra mount" };
+      opts.push({ value: "Wall", label: "Wall (783S4AA)" });
+      opts.push({ value: "VESA style display mount", label: "VESA style display mount (875L1AA)" });
+    } else if (family === "g62") {
+      opts[0] = { value: "None", label: "None — bar only (no mounting plate)" };
+      opts.push({ value: "Kit", label: "Mounting plate kit" });
+    } else if (family === "v12" || family === "x32") {
       opts.push({ value: "Wall", label: "Wall / VESA kit (875L6AA)" });
       opts.push({ value: "Table", label: "Table stand (875L5AA)" });
       opts.push({ value: "Inverted wall", label: "Inverted wall (875L7AA)" });
@@ -937,6 +1061,17 @@ async function init() {
   function updateExpansionOptions() {
     const sel = document.getElementById("expansionMic");
     if (!sel) return;
+    const family = hostFamily();
+    const wrap = document.getElementById("expansionMicWrap");
+    if (family === "r30") {
+      if (wrap) wrap.classList.add("hidden");
+      sel.innerHTML = `<option value="None">None</option>`;
+      sel.value = "None";
+      const info = document.getElementById("expansionInfo");
+      if (info) info.classList.add("hidden");
+      return;
+    }
+    if (wrap) wrap.classList.remove("hidden");
     const prev = sel.value || "None";
     const analog = analogMicApplies();
     const opts = [{ value: "None", label: "None" }];
@@ -948,7 +1083,6 @@ async function init() {
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
     const info = document.getElementById("expansionInfo");
-    const family = hostFamily();
     const restrict = family === "v12" || family === "x32" || family === "v52" || family === "x52";
     if (info) info.classList.toggle("hidden", !restrict);
   }
@@ -977,7 +1111,8 @@ async function init() {
     const wrap = document.getElementById("g6DockWrap");
     if (!wrap) return;
     const t = document.getElementById("typeOfSystem")?.value || "";
-    const show = t === "Windows PC based solution";
+    const family = hostFamily();
+    const show = t === "Windows PC based solution" && family !== "r30";
     wrap.classList.toggle("hidden", !show);
     if (!show) {
       const cb = document.getElementById("g6DockOpt");
@@ -997,7 +1132,9 @@ async function init() {
     }
   }
   function refreshDependentControls() {
+    updateHuddleAvailability();
     updatePlatformVisibility();
+    updateSupportTermOptions();
     updateMountingOptions();
     updateExpansionOptions();
     updateCameraVisibility();
@@ -1064,6 +1201,18 @@ async function init() {
     updateCameraAccessoryVisibility();
   }
 
+  document.getElementById("optJitc")?.addEventListener("change", () => {
+    if (document.getElementById("optJitc")?.checked) {
+      const taa = document.getElementById("optTaa");
+      if (taa) taa.checked = true;
+    }
+  });
+  document.getElementById("optTaa")?.addEventListener("change", () => {
+    if (!document.getElementById("optTaa")?.checked) {
+      const jitc = document.getElementById("optJitc");
+      if (jitc) jitc.checked = false;
+    }
+  });
   ["platform", "typeOfSystem", "roomSize"].forEach(id => {
     document.getElementById(id)?.addEventListener("change", refreshDependentControls);
   });
@@ -1084,8 +1233,10 @@ async function init() {
   const applyPromoBtn = document.getElementById("applyPromoBtn");
   if (applyPromoBtn) {
     applyPromoBtn.addEventListener("click", () => {
-      const taaCb = document.getElementById("taaJitc");
-      if (taaCb) taaCb.checked = false;
+      ["optTaa", "optJitc", "optNoRadio"].forEach(id => {
+        const cb = document.getElementById(id);
+        if (cb) cb.checked = false;
+      });
       document.getElementById("typeOfSystem").value = "Android appliance based solution";
       document.getElementById("platform").value = "Microsoft Teams";
       document.getElementById("roomSize").value = "Medium";
@@ -1278,7 +1429,7 @@ async function init() {
     const implHelp     = document.getElementById("implementationHelp").value;
     const accessories  = (document.getElementById("accessories").value || "").split(",").map(s => s.trim()).filter(Boolean);
     const includePrices = document.getElementById("includePrices").checked;
-    const taaJitc      = document.getElementById("taaJitc")?.checked || false;
+    const flags        = complianceFlags();
 
     const needsPlatform = typeOfSystem === "Windows PC based solution";
     const missing = [];
@@ -1292,274 +1443,138 @@ async function init() {
 
     const results = [];
     const isUSBorPC = (typeOfSystem === "BYOD USB Bar only" || typeOfSystem === "Windows PC based solution");
+    const family = hostFamily();
 
+    // Host (unified TAA / JITC / No Radio / commercial)
+    const hostKey = (family === "g62" && mounting && mounting !== "None") ? "g62_kit" : family;
+    const hostSku = pickHost(hostKey, flags);
+    if (hostSku) addLine(results, hostSku);
+    const supportKey = (family === "r30") ? "r30"
+      : (family === "g62" || hostKey === "g62_kit") ? "g62"
+      : family;
+    if (supportKey) addSupport(results, supportKey, supportTerm);
 
-    // ========== TAA / JITC MODE ==========
-    // Prefer JITC variant when available; fall back to TAA-only.
-    if (taaJitc) {
-      const pick = (jitcSku, taaSku) => jitcSku || taaSku;
-      const tc10Sku = () => pick("973F9AA", "977L6AA"); // Black TC10 TAA JITC / TAA
+    // Huddle TAA dock (commercial 9U3U1AA already includes G5 dock)
+    if (family === "r30" && flags.taa) {
+      addLine(results, "9X478AA");
+    }
 
-      if (isUSBorPC) {
-        // USB / PC based → V-series bars (TAA)
-        if (roomSize === "Small") {
-          addLine(results, "B95SPAA"); // V12 TAA
-          addSupport(results, "v12", supportTerm);
-        } else if (roomSize === "Medium") {
-          addLine(results, pick("A09D6AA", "A09D5AA")); // V52
-          addSupport(results, "v52", supportTerm);
+    const addInRoomTc10 = () => {
+      addLine(results, pickTc10("black"));
+      addSupport(results, "tc10", supportTerm);
+    };
+
+    if (typeOfSystem === "Windows PC based solution") {
+      if (platform === "Microsoft Teams") {
+        if (flags.taa) {
+          if (roomSize === "Small" || roomSize === "Medium") addLine(results, "DS1R6AW");
+          else addLine(results, "DS0W9AW");
         } else {
-          addLine(results, pick("AV1E4AA", null)); // V72
-          addSupport(results, "v72", supportTerm);
+          addLine(results, "A1ZB6AW#ABA");
         }
-        if (typeOfSystem === "Windows PC based solution") {
-          if (platform === "Microsoft Teams") {
-            if (roomSize === "Small" || roomSize === "Medium") {
-              addLine(results, "DS1R6AW"); // Studio 5 Room Compute TAA
-            } else {
-              addLine(results, "DS0W9AW"); // Studio 7 Room Compute TAA
-            }
-            addSupport(results, "g9plus_mtr", supportTerm);
-            addLine(results, tc10Sku());
-            addSupport(results, "tc10", supportTerm);
-          } else if (platform === "Zoom") {
-            // No TAA Zoom room PC in catalog — TC10 only, do not invent a compute SKU
-            addLine(results, tc10Sku());
-            addSupport(results, "tc10", supportTerm);
-          }
-          // Google Meet: USB bar only (no room PC or TC10)
+        addSupport(results, "g9plus_mtr", supportTerm);
+        addInRoomTc10();
+      } else if (platform === "Zoom") {
+        if (!flags.taa) {
+          addLine(results, "DS1R5AW"); // replaces 9C422AW#ABA; no TAA Zoom PC
+          addSupport(results, "zoom_pc", supportTerm);
         }
-      } else {
-        // Android appliance → X-series / G62 (TAA)
-        if (roomSize === "Small") {
-          addLine(results, pick("A3SW0AA", "A3SV9AA")); // X32
-          addSupport(results, "x32", supportTerm);
-          addLine(results, tc10Sku());
-          addSupport(results, "tc10", supportTerm);
-        } else if (roomSize === "Medium") {
-          addLine(results, pick("8D8K4AA", "8D8K3AA")); // X52
-          addSupport(results, "x52", supportTerm);
-          addLine(results, tc10Sku());
-          addSupport(results, "tc10", supportTerm);
-        } else if (roomSize === "Large") {
-          addLine(results, pick("A4MA2AA", "A4MA1AA")); // X72
-          addSupport(results, "x72", supportTerm);
-          addLine(results, tc10Sku());
-          addSupport(results, "tc10", supportTerm);
-        } else {
-          addLine(results, pick("99T11AA", "99T10AA")); // G62
-          addSupport(results, "g62", supportTerm);
-          addLine(results, tc10Sku());
-          addSupport(results, "tc10", supportTerm);
-        }
+        addInRoomTc10();
       }
+      // Google Meet: USB bar only, no PC, no TC10
+    } else if (typeOfSystem === "Android appliance based solution") {
+      addInRoomTc10();
+    }
+    // BYOD (including huddle R30): no in-room TC10
 
-      // Scheduling panel (TAA path)
-      if (scheduling && scheduling !== "None" && SCHEDULING_MAP[scheduling]) {
-        const sch = SCHEDULING_MAP[scheduling];
-        addLine(results, sch.taaTc10 || tc10Sku(), sch.label);
-        addSupport(results, "tc10", supportTerm);
-        if (sch.glassMount) addLine(results, sch.glassMount);
-      }
+    // Scheduling panel
+    if (scheduling && scheduling !== "None" && SCHEDULING_MAP[scheduling]) {
+      const sch = SCHEDULING_MAP[scheduling];
+      addLine(results, pickTc10(sch.color), sch.label);
+      addSupport(results, "tc10", supportTerm);
+      if (sch.glassMount) addLine(results, sch.glassMount);
+    }
 
-      // A2 mics (TAA versions)
+    // A2 mics
+    {
       const wantsA2White = (expansionMic || "").includes("New White A2");
       const wantsA2Black = (expansionMic || "").includes("New Black A2");
       if (wantsA2White || wantsA2Black) {
         const a2Qty = Math.max(1, Math.min(a2MaxForSelection(), parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
-        const podSku = wantsA2White ? "B22X5AA" : "B22X7AA"; // TAA White / Black
-        addLine(results, podSku, "(A2 mic pod TAA)", a2Qty);
-        addSupport(results, "a2_mic", supportTerm, a2Qty);
-        addLine(results, "B22X3AA"); // A2 Bridge TAA (one per system)
-        addSupport(results, "a2_bridge", supportTerm);
-        // Required PoE for A2 bridge
-        if (!hasSku(results, "A02F9AA")) addLine(results, "A02F9AA", "PoE power injector for G62 or A2 Audio bridge");
-      }
-
-      // Camera add-ons (TAA) for X52 / X72 / G62
-      {
-        const isG62 = hasSku(results, "99T11AA") || hasSku(results, "99T10AA");
-        const isX52 = hasSku(results, "8D8K4AA") || hasSku(results, "8D8K3AA");
-        const isX72 = hasSku(results, "A4MA2AA") || hasSku(results, "A4MA1AA");
-        if (isG62 || isX52 || isX72) {
-          const cam = document.getElementById("cameraChoice")?.value;
-          const wantWall = !!document.getElementById("camPowerWall")?.checked;
-          const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
-          const camMount = document.getElementById("cameraMount")?.value || "None";
-          if (cam === "E60") {
-            addLine(results, "9W1A7AA"); // E60 TAA
-            addSupport(results, "e60", supportTerm);
-            if (wantWall && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
-              addLine(results, "9W1A9AA#ABA", "Poly Studio E60 Power Accessory (wall power supply)");
-            }
-            if (wantPoePP) addLine(results, "B5NH6AA");
-            if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
-              addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
-            }
-            if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
-              addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
-            }
-          } else if (cam === "E70") {
-            addLine(results, pick("886C9AA", "886C8AA")); // E70 TAA JITC / TAA
-            addSupport(results, "e70", supportTerm);
-            if (wantWall && !hasSku(results, "875K6AA")) {
-              addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
-            }
-            if (wantPoePP) addLine(results, "B5NH6AA");
-            if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
-              addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
-            }
-            if (camMount === "Clamp" && !hasSku(results, "875K8AA")) {
-              addLine(results, "875K8AA", "E70 display clamp");
-            }
-          }
-        }
-      }
-
-      // Mounting applied after both TAA and commercial paths (same physical SKUs)
-    }
-    // ========== END TAA / JITC MODE ==========
-
-    // ========== STANDARD COMMERCIAL PATH ==========
-    if (!taaJitc) {
-      if (isUSBorPC) {
-        if (roomSize === "Small") {
-          addLine(results, "A9DD8AA#ABA"); // V12
-          addSupport(results, "v12", supportTerm);
-        } else if (roomSize === "Medium") {
-          addLine(results, "A09D4AA#ABA"); // V52
-          addSupport(results, "v52", supportTerm);
-        } else { // Large or Very large → V72
-          addLine(results, "AV1E3AA#ABA");
-          addSupport(results, "v72", supportTerm);
-        }
-        if (typeOfSystem === "Windows PC based solution") {
-          if (platform === "Zoom") {
-            addLine(results, "9C422AW#ABA");
-            addSupport(results, "zoom_pc", supportTerm);
-            addLine(results, "875K5AA");
-            addSupport(results, "tc10", supportTerm);
-          } else if (platform === "Microsoft Teams") {
-            addLine(results, "A1ZB6AW#ABA");
-            addSupport(results, "g9plus_mtr", supportTerm);
-            addLine(results, "875K5AA");
-            addSupport(results, "tc10", supportTerm);
-          }
-        }
-      } else {
-        // Android appliance
-        if (roomSize === "Small") {
-          addLine(results, "A3SV5AA#ABA"); // X32
-          addSupport(results, "x32", supportTerm);
-          // X32 also gets TC10
-          if (!hasSku(results, "875K5AA")) addLine(results, "875K5AA");
-          addSupport(results, "tc10", supportTerm);
-        } else if (roomSize === "Medium") {
-          addLine(results, "8D8K2AA#ABA"); // X52
-          addSupport(results, "x52", supportTerm);
-          addLine(results, "875K5AA");
-          addSupport(results, "tc10", supportTerm);
-        } else if (roomSize === "Large") {
-          addLine(results, "A4LZ8AA#ABA"); // X72
-          addSupport(results, "x72", supportTerm);
-          addLine(results, "875K5AA");
-          addSupport(results, "tc10", supportTerm);
-        } else { // Very large → G62
-          addLine(results, "A01KCAA#AC3");
-          addSupport(results, "g62", supportTerm);
-          addLine(results, "875K5AA");
-          addSupport(results, "tc10", supportTerm);
-        }
-      }
-
-      // Camera add-ons for X52 / X72 / G62
-      const isX52 = hasSku(results, "8D8K2AA#ABA");
-      const isX72 = hasSku(results, "A4LZ8AA#ABA");
-      const isG62 = hasSku(results, "A01KCAA#AC3");
-      if (isX52 || isX72 || isG62) {
-        const cam = document.getElementById("cameraChoice")?.value;
-        const wantWall = !!document.getElementById("camPowerWall")?.checked;
-        const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
-        const camMount = document.getElementById("cameraMount")?.value || "None";
-        if (cam === "E70") {
-          if (!hasSku(results, "842F8AA")) addLine(results, "842F8AA");
-          addSupport(results, "e70", supportTerm);
-          if (wantWall && !hasSku(results, "875K6AA")) {
-            addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
-          }
-          if (wantPoePP) addLine(results, "B5NH6AA");
-          if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
-            addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
-          }
-          if (camMount === "Clamp" && !hasSku(results, "875K8AA")) {
-            addLine(results, "875K8AA", "E70 display clamp");
-          }
-        } else if (cam === "E60") {
-          if (!hasSku(results, "9W1A6AA#AC3")) addLine(results, "9W1A6AA#AC3");
-          addSupport(results, "e60", supportTerm);
-          if (wantWall && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
-            addLine(results, "9W1A9AA", "Poly Studio E60 Power Accessory");
-          }
-          if (wantPoePP) addLine(results, "B5NH6AA");
-          if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
-            addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
-          }
-          if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
-            addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
-          }
-        }
-      }
-
-      // A2 mics (commercial)
-      {
-        const wantsA2White = (expansionMic || "").includes("New White A2");
-        const wantsA2Black = (expansionMic || "").includes("New Black A2");
-        if (wantsA2White || wantsA2Black) {
-          const a2Qty = Math.max(1, Math.min(a2MaxForSelection(), parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
-          const podSku = wantsA2White ? "B22X4AA#AC3" : "B22X6AA#AC3"; // commercial White / Black
+        if (flags.taa) {
+          const podSku = wantsA2White ? "B22X5AA" : "B22X7AA";
+          addLine(results, podSku, "(A2 mic pod TAA)", a2Qty);
+          addSupport(results, "a2_mic", supportTerm, a2Qty);
+          addLine(results, "B22X3AA");
+          addSupport(results, "a2_bridge", supportTerm);
+        } else {
+          const podSku = wantsA2White ? "B22X4AA#AC3" : "B22X6AA#AC3";
           addLine(results, podSku, wantsA2White ? "Poly Studio A2 Table Microphone — White" : "Poly Studio A2 Table Microphone — Black", a2Qty);
           addSupport(results, "a2_mic", supportTerm, a2Qty);
           if (!hasSku(results, "B22X2AA#AC3")) {
             addLine(results, "B22X2AA#AC3", "Poly Studio A2 Audio Bridge");
           }
           addSupport(results, "a2_bridge", supportTerm);
-          // Required PoE for A2 bridge
-          if (!hasSku(results, "A02F9AA")) addLine(results, "A02F9AA", "PoE power injector for G62 or A2 Audio bridge");
         }
-      }
-
-      // Scheduling panel
-      if (scheduling && scheduling !== "None" && SCHEDULING_MAP[scheduling]) {
-        const sch = SCHEDULING_MAP[scheduling];
-        addLine(results, sch.commercialTc10, sch.label);
-        addSupport(results, "tc10", supportTerm);
-        if (sch.glassMount) addLine(results, sch.glassMount);
+        if (!hasSku(results, "A02F9AA")) addLine(results, "A02F9AA", "PoE power injector for G62 or A2 Audio bridge");
       }
     }
-    // ========== END STANDARD PATH ==========
+
+    // Camera add-ons — keyed off hostFamily, not hasSku of a few SKUs
+    if (family === "g62" || family === "x52" || family === "x72") {
+      const cam = document.getElementById("cameraChoice")?.value;
+      const wantWall = !!document.getElementById("camPowerWall")?.checked;
+      const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
+      const camMount = document.getElementById("cameraMount")?.value || "None";
+      if (cam === "E60") {
+        addLine(results, flags.taa ? "9W1A7AA" : "9W1A6AA#AC3");
+        addSupport(results, "e60", supportTerm);
+        if (wantWall && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
+          addLine(results, flags.taa ? "9W1A9AA#ABA" : "9W1A9AA", flags.taa ? "Poly Studio E60 Power Accessory (wall power supply)" : "Poly Studio E60 Power Accessory");
+        }
+        if (wantPoePP) addLine(results, "B5NH6AA");
+        if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
+          addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
+        }
+        if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
+          addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
+        }
+      } else if (cam === "E70") {
+        const e70sku = flags.jitc ? "886C9AA" : flags.taa ? "886C8AA" : "842F8AA";
+        addLine(results, e70sku);
+        addSupport(results, "e70", supportTerm);
+        if (wantWall && !hasSku(results, "875K6AA")) {
+          addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
+        }
+        if (wantPoePP) addLine(results, "B5NH6AA");
+        if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
+          addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
+        }
+        if (camMount === "Clamp" && !hasSku(results, "875K8AA")) {
+          addLine(results, "875K8AA", "E70 display clamp");
+        }
+      }
+    }
 
     // Analog expansion mic (875M6AA) — commercial SKU is the only catalog key
     if ((expansionMic || "").includes("Single Analog Exp mic")) {
       addLine(results, "875M6AA");
     }
 
-    // Mounting (commercial + TAA hosts share these physical mount SKUs)
+    // Mounting extras — detect by hostFamily(); G62 kit vs base is pickHost
     if (mounting && mounting !== "None") {
-      const isV12 = hasSku(results, "B95SPAA") || hasSku(results, "A9DD8AA#ABA");
-      const isV52 = hasSku(results, "A09D6AA") || hasSku(results, "A09D5AA") || hasSku(results, "A09D4AA#ABA");
-      const isV72 = hasSku(results, "AV1E4AA") || hasSku(results, "AV1E3AA#ABA");
-      const isX32 = hasSku(results, "A3SW0AA") || hasSku(results, "A3SV9AA") || hasSku(results, "A3SV5AA#ABA");
-      const isX52 = hasSku(results, "8D8K4AA") || hasSku(results, "8D8K3AA") || hasSku(results, "8D8K2AA#ABA");
-      const isX72 = hasSku(results, "A4MA2AA") || hasSku(results, "A4MA1AA") || hasSku(results, "A4LZ8AA#ABA");
-      if (isV12 || isX32) {
+      if (family === "r30") {
+        if (mounting === "Wall") addLine(results, "783S4AA");
+        else if (mounting === "VESA style display mount") addLine(results, "875L1AA");
+      } else if (family === "v12" || family === "x32") {
         if (mounting === "Table") addLine(results, "875L5AA");
         else if (mounting === "Wall" || mounting === "VESA style display mount") addLine(results, "875L6AA");
         else if (mounting === "Inverted wall") addLine(results, "875L7AA");
-      } else if (isX52 || isV52) {
+      } else if (family === "x52" || family === "v52") {
         if (mounting === "Wall") addLine(results, "875L8AA");
         else if (mounting === "VESA style display mount") addLine(results, "875L9AA");
         else if (mounting === "Table") addLine(results, "875M0AA");
-      } else if (isX72 || isV72) {
+      } else if (family === "x72" || family === "v72") {
         if (mounting === "VESA style display mount") addLine(results, "875L2AA");
         else if (mounting === "Table") addLine(results, "875L3AA");
       }
