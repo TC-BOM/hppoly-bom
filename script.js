@@ -1,5 +1,6 @@
-const VERSION = "v10.34";
-// script.js – HP | Poly Configurator – v10.34: camera power options cleaned up (drop PoE+ injector; unified labels)
+const VERSION = "v10.35";
+// script.js – HP | Poly Configurator – v10.35: TAA Google Meet does not add TC10; V72 A2 max 4
+// v10.34: camera power options cleaned up (drop PoE+ injector; unified labels)
 // v10.33: Lens Pro Rooms checkbox reveals 3-band dropdown (default 1–65)
 // v10.32: resource links (Spaces, dimensional drawings, Glen Bevcar Excel) + AI disclaimer
 // v10.31: VIDEO | AUDIO | HEADSETS tabs (audio/headset mock catalogs)
@@ -590,7 +591,7 @@ async function init() {
     const t = document.getElementById("typeOfSystem")?.value || "";
     const r = document.getElementById("roomSize")?.value || "";
     const isUSB = (t === "BYOD USB Bar only" || t === "Windows PC based solution");
-    if (r === "Very large") return 8; // G62
+    if (r === "Very large") return isUSB ? 4 : 8; // V72 vs G62
     if (r === "Large") return 4;      // X72 / V72
     if (r === "Medium") return 4;     // X52 / V52
     if (r === "Small") {
@@ -623,7 +624,7 @@ async function init() {
       else if (r === "Small") host = "X32 (max 2)";
       else if (r === "Medium") host = "X52 / V52 (max 4)";
       else if (r === "Large") host = "X72 / V72 (max 4)";
-      else if (r === "Very large") host = "G62 (max 8)";
+      else if (r === "Very large") host = isUSB ? "V72 (max 4)" : "G62 (max 8)";
       hint.textContent = "Per HP Poly Studio A2 admin guide: " + host + ".";
     }
   }
@@ -1121,10 +1122,12 @@ async function init() {
             addSupport(results, "g9plus_mtr", supportTerm);
             addLine(results, tc10Sku());
             addSupport(results, "tc10", supportTerm);
-          } else {
+          } else if (platform === "Zoom") {
+            // No TAA Zoom room PC in catalog — TC10 only, do not invent a compute SKU
             addLine(results, tc10Sku());
             addSupport(results, "tc10", supportTerm);
           }
+          // Google Meet: USB bar only (no room PC or TC10)
         }
       } else {
         // Android appliance → X-series / G62 (TAA)
@@ -1163,7 +1166,7 @@ async function init() {
       const wantsA2White = (expansionMic || "").includes("New White A2");
       const wantsA2Black = (expansionMic || "").includes("New Black A2");
       if (wantsA2White || wantsA2Black) {
-        const a2Qty = Math.max(1, Math.min(8, parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
+        const a2Qty = Math.max(1, Math.min(a2MaxForSelection(), parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
         const podSku = wantsA2White ? "B22X5AA" : "B22X7AA"; // TAA White / Black
         addLine(results, podSku, "(A2 mic pod TAA)", a2Qty);
         addSupport(results, "a2_mic", supportTerm, a2Qty);
@@ -1312,7 +1315,7 @@ async function init() {
         const wantsA2White = (expansionMic || "").includes("New White A2");
         const wantsA2Black = (expansionMic || "").includes("New Black A2");
         if (wantsA2White || wantsA2Black) {
-          const a2Qty = Math.max(1, Math.min(8, parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
+          const a2Qty = Math.max(1, Math.min(a2MaxForSelection(), parseInt(document.getElementById("a2Qty")?.value || "1", 10) || 1));
           const podSku = wantsA2White ? "B22X4AA#AC3" : "B22X6AA#AC3"; // commercial White / Black
           addLine(results, podSku, wantsA2White ? "Poly Studio A2 Table Microphone — White" : "Poly Studio A2 Table Microphone — Black", a2Qty);
           addSupport(results, "a2_mic", supportTerm, a2Qty);
