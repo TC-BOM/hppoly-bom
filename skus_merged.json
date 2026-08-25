@@ -842,5 +842,25 @@
   "PROADDON004": {
     "description": "Poly Remote install one additional peripheral",
     "msrp": 177.95
+  },
+  "UJ8T6LN": {
+    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
+    "msrp": 99
+  },
+  "UJ8T5LN": {
+    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
+    "msrp": 79
+  },
+  "UJ8T4LN": {
+    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
+    "msrp": 59
+  },
+  "874R5AA": {
+    "description": "Poly GC8 Studio X30 Power Supply without Power Cord",
+    "msrp": 130.95
+  },
+  "89L88AA": {
+    "description": "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket",
+    "msrp": 201.0
   }
 }

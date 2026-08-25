@@ -1,5 +1,5 @@
-const VERSION = "v10.26";
-// script.js – HP | Poly Configurator – v10.26: onsite PROADDON004 per extra camera and A2 mic
+const VERSION = "v10.27";
+// script.js – HP | Poly Configurator – v10.27: Lens Pro Rooms checkbox + live qty adjusters
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
 
 document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
@@ -65,6 +65,24 @@ async function init() {
     const sku = map[term];
     if (sku) addLine(arr, sku, undefined, qty);
   };
+
+  const LENS_PRO_SKUS = ["UJ8T6LN", "UJ8T5LN", "UJ8T4LN"];
+  function lensProSkuForQty(n) {
+    const q = Math.max(0, Number(n) || 0);
+    if (q <= 65) return "UJ8T6LN";
+    if (q <= 250) return "UJ8T5LN";
+    return "UJ8T4LN";
+  }
+  function applyLensProBand(line) {
+    if (!line || !LENS_PRO_SKUS.includes(line.sku)) return;
+    const sku = lensProSkuForQty(line.quantity);
+    const item = getItem(sku);
+    line.sku = sku;
+    if (item) {
+      if (item.description) line.description = item.description;
+      line.msrp = (item.msrp != null) ? item.msrp : line.msrp;
+    }
+  }
 
   const SCHEDULING_MAP = {
     tc10_black_wall:  { commercialTc10: "875K5AA", taaTc10: "973F9AA", glassMount: null,      label: "TC10 Black scheduling panel (wall mount included)" },
@@ -362,6 +380,18 @@ async function init() {
   `;
   svcSection.appendChild(featuresDetails);
 
+  const lensProWrap = document.createElement("div");
+  lensProWrap.className = "mt-2";
+  lensProWrap.innerHTML = `
+    <label class="inline-flex items-start gap-2">
+      <input id="lensProRooms" type="checkbox" class="border mt-1">
+      <span>
+        <span class="font-medium">1 Year Lens Pro for Rooms</span>
+        <span class="block text-xs text-gray-600">Volume priced per room: $99 (1–65), $79 (66–250), $59 (251+). Starts at 1 room; change qty on the generated BOM.</span>
+      </span>
+    </label>`;
+  svcSection.appendChild(lensProWrap);
+
   svcSection.appendChild(select("implementationHelp", "Implementation Help", [
     "None", "Remote Implementation help", "Onsite Implementation help"
   ]));
@@ -385,6 +415,7 @@ async function init() {
   const resultDiv = document.createElement("div");
   resultDiv.id = "result";
   resultDiv.className = "mt-6 space-y-4";
+  let lastBom = null;
 
   app.appendChild(form);
   app.appendChild(resultDiv);
@@ -578,7 +609,11 @@ async function init() {
           mountSel.innerHTML += `<option value="Ceiling">Ceiling mount (9W1A8AA#AC3)</option>`;
           mountOptions++;
         }
-        if (hint) hint.textContent = "Optional ceiling mount for Poly Studio E60 (wall mount is included with camera).";
+        if (getItem("89L88AA")) {
+          mountSel.innerHTML += `<option value="HDCI">HDCI camera bracket (89L88AA)</option>`;
+          mountOptions++;
+        }
+        if (hint) hint.textContent = "Optional E60 mounts from catalog. Wall mount is included with the camera.";
       } else {
         if (hint) hint.textContent = "";
       }
@@ -624,6 +659,115 @@ async function init() {
       if (res) res.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
+
+  function renderBom(focusIdx, caretPos) {
+    if (!lastBom) return;
+    const { results, includePrices, googleMeetNote } = lastBom;
+    let html = `<p class="text-xs text-gray-500 mb-1">Build ${VERSION} — generated ${new Date().toLocaleDateString()}</p>`;
+    html += `<h2 class="font-semibold mb-2">Your BOM:</h2>`;
+    if (googleMeetNote) {
+      html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
+    }
+    html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
+    html += `<th class="border px-4 py-2 text-left">Qty</th>`;
+    html += `<th class="border px-4 py-2 text-left">SKU</th>`;
+    html += `<th class="border px-4 py-2 text-left">Description</th>`;
+    if (includePrices) html += `<th class="border px-4 py-2 text-left">MSRP</th>`;
+    html += `</tr></thead><tbody>`;
+
+    let grandTotal = 0;
+    let pricedLines = 0;
+    let unpricedLines = 0;
+
+    results.forEach((r, i) => {
+      const sku = r.sku || "—";
+      const qty = Number(r.quantity) || 0;
+      const unit = (typeof r.msrp === "number") ? r.msrp : null;
+
+      if (unit != null) {
+        grandTotal += unit * qty;
+        pricedLines++;
+      } else {
+        unpricedLines++;
+      }
+
+      html += `<tr>
+        <td class="border px-4 py-2">
+          <div class="inline-flex items-center gap-1">
+            <button type="button" data-qty-delta="-1" data-i="${i}" class="qty-btn px-2 py-0.5 border rounded leading-none bg-gray-50 hover:bg-gray-100" aria-label="Decrease quantity">−</button>
+            <input type="number" min="0" step="1" data-i="${i}" class="qty-input w-16 border rounded px-2 py-1 text-center" value="${qty}">
+            <button type="button" data-qty-delta="1" data-i="${i}" class="qty-btn px-2 py-0.5 border rounded leading-none bg-gray-50 hover:bg-gray-100" aria-label="Increase quantity">+</button>
+          </div>
+        </td>
+        <td class="border px-4 py-2">${sku}</td>
+        <td class="border px-4 py-2">${r.description}</td>`;
+      if (includePrices) {
+        html += `<td class="border px-4 py-2">${fmtCurrency(r.msrp)}</td>`;
+      }
+      html += `</tr>`;
+    });
+
+    if (includePrices) {
+      html += `<tr class="bg-blue-50 font-semibold">
+        <td class="border px-4 py-2" colspan="3">Estimated MSRP Total</td>
+        <td class="border px-4 py-2">${fmtCurrency(grandTotal)}</td>
+      </tr>`;
+    }
+
+    html += `</tbody></table>`;
+
+    if (includePrices) {
+      html += `<p class="text-xs text-gray-600 mt-2">Total is Qty × unit MSRP for lines with a known price (${pricedLines} priced line${pricedLines === 1 ? "" : "s"}).`;
+      if (unpricedLines > 0) {
+        html += ` ${unpricedLines} line${unpricedLines === 1 ? "" : "s"} have no MSRP in the catalog and are excluded from the total.`;
+      }
+      html += ` Prices are list MSRP and may not reflect final quote.</p>`;
+    }
+
+    resultDiv.innerHTML = html;
+    if (focusIdx != null) {
+      const el = resultDiv.querySelector(`.qty-input[data-i="${focusIdx}"]`);
+      if (el) {
+        el.focus();
+        const pos = (caretPos != null && caretPos >= 0) ? Math.min(caretPos, String(el.value).length) : String(el.value).length;
+        try { el.setSelectionRange(pos, pos); } catch (e) { el.select(); }
+      }
+    }
+  }
+
+  function applyQty(i, n, restoreFocus, caretPos) {
+    if (!lastBom || !lastBom.results[i]) return;
+    lastBom.results[i].quantity = n;
+    applyLensProBand(lastBom.results[i]);
+    renderBom(restoreFocus ? i : undefined, restoreFocus ? caretPos : undefined);
+  }
+
+  resultDiv.addEventListener("click", (e) => {
+    const btn = e.target.closest(".qty-btn");
+    if (!btn || !resultDiv.contains(btn)) return;
+    const i = Number(btn.getAttribute("data-i"));
+    const delta = Number(btn.getAttribute("data-qty-delta"));
+    if (!lastBom || !lastBom.results[i]) return;
+    const current = Number(lastBom.results[i].quantity) || 0;
+    applyQty(i, Math.max(0, current + delta));
+  });
+
+  function handleQtyInputEvent(el, restoreFocus) {
+    const i = Number(el.getAttribute("data-i"));
+    const n = parseInt(el.value, 10);
+    if (Number.isNaN(n)) return;
+    const caret = (typeof el.selectionStart === "number") ? el.selectionStart : String(el.value).length;
+    applyQty(i, Math.max(0, n), restoreFocus, caret);
+  }
+
+  resultDiv.addEventListener("input", (e) => {
+    if (!e.target.classList.contains("qty-input")) return;
+    handleQtyInputEvent(e.target, true);
+  });
+  resultDiv.addEventListener("change", (e) => {
+    if (!e.target.classList.contains("qty-input")) return;
+    handleQtyInputEvent(e.target, true);
+  });
 
   // ---------- core generate ----------
   btn.addEventListener("click", () => generate());
@@ -756,6 +900,9 @@ async function init() {
             if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
               addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
             }
+            if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
+              addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
+            }
           } else if (cam === "E70") {
             addLine(results, pick("886C9AA", "886C8AA")); // E70 TAA JITC / TAA
             addSupport(results, "e70", supportTerm);
@@ -866,6 +1013,9 @@ async function init() {
           if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
             addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
           }
+          if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
+            addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
+          }
         }
       }
 
@@ -946,63 +1096,17 @@ async function init() {
     // Free-form accessories
     accessories.forEach(sku => addLine(results, sku, sku));
 
-    // ---------- render table + correct total ----------
-    let html = `<p class="text-xs text-gray-500 mb-1">Build ${VERSION} — generated ${new Date().toLocaleDateString()}</p>`;
-    html += `<h2 class="font-semibold mb-2">Your BOM:</h2>`;
-    if (needsPlatform && platform === "Google Meet") {
-      html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">No Google Meet compute SKU is in this catalog. This BOM includes the USB bar only (no room PC or TC10).</p>`;
-    }
-    html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
-    html += `<th class="border px-4 py-2 text-left">Qty</th>`;
-    html += `<th class="border px-4 py-2 text-left">SKU</th>`;
-    html += `<th class="border px-4 py-2 text-left">Description</th>`;
-    if (includePrices) html += `<th class="border px-4 py-2 text-left">MSRP</th>`;
-    html += `</tr></thead><tbody>`;
-
-    let grandTotal = 0;
-    let pricedLines = 0;
-    let unpricedLines = 0;
-
-    results.forEach(r => {
-      const sku = r.sku || "—";
-      const qty = Number(r.quantity) || 0;
-      const unit = (typeof r.msrp === "number") ? r.msrp : null;
-
-      if (unit != null) {
-        grandTotal += unit * qty;
-        pricedLines++;
-      } else {
-        unpricedLines++;
-      }
-
-      html += `<tr>
-        <td class="border px-4 py-2">${r.quantity}</td>
-        <td class="border px-4 py-2">${sku}</td>
-        <td class="border px-4 py-2">${r.description}</td>`;
-      if (includePrices) {
-        html += `<td class="border px-4 py-2">${fmtCurrency(r.msrp)}</td>`;
-      }
-      html += `</tr>`;
-    });
-
-    if (includePrices) {
-      html += `<tr class="bg-blue-50 font-semibold">
-        <td class="border px-4 py-2" colspan="3">Estimated MSRP Total</td>
-        <td class="border px-4 py-2">${fmtCurrency(grandTotal)}</td>
-      </tr>`;
+    if (document.getElementById("lensProRooms")?.checked) {
+      const sku = lensProSkuForQty(1);
+      addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
 
-    html += `</tbody></table>`;
-
-    if (includePrices) {
-      html += `<p class="text-xs text-gray-600 mt-2">Total is Qty × unit MSRP for lines with a known price (${pricedLines} priced line${pricedLines === 1 ? "" : "s"}).`;
-      if (unpricedLines > 0) {
-        html += ` ${unpricedLines} line${unpricedLines === 1 ? "" : "s"} have no MSRP in the catalog and are excluded from the total.`;
-      }
-      html += ` Prices are list MSRP and may not reflect final quote.</p>`;
-    }
-
-    resultDiv.innerHTML = html;
+    lastBom = {
+      results,
+      includePrices,
+      googleMeetNote: !!(needsPlatform && platform === "Google Meet")
+    };
+    renderBom();
   }
 }
 
