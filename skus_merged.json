@@ -60,15 +60,15 @@
     "msrp": 275.0
   },
   "875L3AA": {
-    "description": "Studio X70/X72/V72 table stand",
+    "description": "Poly Studio X70/X72/V72 Table Stand",
     "msrp": 143.0
   },
   "875L5AA": {
-    "description": "Studio V12 /X32 table stand",
+    "description": "Poly Studio X30/X32/V12 Table Stand",
     "msrp": 61.0
   },
   "875L6AA": {
-    "description": "Studio X32/V32/V12 WALL + VESA mount kit",
+    "description": "Poly Studio X30/X32/V12 VESA and Wall Mount",
     "msrp": 121.0
   },
   "875L8AA": {
@@ -80,7 +80,7 @@
     "msrp": 274.0
   },
   "875M0AA": {
-    "description": "Studio X50/X52/V52 table stand",
+    "description": "Poly Studio X50/X52/V52 Table Stand",
     "msrp": 119.0
   },
   "875M4AA": {
@@ -862,5 +862,13 @@
   "89L88AA": {
     "description": "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket",
     "msrp": 201.0
+  },
+  "875L7AA": {
+    "description": "Poly Studio X30 Inverted Wall Mount",
+    "msrp": 151.95
+  },
+  "875R9AA": {
+    "description": "Poly Studio USB VESA Mount",
+    "msrp": 178.0
   }
 }
