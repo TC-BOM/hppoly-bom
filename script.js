@@ -1,5 +1,6 @@
-const VERSION = "v10.47";
-// script.js – HP | Poly Configurator – v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
+const VERSION = "v10.48";
+// script.js – HP | Poly Configurator – v10.48: Netgear only Large/XL or X/V 52/72 + A2 + camera; G6 dock BYOD only
+// v10.47: Room PC picker (Studio 5 / Studio 7 / G9+) after Generate
 // v10.46: TAA/JITC/No Radio flags, Huddle R30, HOST_SKUS picker, G62 kit mount
 // v10.45: Knauf-style flat home form; HEADSETS tab greyed out
 // v10.44: shrink announcement banner
@@ -301,7 +302,7 @@ async function init() {
   promoWrap.id = "promoBox";
   promoWrap.className = "px-3 py-1.5 border border-amber-400 rounded bg-amber-50";
   promoWrap.innerHTML = `
-    <div class="text-sm text-amber-900">Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
+    <div class="text-sm text-amber-900">📢 Announcement — new Poly+ / Analyze terms and TC10 scheduler options.</div>`;
   form.appendChild(promoWrap);
 
   // TAA / JITC / No Radio
@@ -432,7 +433,7 @@ async function init() {
     <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
   form.appendChild(cameraMountWrap);
 
-  // Netgear Pro AV switch (LLN / StudioNet) — G62 / X52 / V52 / X72 / V72, and X32 if A2/IP extras
+  // Netgear Pro AV switch (LLN / StudioNet) — Large / Very large, or X/V 52/72 with A2 + camera add-on
   const netgearWrap = document.createElement("div");
   netgearWrap.id = "netgearWrap";
   netgearWrap.className = "hidden p-3 border-2 border-amber-400 rounded bg-blue-50 space-y-2";
@@ -463,7 +464,7 @@ async function init() {
       <input id="g6DockOpt" type="checkbox" class="border">
       <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA)</span>
     </label>
-    <p class="text-xs text-gray-600 ml-6">Optional for Windows PC based rooms. Not added unless checked.</p>`;
+    <p class="text-xs text-gray-600 ml-6">Optional for BYOD USB bar rooms. Not added unless checked.</p>`;
   form.appendChild(g6DockWrap);
 
 
@@ -1165,10 +1166,14 @@ async function init() {
   function updateNetgearVisibility() {
     const wrap = document.getElementById("netgearWrap");
     if (!wrap) return;
+    const r = document.getElementById("roomSize")?.value || "";
     const family = hostFamily();
-    const hostOk = family === "g62" || family === "x32" || family === "x52"
-      || family === "v52" || family === "x72" || family === "v72";
-    const show = !!(hostOk && extraIpPeripheralSelected());
+    const exp = document.getElementById("expansionMic")?.value || "";
+    const cam = document.getElementById("cameraChoice")?.value || "None";
+    const a2 = exp.includes("New White A2") || exp.includes("New Black A2");
+    const extraCam = canShowCameraAddOn() && (cam === "E60" || cam === "E70");
+    const is5272 = family === "x52" || family === "v52" || family === "x72" || family === "v72";
+    const show = r === "Large" || r === "Very large" || !!(is5272 && a2 && extraCam);
     wrap.classList.toggle("hidden", !show);
     if (!show) {
       const sel = document.getElementById("netgearSwitch");
@@ -1180,7 +1185,7 @@ async function init() {
     if (!wrap) return;
     const t = document.getElementById("typeOfSystem")?.value || "";
     const family = hostFamily();
-    const show = t === "Windows PC based solution" && family !== "r30";
+    const show = t === "BYOD USB Bar only" && family !== "r30";
     wrap.classList.toggle("hidden", !show);
     if (!show) {
       const cb = document.getElementById("g6DockOpt");
@@ -1763,8 +1768,9 @@ async function init() {
       addLine(results, sku, "Poly Lens Pro for Rooms 1 Year", 1);
     }
 
+    const netgearWrapEl = document.getElementById("netgearWrap");
     const netgearSku = document.getElementById("netgearSwitch")?.value || "";
-    if (netgearSku && netgearSku.startsWith("GSM")) {
+    if (netgearSku && netgearSku.startsWith("GSM") && netgearWrapEl && !netgearWrapEl.classList.contains("hidden")) {
       addLine(results, netgearSku);
     }
 
@@ -1776,7 +1782,7 @@ async function init() {
 
     const g6Wrap = document.getElementById("g6DockWrap");
     const g6On = document.getElementById("g6DockOpt")?.checked;
-    if (g6On && g6Wrap && !g6Wrap.classList.contains("hidden") && typeOfSystem === "Windows PC based solution") {
+    if (g6On && g6Wrap && !g6Wrap.classList.contains("hidden") && typeOfSystem === "BYOD USB Bar only") {
       addLine(results, "9X481UT#ABA", "HP Thunderbolt 4 Ultra 180W G6 Dock", 1);
       addSupport(results, "g6_dock", supportTerm);
     }
