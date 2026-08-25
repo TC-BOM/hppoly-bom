@@ -1,5 +1,8 @@
-const VERSION = "v10.36";
-// script.js – HP | Poly Configurator – v10.36: dedupe host mount lists (one VESA per family; X32/V12 wall+VESA is one kit)
+const VERSION = "v10.39";
+// script.js – HP | Poly Configurator – v10.39: in-box mount notes + per-option QSG links
+// v10.38: live Audio phone catalog (Trio/CCX/Edge E/Rove) + G6 dock option
+// v10.37: polarized filter moved to Hardware options (E70/X72/V72)
+// v10.36: dedupe host mount lists (one VESA per family; X32/V12 wall+VESA is one kit)
 // v10.35: TAA Google Meet does not add TC10; V72 A2 max 4
 // v10.34: camera power options cleaned up (drop PoE+ injector; unified labels)
 // v10.33: Lens Pro Rooms checkbox reveals 3-band dropdown (default 1–65)
@@ -65,7 +68,31 @@ async function init() {
     v72:        { poly1: "U98X0PV",   poly3: "U98X1PV",   poly5: "UF4W0PV", analyze1: "UR8F2PV", analyze3: "UR8F3PV", analyze5: "UR8F5PV" },
     x32:        { poly1: "UE1Q8PV",   poly3: "UE1Q9PV",   poly5: null,     analyze1: "UR4R6PV", analyze3: "UR4R7PV", analyze5: "UR4R9PV" },
     x52:        { poly1: "P87620112", poly3: "P87620312", poly5: "UL5R7PV", analyze1: "UR4V4PV", analyze3: "UR4V5PV", analyze5: "UR4V7PV" },
-    x72:        { poly1: "U99P8PV",   poly3: "U99P9PV",   poly5: "UL5V2PV", analyze1: "UR5C3PV", analyze3: "UR5C4PV", analyze5: "UR5C6PV" }
+    x72:        { poly1: "U99P8PV",   poly3: "U99P9PV",   poly5: "UL5V2PV", analyze1: "UR5C3PV", analyze3: "UR5C4PV", analyze5: "UR5C6PV" },
+    trio_c60:    { poly1: "P86240112", poly3: "P86240312", poly5: "UM5V3PB", analyze1: "UQ7U6PB", analyze3: "UQ7U7PB", analyze5: null },
+    trio_8300:   { poly1: "P66800112", poly3: "P66800312", poly5: "UM5V1PB", analyze1: "UQ7S3PB", analyze3: "UQ7S4PB", analyze5: null },
+    ccx_350:     { poly1: "P49690112", poly3: "P49690312", poly5: null,     analyze1: "UQ7C4PB", analyze3: "UQ7C5PB", analyze5: null },
+    ccx_400:     { poly1: "P49700112", poly3: "P49700312", poly5: null,     analyze1: "UQ7C9PB", analyze3: "UQ7D0PB", analyze5: null },
+    ccx_505:     { poly1: "P49735112", poly3: "P49735312", poly5: null,     analyze1: "UQ7D9PB", analyze3: "UQ7E0PB", analyze5: null },
+    ccx_600:     { poly1: "P49780112", poly3: "P49780312", poly5: null,     analyze1: "UQ7E4PB", analyze3: "UQ7E5PB", analyze5: null },
+    ccx_em60:    { poly1: "U73W3PP",   poly3: "U73W4PP",   poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
+    edge_e100:   { poly1: "P86980112", poly3: "P86980312", poly5: "UM5T1PB", analyze1: "UQ7G8PB", analyze3: "UQ7G9PB", analyze5: "UQ7H1PB" },
+    edge_e220:   { poly1: "P86990112", poly3: "P86990312", poly5: "UM5T2PB", analyze1: "UQ7H4PB", analyze3: "UQ7H5PB", analyze5: "UQ7H7PB" },
+    edge_e300:   { poly1: "P87815112", poly3: "P87815312", poly5: "UM5T7PB", analyze1: "UQ7J0PB", analyze3: "UQ7J1PB", analyze5: "UQ7J3PB" },
+    edge_e320:   { poly1: "P87000112", poly3: "P87000312", poly5: "UM5T3PB", analyze1: "UQ7J6PB", analyze3: "UQ7J7PB", analyze5: "UQ7J9PB" },
+    edge_e350:   { poly1: "P87010112", poly3: "P87010312", poly5: "UM5T4PB", analyze1: "UQ7K2PB", analyze3: "UQ7K3PB", analyze5: "UQ7K5PB" },
+    edge_e400:   { poly1: "P87835112", poly3: "P87835312", poly5: "UM5T8PB", analyze1: "UQ7K8PB", analyze3: "UQ7K9PB", analyze5: "UQ7L1PB" },
+    edge_e450:   { poly1: "P87030112", poly3: "P87030312", poly5: "UM5T5PB", analyze1: "UQ7L4PB", analyze3: "UQ7L5PB", analyze5: "UQ7L7PB" },
+    edge_e550:   { poly1: "P87050112", poly3: "P87050312", poly5: "UM5T6PB", analyze1: "UQ7M6PB", analyze3: null,     analyze5: "UQ7M9PB" },
+    edge_em:     { poly1: "P87020112", poly3: "P87020312", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
+    rove_20:     { poly1: "P88090112", poly3: "P88090312", poly5: "UM5U3PB", analyze1: null,     analyze3: null,     analyze5: null },
+    rove_20_b1:  { poly1: "P88080112", poly3: "P88080312", poly5: "UM5U2PB", analyze1: null,     analyze3: null,     analyze5: null },
+    rove_30:     { poly1: "P86930112", poly3: "P86930312", poly5: "UM5V0PB", analyze1: "UQ7N8PB", analyze3: "UQ7N9PB", analyze5: "UQ7P1PB" },
+    rove_40:     { poly1: "P86810112", poly3: "P86810312", poly5: "UM5U4PB", analyze1: "UQ7P4PB", analyze3: "UQ7P5PB", analyze5: "UQ7P7PB" },
+    rove_b2:     { poly1: "P86820112", poly3: "P86820312", poly5: "UM5U5PB", analyze1: "UQ7Q0PB", analyze3: "UQ7Q1PB", analyze5: "UQ7Q3PB" },
+    rove_b4:     { poly1: "P86830112", poly3: "P86830312", poly5: "UM5U6PB", analyze1: "UQ7Q6PB", analyze3: "UQ7Q7PB", analyze5: "UQ7Q9PB" },
+    rove_r8:     { poly1: "P86840112", poly3: "P86840312", poly5: "UM5U7PB", analyze1: "UQ7R2PB", analyze3: "UQ7R3PB", analyze5: "UQ7R5PB" },
+    g6_dock:     { poly1: "US2A4PV",   poly3: "US2A5PV",   poly5: null,     analyze1: null,     analyze3: null,     analyze5: null }
   };
 
   const addSupport = (arr, key, term, qty = 1) => {
@@ -277,6 +304,28 @@ async function init() {
       <option value="GSM4248PX-100NAS">GSM4248PX-100NAS — 40-port PoE+ (~$4,521)</option>
     </select>`;
   hwSection.appendChild(netgearWrap);
+
+  const g6DockWrap = document.createElement("div");
+  g6DockWrap.id = "g6DockWrap";
+  g6DockWrap.className = "hidden mt-2";
+  g6DockWrap.innerHTML = `
+    <label class="flex items-center gap-2 text-sm">
+      <input id="g6DockOpt" type="checkbox" class="border">
+      <span>HP Thunderbolt 4 Ultra 180W G6 Dock (9X481UT#ABA) — $394</span>
+    </label>
+    <p class="text-xs text-gray-600 ml-6">Optional for Windows PC based rooms. Not added unless checked.</p>`;
+  hwSection.appendChild(g6DockWrap);
+
+  const polarFilterWrap = document.createElement("div");
+  polarFilterWrap.id = "polarFilterWrap";
+  polarFilterWrap.className = "hidden mt-2";
+  polarFilterWrap.innerHTML = `
+    <label class="flex items-center gap-2 text-sm">
+      <input id="polarFilterOpt" type="checkbox" class="border">
+      <span>Optional polarized filter (875K9AA) — $181</span>
+    </label>
+    <p class="text-xs text-gray-600 ml-6">For E70, X72, and V72. Cuts window glare on the camera lens. Not added unless checked.</p>`;
+  hwSection.appendChild(polarFilterWrap);
   form.appendChild(hwSection);
 
   const svcSection = document.createElement("fieldset");
@@ -470,6 +519,10 @@ async function init() {
     <div class="p-3 border-2 border-amber-400 rounded bg-amber-50 space-y-1">
       <div class="font-semibold text-amber-900">Under construction. Mock catalog only — a few popular SKUs so you can click through. Support SKU mapping is not loaded yet. Do not use for a live quote.</div>
     </div>`;
+  const AUDIO_BANNER = `
+    <div class="p-3 border border-blue-200 rounded bg-blue-50 space-y-1">
+      <div class="text-sm text-blue-950">Audio is live from the Aug 2026 HP Poly Collab Reference (Voice-Desk&amp;Conf Phone). Headsets remain under construction.</div>
+    </div>`;
   const SUPPORT_OPTS = [
     { value: "",         label: "None" },
     { value: "poly1",    label: "1yr - Poly+" },
@@ -491,20 +544,32 @@ async function init() {
 
   const audioForm = document.createElement("form");
   audioForm.className = "space-y-4";
-  audioForm.innerHTML = MOCK_BANNER;
+  audioForm.innerHTML = AUDIO_BANNER;
   const audioSection = document.createElement("fieldset");
   audioSection.className = "space-y-3 p-4 border border-gray-200 rounded";
-  audioSection.innerHTML = '<legend class="font-semibold px-1">Audio (mock)</legend>';
+  audioSection.innerHTML = '<legend class="font-semibold px-1">Audio</legend>';
   audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
-  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E"], true));
+  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
+  const audioNote = document.createElement("p");
+  audioNote.id = "audioPlatformNote";
+  audioNote.className = "text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded hidden";
+  audioSection.appendChild(audioNote);
   const audioRadioWrap = document.createElement("div");
   audioRadioWrap.className = "space-y-1";
   audioRadioWrap.innerHTML = `
-    <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are included radios on these mock SKUs and do not add extra lines.</p>
+    <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are included radios on these SKUs and do not add extra lines.</p>
     <label class="inline-flex items-center gap-2"><input id="audioWifi" type="checkbox" class="border" checked><span>Wi-Fi</span></label>
     <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>`;
   audioSection.appendChild(audioRadioWrap);
+  const audioAccWrap = document.createElement("div");
+  audioAccWrap.id = "audioAccWrap";
+  audioAccWrap.className = "space-y-1";
+  audioAccWrap.innerHTML = `
+    <label id="audioExpWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioExpMics" type="checkbox" class="border"><span id="audioExpLabel">Include expansion mics</span></label>
+    <label id="audioEmWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm" type="checkbox" class="border"><span id="audioEmLabel">Include expansion module</span></label>
+    <label id="audioPsuWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioPsu" type="checkbox" class="border"><span id="audioPsuLabel">Include power supply (if no PoE)</span></label>`;
+  audioSection.appendChild(audioAccWrap);
   audioSection.appendChild(select("audioSupportTerm", "Select Support term", SUPPORT_OPTS));
   audioForm.appendChild(audioSection);
   const audioActions = document.createElement("div");
@@ -573,16 +638,128 @@ async function init() {
     setActiveTab(btn.getAttribute("data-panel"));
   });
 
+  const AUDIO_CATALOG = {
+    Trio: {
+      C60:  { teams: "849B6AA#ABA", sip: "849B4AA#ABA", support: "trio_c60",  exp: "85X02AA", psu: "85X03AA#ABA" },
+      "8300": { teams: null, sip: "849A0AA#AC3", support: "trio_8300", exp: "85X00AA", psu: "85W92AA#ABA",
+        teamsNote: "Trio 8300 is OpenSIP only (not native Teams). BOM uses the OpenSIP SKU." }
+    },
+    CCX: {
+      "350": { teams: "848Z7AA#AC3", sip: null, support: "ccx_350", em: "8F3R9AA", psu: "86H66AA#ABA",
+        sipNote: "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet." },
+      "400": { teams: "848Z8AA#AC3", sip: "849A1AA#AC3", support: "ccx_400", em: "8F3R9AA" },
+      "505": { teams: "82Z79AA", sip: "82Z82AA", support: "ccx_505", em: "8F3R9AA", psu: "86P04AA#ABA" },
+      "600": { teams: "82Z84AA", sip: "82Z85AA", support: "ccx_600", em: "8F3R9AA", psu: "86P04AA#ABA" }
+    },
+    "Edge E": {
+      E100: { sip: "82M86AA", support: "edge_e100", psu: "86H66AA#ABA", em: "85W93AA" },
+      E220: { sip: "82M87AA", support: "edge_e220", psu: "86H66AA#ABA", em: "85W93AA" },
+      E300: { sip: "82M92AA", support: "edge_e300", psu: "86H66AA#ABA", em: "85W93AA" },
+      E320: { sip: "82M88AA", support: "edge_e320", psu: "86H66AA#ABA", em: "85W93AA" },
+      E350: { sip: "82M89AA", support: "edge_e350", psu: "86H66AA#ABA", em: "85W93AA" },
+      E400: { sip: "82M93AA", support: "edge_e400", psu: "86H66AA#ABA", em: "85W93AA" },
+      E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA" },
+      E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA" }
+    },
+    Rove: {
+      "20": { sip: "8F3E4AA#ABA", support: "rove_20" },
+      "30": { sip: "84H76AA#ABA", support: "rove_30" },
+      "40": { sip: "84H77AA#ABA", support: "rove_40" },
+      B2: { sip: "84H80AA#ABA", support: "rove_b2" },
+      B4: { sip: "84H78AA#ABA", support: "rove_b4" },
+      R8: { sip: "84H79AA#ABA", support: "rove_r8" },
+      "20 + B1 kit": { sip: "8F3E1AA#ABA", support: "rove_20_b1" }
+    }
+  };
+  function audioCfg() {
+    const family = document.getElementById("audioFamily")?.value || "";
+    const model = document.getElementById("audioModel")?.value || "";
+    return (AUDIO_CATALOG[family] || {})[model] || null;
+  }
+  function updateAudioNotesAndAcc() {
+    const platform = document.getElementById("audioPlatform")?.value || "";
+    const family = document.getElementById("audioFamily")?.value || "";
+    const cfg = audioCfg();
+    const note = document.getElementById("audioPlatformNote");
+    const isTeams = platform === "Microsoft Teams";
+    const isSip = platform === "Zoom" || platform === "OpenSIP";
+    let msg = "";
+    if (cfg) {
+      if (family === "Edge E" && isTeams) {
+        msg = "No Edge E native Teams SKU. Edge E is OpenSIP only — basic Teams calling via MS SIP Gateway. BOM uses the OpenSIP SKU.";
+      } else if (cfg.teamsNote && isTeams) {
+        msg = cfg.teamsNote;
+      } else if (cfg.sipNote && isSip) {
+        msg = cfg.sipNote;
+      } else if (family === "CCX" && isSip) {
+        msg = "No Zoom-branded CCX SKU. Zoom Phone uses the OpenSIP/SIP SKU.";
+      } else if (family === "Rove" && isTeams) {
+        msg = "Rove DECT is OpenSIP (not native Teams). BOM uses the OpenSIP SKU.";
+      }
+    }
+    if (note) {
+      note.textContent = msg;
+      note.classList.toggle("hidden", !msg);
+    }
+    const expWrap = document.getElementById("audioExpWrap");
+    const emWrap = document.getElementById("audioEmWrap");
+    const psuWrap = document.getElementById("audioPsuWrap");
+    const expLabel = document.getElementById("audioExpLabel");
+    const emLabel = document.getElementById("audioEmLabel");
+    const psuLabel = document.getElementById("audioPsuLabel");
+    if (expWrap) {
+      const show = !!(cfg && cfg.exp);
+      expWrap.classList.toggle("hidden", !show);
+      if (expLabel && show) {
+        const item = getItem(cfg.exp);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        expLabel.textContent = "Include expansion mics (" + cfg.exp + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioExpMics");
+        if (cb) cb.checked = false;
+      }
+    }
+    if (emWrap) {
+      const show = !!(cfg && cfg.em);
+      emWrap.classList.toggle("hidden", !show);
+      if (emLabel && show) {
+        const item = getItem(cfg.em);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        emLabel.textContent = "Include expansion module (" + cfg.em + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioEm");
+        if (cb) cb.checked = false;
+      }
+    }
+    if (psuWrap) {
+      const show = !!(cfg && cfg.psu);
+      psuWrap.classList.toggle("hidden", !show);
+      if (psuLabel && show) {
+        const item = getItem(cfg.psu);
+        const price = item && item.msrp != null ? " — $" + item.msrp : "";
+        psuLabel.textContent = "Include power supply if no PoE (" + cfg.psu + ")" + price;
+      }
+      if (!show) {
+        const cb = document.getElementById("audioPsu");
+        if (cb) cb.checked = false;
+      }
+    }
+  }
   function rebuildAudioModel() {
     const family = document.getElementById("audioFamily")?.value || "";
     const sel = document.getElementById("audioModel");
     if (!sel) return;
     const prev = sel.value;
-    const models = family === "Trio" ? ["C60"] : family === "CCX" ? ["505", "600"] : family === "Edge E" ? ["E450"] : [];
+    const models = Object.keys(AUDIO_CATALOG[family] || {});
     sel.innerHTML = '<option value="">--</option>' + models.map(m => `<option value="${m}">${m}</option>`).join("");
     sel.value = models.includes(prev) ? prev : "";
+    updateAudioNotesAndAcc();
   }
   document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioPlatform")?.addEventListener("change", updateAudioNotesAndAcc);
   rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
@@ -673,67 +850,86 @@ async function init() {
       hint.textContent = "Windows room compute and in-room TC10 are added for Zoom and Teams.";
     }
   }
+  function qsgLink(href, label) {
+    if (!href) return "";
+    return `<a target="_blank" rel="noopener" class="text-blue-700 underline" href="${href}">${label}</a>`;
+  }
+  function refreshMountHint() {
+    const hint = document.getElementById("mountingHint");
+    const sel = document.getElementById("mounting");
+    if (!hint || !sel) return;
+    const family = hostFamily();
+    const choice = sel.value || "None";
+    const usb = family === "v12" || family === "v52" || family === "v72";
+    let included = "";
+    let qsg = "";
+    if (family === "v12" || family === "x32") {
+      included = (usb ? "V12" : "X32") + " includes a display clamp in the box. Wall/VESA kit, table stand, and inverted wall are sold separately.";
+      if (choice === "Wall") qsg = qsgLink("https://media.dustin.eu/media/d2000010011101422/poly-studio-x30-vesa-display-mount-wall-mount-quick-start-guide.pdf", "X30/X32/V12 wall + VESA kit setup sheet (PDF)");
+      else if (choice === "Table" || choice === "Inverted wall" || choice === "None") qsg = qsgLink("https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html", "X32/V12 hardware install (included display clamp)");
+    } else if (family === "v52" || family === "x52") {
+      included = (usb ? "V52" : "X52") + " includes a display clamp and a wall mount in the box. VESA and table stand are sold separately.";
+      if (choice === "Wall") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580259_en-US-1.pdf", "X52/V52 wall mount quick start (PDF)");
+      else if (choice === "VESA style display mount") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580398_en-US-1.pdf", "X52/V52 VESA mount quick start (PDF)");
+      else if (choice === "Table") qsg = qsgLink("https://kaas.hpcloud.hp.com/pdf-public/pdf_9580389_en-US-1.pdf", "X52/V52 table stand quick start (PDF)");
+      else qsg = qsgLink("https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/Poly-Studio-X52-V52-Accessories-Quick-Start-Guide/ta-p/9119238", "X52/V52 accessories quick starts (clamp, wall, VESA, stand)");
+    } else if (family === "v72" || family === "x72") {
+      included = (usb ? "V72" : "X72") + " includes a wall mount in the box. No extra wall SKU. VESA and table stand are sold separately.";
+      if (usb) qsg = qsgLink("https://docs.poly.com/bundle/poly-studio-v72-ug-current/page/mounting-the-poly-studio-v72.html", "V72 mounting guide (included wall mount)");
+      else qsg = qsgLink("https://docs.poly.com/bundle/studio-x72-ug/page/poly-studio-x-hardware-installation.html", "X72 hardware install (included wall mount)");
+    } else if (family === "g62") {
+      included = "G62 commercial kit includes the mount; no extra bar-mount SKU is added.";
+    }
+    hint.innerHTML = included + (qsg ? "<br>Quick start: " + qsg : "");
+  }
+  function refreshCameraMountHint() {
+    const hint = document.getElementById("cameraMountHint");
+    const sel = document.getElementById("cameraMount");
+    const cam = document.getElementById("cameraChoice")?.value || "None";
+    if (!hint) return;
+    const choice = sel ? (sel.value || "None") : "None";
+    let included = "";
+    let qsg = "";
+    if (cam === "E70") {
+      included = "E70 includes a display clamp and a wall mount in the box. VESA kit is sold separately.";
+      if (choice === "Clamp") qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 display clamp quick start (PDF)");
+      else qsg = qsgLink("https://cdn.cs.1worldsync.com/f2/f6/f2f666a4-534d-4221-9882-367ac6606549.pdf", "E70 display clamp quick start (PDF)");
+    } else if (cam === "E60") {
+      included = "E60 includes a wall mount in the box. Ceiling and HDCI brackets are sold separately.";
+      qsg = qsgLink("https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/How-to-unbox-and-set-up-the-Poly-Studio-E60/ta-p/9223557", "E60 unbox and setup (included wall mount)");
+    }
+    hint.innerHTML = included + (qsg ? "<br>Quick start: " + qsg : "");
+  }
   function updateMountingOptions() {
     const wrap = document.getElementById("mountingWrap");
     const sel = document.getElementById("mounting");
-    const hint = document.getElementById("mountingHint");
     if (!wrap || !sel) return;
     const family = hostFamily();
     const prev = sel.value || "None";
-    function mountQsgHtml(fam) {
-      let href = "";
-      let label = "";
-      if (fam === "v12" || fam === "x32") {
-        href = "https://docs.poly.com/bundle/studio-x-ug/page/poly-studio-x-hardware-installation.html";
-        label = "Mounting quick start / hardware install";
-      } else if (fam === "v52" || fam === "x52") {
-        href = "https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/Poly-Studio-X52-V52-Accessories-Quick-Start-Guide/ta-p/9119238";
-        label = "X52/V52 mount quick start guides (wall, VESA, stand, clamp)";
-      } else if (fam === "v72" || fam === "x72") {
-        href = "https://docs.poly.com/bundle/studio-x72-ug/page/poly-studio-x-hardware-installation.html";
-        label = "X72/V72 mounting quick start (HP Support / user guide)";
-      }
-      if (!href) return "";
-      return `Mounting quick start: <a target="_blank" rel="noopener" class="text-blue-700 underline" href="${href}">${label}</a>`;
-    }
-    function setMountHint(el, sentence, fam) {
-      if (!el) return;
-      const qsg = mountQsgHtml(fam);
-      if (sentence && qsg) el.innerHTML = sentence + "<br>" + qsg;
-      else if (qsg) el.innerHTML = qsg;
-      else el.textContent = sentence || "";
-    }
-    // Hide until host is known; G62 kit already includes mount (no extra SKU in this generator)
     if (!family || family === "g62") {
       wrap.classList.add("hidden");
       sel.innerHTML = `<option value="None">None</option>`;
       sel.value = "None";
-      if (hint) {
-        hint.textContent = family === "g62"
-          ? "G62 commercial kit includes the mount; no extra mounting SKU is added."
-          : "";
-      }
+      refreshMountHint();
       return;
     }
     wrap.classList.remove("hidden");
-    const opts = [{ value: "None", label: "None" }];
+    const opts = [{ value: "None", label: "None — use in-box mount" }];
     if (family === "v12" || family === "x32") {
       opts.push({ value: "Wall", label: "Wall / VESA kit (875L6AA)" });
       opts.push({ value: "Table", label: "Table stand (875L5AA)" });
       opts.push({ value: "Inverted wall", label: "Inverted wall (875L7AA)" });
-      setMountHint(hint, "X32/V12: 875L6AA is the combined wall + VESA kit (one SKU). 875L7AA is inverted wall.", family);
     } else if (family === "v52" || family === "x52") {
-      opts.push({ value: "Wall", label: "Wall (875L8AA)" });
+      opts.push({ value: "Wall", label: "Wall (875L8AA) — spare / extra" });
       opts.push({ value: "VESA style display mount", label: "VESA (875L9AA)" });
       opts.push({ value: "Table", label: "Table stand (875M0AA)" });
-      setMountHint(hint, "X52/V52: wall, VESA, and table stand are distinct SKUs.", family);
     } else if (family === "v72" || family === "x72") {
       opts.push({ value: "VESA style display mount", label: "VESA (875L2AA)" });
       opts.push({ value: "Table", label: "Table stand (875L3AA)" });
-      setMountHint(hint, "No dedicated wall SKU for X72 / V72; VESA or table only.", family);
     }
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
+    refreshMountHint();
   }
   function updateExpansionOptions() {
     const sel = document.getElementById("expansionMic");
@@ -770,6 +966,29 @@ async function init() {
       if (sel) sel.value = "None";
     }
   }
+  function updateG6DockVisibility() {
+    const wrap = document.getElementById("g6DockWrap");
+    if (!wrap) return;
+    const t = document.getElementById("typeOfSystem")?.value || "";
+    const show = t === "Windows PC based solution";
+    wrap.classList.toggle("hidden", !show);
+    if (!show) {
+      const cb = document.getElementById("g6DockOpt");
+      if (cb) cb.checked = false;
+    }
+  }
+  function updatePolarFilterVisibility() {
+    const wrap = document.getElementById("polarFilterWrap");
+    if (!wrap) return;
+    const family = hostFamily();
+    const cam = document.getElementById("cameraChoice")?.value || "None";
+    const show = family === "x72" || family === "v72" || cam === "E70";
+    wrap.classList.toggle("hidden", !show);
+    if (!show) {
+      const cb = document.getElementById("polarFilterOpt");
+      if (cb) cb.checked = false;
+    }
+  }
   function refreshDependentControls() {
     updatePlatformVisibility();
     updateMountingOptions();
@@ -777,6 +996,8 @@ async function init() {
     updateCameraVisibility();
     updateA2QtyVisibility();
     updateNetgearVisibility();
+    updateG6DockVisibility();
+    updatePolarFilterVisibility();
   }
   function canShowCameraAddOn() {
     const t = document.getElementById("typeOfSystem")?.value || "";
@@ -811,7 +1032,7 @@ async function init() {
           mountSel.innerHTML += `<option value="Clamp">Display clamp (875K8AA)</option>`;
           mountOptions++;
         }
-        if (hint) hint.textContent = "Optional E70 mounts from catalog. Default None (use included hardware).";
+        refreshCameraMountHint();
       } else if (cam === "E60") {
         if (getItem("9W1A8AA#AC3") || getItem("9W1A8AA")) {
           mountSel.innerHTML += `<option value="Ceiling">Ceiling mount (9W1A8AA#AC3)</option>`;
@@ -821,12 +1042,13 @@ async function init() {
           mountSel.innerHTML += `<option value="HDCI">HDCI camera bracket (89L88AA)</option>`;
           mountOptions++;
         }
-        if (hint) hint.textContent = "Optional E60 mounts from catalog. Wall mount is included with the camera.";
+        refreshCameraMountHint();
       } else {
         if (hint) hint.textContent = "";
       }
       if ([...mountSel.options].some(o => o.value === prev)) mountSel.value = prev;
       else mountSel.value = "None";
+      if (cam === "E70" || cam === "E60") refreshCameraMountHint();
     }
     if (mountWrap) mountWrap.classList.toggle("hidden", !show || mountOptions === 0);
   }
@@ -841,11 +1063,14 @@ async function init() {
   document.getElementById("cameraChoice")?.addEventListener("change", () => {
     updateCameraAccessoryVisibility();
     updateNetgearVisibility();
+    updatePolarFilterVisibility();
   });
   document.getElementById("expansionMic")?.addEventListener("change", () => {
     updateA2QtyVisibility();
     updateNetgearVisibility();
   });
+  document.getElementById("mounting")?.addEventListener("change", refreshMountHint);
+  document.getElementById("cameraMount")?.addEventListener("change", refreshCameraMountHint);
   refreshDependentControls();
 
   // ---------- promo button ----------
@@ -947,18 +1172,6 @@ async function init() {
       html += ` Prices are list MSRP and may not reflect final quote.</p>`;
     }
 
-    if (bom.showPolarFilter) {
-      const polarChecked = hasSku(results, "875K9AA") ? " checked" : "";
-      html += `<div class="mt-3 p-2 border border-amber-300 rounded bg-amber-50 text-sm text-amber-900">
-        <label class="flex items-start gap-2">
-          <input id="polarFilterOpt" type="checkbox" class="border mt-1"${polarChecked}>
-          <span>
-            <span class="font-medium">Optional polarized filter (875K9AA)</span>
-            <span class="block text-xs">For E70, X72, and V72. Cuts window glare on the camera lens. $181 list. Not included in the recommended quote unless you check this.</span>
-          </span>
-        </label>
-      </div>`;
-    }
 
     if (bom.footnote) {
       html += `<p class="text-xs text-amber-800 mt-2">${bom.footnote}</p>`;
@@ -1040,20 +1253,6 @@ async function init() {
     handleQtyInputEvent(e.target, true);
   });
   resultDiv.addEventListener("change", (e) => {
-    if (e.target.id === "polarFilterOpt") {
-      if (!lastBom) return;
-      if (e.target.checked) {
-        if (!hasSku(lastBom.results, "875K9AA")) {
-          addLine(lastBom.results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", 1);
-          lastBom.polarOn = true;
-          renderBom();
-        }
-      } else {
-        lastBom.results = lastBom.results.filter(x => x.sku !== "875K9AA");
-        renderBom();
-      }
-      return;
-    }
     if (!e.target.classList.contains("qty-input")) return;
     handleQtyInputEvent(e.target, true);
   });
@@ -1392,13 +1591,24 @@ async function init() {
       addLine(results, netgearSku);
     }
 
+    const polarWrap = document.getElementById("polarFilterWrap");
+    const polarOn = document.getElementById("polarFilterOpt")?.checked;
+    if (polarOn && polarWrap && !polarWrap.classList.contains("hidden")) {
+      addLine(results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", 1);
+    }
+
+    const g6Wrap = document.getElementById("g6DockWrap");
+    const g6On = document.getElementById("g6DockOpt")?.checked;
+    if (g6On && g6Wrap && !g6Wrap.classList.contains("hidden") && typeOfSystem === "Windows PC based solution") {
+      addLine(results, "9X481UT#ABA", "HP Thunderbolt 4 Ultra 180W G6 Dock", 1);
+      addSupport(results, "g6_dock", supportTerm);
+    }
+
     lastBom = {
       results,
       includePrices,
       googleMeetNote: !!(needsPlatform && platform === "Google Meet")
     };
-    lastBom.showPolarFilter = bomOffersPolarFilter(results);
-    lastBom.polarOn = false;
     renderBom();
   }
 
@@ -1421,32 +1631,44 @@ async function init() {
       mockError(audioResult, "Please select " + missing.join(", ") + " to generate a BOM.");
       return;
     }
-    let sku = null;
-    let err = null;
-    if (family === "Trio") {
-      sku = (platform === "Microsoft Teams") ? "849B6AA#ABA" : "849B4AA";
-    } else if (family === "CCX") {
-      if (platform === "Microsoft Teams") {
-        if (model === "505") sku = "82Z79AA";
-        else if (model === "600") sku = "82Z84AA";
-      } else {
-        err = "This mock has no OpenSIP/Zoom CCX SKU yet.";
-      }
-    } else if (family === "Edge E") {
-      if (platform === "Zoom" || platform === "OpenSIP") sku = "82M90AA";
-      else err = "This mock has no Teams Edge SKU yet.";
-    }
-    if (err) {
+    const cfg = audioCfg();
+    if (!cfg) {
       lastAudioBom = null;
-      mockError(audioResult, err);
+      mockError(audioResult, "Unknown family/model combination.");
+      return;
+    }
+    const isTeams = platform === "Microsoft Teams";
+    const sku = isTeams ? (cfg.teams || cfg.sip) : (cfg.sip || cfg.teams);
+    if (!sku) {
+      lastAudioBom = null;
+      mockError(audioResult, cfg.sipNote || cfg.teamsNote || "No SKU for this platform/model (not invented).");
       return;
     }
     const results = [];
     addLine(results, sku);
+    addSupport(results, cfg.support, supportTerm);
+    if (document.getElementById("audioExpMics")?.checked && cfg.exp) addLine(results, cfg.exp);
+    if (document.getElementById("audioEm")?.checked && cfg.em) {
+      addLine(results, cfg.em);
+      if (family === "CCX") addSupport(results, "ccx_em60", supportTerm);
+      if (family === "Edge E") addSupport(results, "edge_em", supportTerm);
+    }
+    if (document.getElementById("audioPsu")?.checked && cfg.psu) addLine(results, cfg.psu);
+    const notes = [];
+    if (family === "Edge E" && isTeams) {
+      notes.push("Edge E has no native Teams SKU. OpenSIP SKU used (basic Teams calling via MS SIP Gateway).");
+    }
+    if (cfg.teamsNote && isTeams) notes.push(cfg.teamsNote);
+    if (family === "CCX" && !isTeams) notes.push("No Zoom-branded CCX SKU; OpenSIP/SIP SKU used for Zoom Phone.");
+    if (family === "Rove" && isTeams) notes.push("Rove DECT is OpenSIP (not native Teams).");
+    const map = SUPPORT_MAP[cfg.support] || {};
+    if (supportTerm && !map[supportTerm]) {
+      notes.push("No " + supportTerm + " SKU mapped for this model (not invented).");
+    }
     lastAudioBom = {
       results,
       includePrices,
-      footnote: supportTerm ? "Phone/headset Poly+ SKUs not in this mock yet." : null
+      footnote: notes.length ? notes.join(" ") : null
     };
     renderBom(undefined, undefined, audioResult, lastAudioBom);
   });

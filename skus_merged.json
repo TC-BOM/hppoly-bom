@@ -27,17 +27,16 @@
     "description": "Poly E70 dual digital lens large room camera with full Ai Director auto-tracking",
     "msrp": 4666.0
   },
-  "849B6AA": {
-    "description": "Poly Trio C60 Preconfigured for geenric/SIP usage, not Teams",
-    "msrp": 899.95
-  },
   "849B6AA#ABA": {
-    "description": "Poly Trio C60 Preconfigured for Teams",
-    "msrp": 1199.95
+    "description": "Poly Trio C60 IP Conference Phone for Microsoft Teams Full Radio and PoE-enabled",
+    "msrp": 1199.95,
+    "family": "trio",
+    "platform": "teams"
   },
   "85X02AA": {
     "description": "Trio C60 expansion mic kit (includes 2 mics)",
-    "msrp": 229.95
+    "msrp": 229.95,
+    "family": "trio"
   },
   "874R3AA": {
     "description": "Poly IP table microphone array",
@@ -804,11 +803,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount \u2014 White",
+    "description": "Poly TC10 Glass Mount — White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount \u2014 Black",
+    "description": "Poly TC10 Glass Mount — Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -881,7 +880,7 @@
   },
   "B42BFAA": {
     "description": "Poly USB-C 65W Power Adapter and Power Cord Kit",
-    "msrp": 49.70
+    "msrp": 49.7
   },
   "GSM4210PD-100NAS": {
     "description": "Netgear AV Line M4250-9G1F-PoE+ (8x PoE+). High-side list estimate.",
@@ -904,28 +903,28 @@
     "msrp": 4520.67
   },
   "849B4AA": {
-    "description": "Poly Trio C60 IP Conference Phone OpenSIP / Zoom (PoE, Wi-Fi, Bluetooth)",
-    "msrp": null,
+    "description": "Poly Trio C60 IP Conference Phone Full Radio and PoE-enabled",
+    "msrp": 1199.95,
     "family": "trio",
     "platform": "opensip"
   },
   "82Z79AA": {
-    "description": "Poly CCX 505 Business Media Phone for Microsoft Teams (PoE, Wi-Fi, Bluetooth)",
+    "description": "Poly CCX 505 BMP MS PoE-e",
     "msrp": 579.95,
     "family": "ccx",
     "platform": "teams"
   },
   "82Z84AA": {
-    "description": "Poly CCX 600 Business Media Phone for Microsoft Teams (PoE, Wi-Fi, Bluetooth)",
+    "description": "Poly CCX 600 BMP MS PoE-e",
     "msrp": 749.95,
     "family": "ccx",
     "platform": "teams"
   },
   "82M90AA": {
-    "description": "Poly Edge E450 IP Phone (PoE, Wi-Fi, Bluetooth; Zoom / OpenSIP)",
-    "msrp": 355.95,
+    "description": "Poly Edge E450 IP PH PoE-e",
+    "msrp": 390.95,
     "family": "edge",
-    "platform": "zoom"
+    "platform": "opensip"
   },
   "8X223AA": {
     "description": "Poly Blackwire 8225 stereo USB-C/A (UC)",
@@ -950,5 +949,624 @@
     "msrp": 291.48,
     "family": "headset",
     "conn": "dect"
+  },
+  "9X481UT#ABA": {
+    "description": "HP Thunderbolt 4 Ultra 180W G6 Dock",
+    "msrp": 394.0,
+    "family": "dock"
+  },
+  "CA7U8AA#ABA": {
+    "description": "HP Thunderbolt 4 Ultra 180W G6 Dock",
+    "msrp": 394.0,
+    "family": "dock",
+    "alias_of": "9X481UT#ABA"
+  },
+  "US2A4PV": {
+    "description": "1 yr Poly+ HP TB4 180W G6 Dock",
+    "msrp": 24.95
+  },
+  "US2A5PV": {
+    "description": "3 yr Poly+ HP TB4 180W G6 Dock",
+    "msrp": 67.25
+  },
+  "849B4AA#ABA": {
+    "description": "Poly Trio C60 IP Conference Phone Full Radio and PoE-enabled",
+    "msrp": 1199.95,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "849A0AA#AC3": {
+    "description": "Poly Trio 8300 IP Conference Phone and PoE-enabled",
+    "msrp": 663.95,
+    "family": "trio",
+    "platform": "opensip"
+  },
+  "85X00AA": {
+    "description": "PLY Trio 8300/8800 Exp Mic",
+    "msrp": 268.95,
+    "family": "trio"
+  },
+  "85W92AA#ABA": {
+    "description": "PLY Trio 8300 PSU wPC CAT5 United States / Canada English",
+    "msrp": 102.95,
+    "family": "trio"
+  },
+  "848Z7AA#AC3": {
+    "description": "Poly CCX 350 BMP MS PoE-e No localization",
+    "msrp": 579.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "848Z8AA#AC3": {
+    "description": "Poly CCX 400 BMP MS PoE-e No localization",
+    "msrp": 399.95,
+    "family": "ccx",
+    "platform": "teams"
+  },
+  "849A1AA#AC3": {
+    "description": "Poly CCX 400 BMP SIP PoE-e No localization",
+    "msrp": 399.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "82Z82AA": {
+    "description": "Poly CCX 505 BMP SIP PoE-e",
+    "msrp": 579.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "82Z85AA": {
+    "description": "Poly CCX 600 BMP SIP PoE-e",
+    "msrp": 749.95,
+    "family": "ccx",
+    "platform": "opensip"
+  },
+  "8F3R9AA": {
+    "description": "PLY CCX EM60 EM",
+    "msrp": 268.95,
+    "family": "ccx"
+  },
+  "86H66AA#ABA": {
+    "description": "PLY Edge E100-450 CCX 350 EM60 PSU 5V/3A United States / Canada English",
+    "msrp": 25.85,
+    "family": "psu"
+  },
+  "86P04AA#ABA": {
+    "description": "PLY CCX 500/505/600/700 Edge E500 PSU United States / Canada English",
+    "msrp": 41.0,
+    "family": "psu"
+  },
+  "82M86AA": {
+    "description": "Poly Edge E100 IP PH PoE-e",
+    "msrp": 171.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M87AA": {
+    "description": "Poly Edge E220 IP PH PoE-e",
+    "msrp": 182.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M92AA": {
+    "description": "Poly Edge E300 IP PH PoE-e",
+    "msrp": 248.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M88AA": {
+    "description": "Poly Edge E320 IP PH PoE-e",
+    "msrp": 272.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M89AA": {
+    "description": "Poly Edge E350 IP PH PoE-e",
+    "msrp": 294.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M93AA": {
+    "description": "Poly Edge E400 IP PH PoE-e",
+    "msrp": 305.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "82M91AA": {
+    "description": "Poly Edge E550 IP PH PoE-e",
+    "msrp": 422.95,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "85W93AA": {
+    "description": "PLY Edge E Exp Mod",
+    "msrp": 323.95,
+    "family": "edge"
+  },
+  "8F3E4AA#ABA": {
+    "description": "Poly Rove 20 DECT PH HS United States / Canada English",
+    "msrp": 153.3,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "84H76AA#ABA": {
+    "description": "Poly Rove 30 DECT PH HS United States / Canada English",
+    "msrp": 307.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "84H77AA#ABA": {
+    "description": "Poly Rove 40 DECT PH HS United States / Canada English",
+    "msrp": 496.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "84H80AA#ABA": {
+    "description": "Poly Rove S/D DECT D1 B2BS United States / Canada English",
+    "msrp": 329.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "84H78AA#ABA": {
+    "description": "Poly Rove M DECT D1 B4BS United States / Canada English",
+    "msrp": 537.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "84H79AA#ABA": {
+    "description": "Poly Rove R8 DECT Rptr United States / Canada English",
+    "msrp": 307.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "8F3E1AA#ABA": {
+    "description": "Poly Rove 20 S DECT D1 B1BS 20PH United States / Canada English",
+    "msrp": 307.95,
+    "family": "rove",
+    "platform": "opensip"
+  },
+  "P49690112": {
+    "description": "1y Poly+ CCX 350 Service",
+    "msrp": 19.75
+  },
+  "P49690312": {
+    "description": "3y Poly+ CCX 350 Service",
+    "msrp": 54.0
+  },
+  "P49700112": {
+    "description": "1y Poly+ CCX 400 Service",
+    "msrp": 15.75
+  },
+  "P49700312": {
+    "description": "3y Poly+ CCX 400 Service",
+    "msrp": 42.25
+  },
+  "P49735112": {
+    "description": "1y Poly+ CCX 505 Service",
+    "msrp": 19.75
+  },
+  "P49735312": {
+    "description": "3y Poly+ CCX 505 Service",
+    "msrp": 54.0
+  },
+  "P49780112": {
+    "description": "1y Poly+ CCX 600 Service",
+    "msrp": 18.5
+  },
+  "P49780312": {
+    "description": "3y Poly+ CCX 600",
+    "msrp": 50.0
+  },
+  "P66800112": {
+    "description": "1y Poly+ Trio8300 Svc",
+    "msrp": 33.5
+  },
+  "P66800312": {
+    "description": "3y Poly+ Trio8300 Svc",
+    "msrp": 90.0
+  },
+  "UM5V3PB": {
+    "description": "5y Poly+ TrioC60 Svc",
+    "msrp": 176.0
+  },
+  "UM5V1PB": {
+    "description": "5y Poly+ Trio8300 Svc",
+    "msrp": 151.0
+  },
+  "P86980112": {
+    "description": "1y Poly+ Edge E100 Service",
+    "msrp": 19.75
+  },
+  "P86980312": {
+    "description": "3y Poly+ Edge E100 Service",
+    "msrp": 54.0
+  },
+  "P86990112": {
+    "description": "1y Poly+ Edge E220 Service",
+    "msrp": 19.75
+  },
+  "P86990312": {
+    "description": "3y Poly+ Edge E220 Service",
+    "msrp": 54.0
+  },
+  "P87815112": {
+    "description": "1y Poly+ Edge E300 Service",
+    "msrp": 19.75
+  },
+  "P87815312": {
+    "description": "3y Poly+ Edge E300 Service",
+    "msrp": 54.0
+  },
+  "P87000112": {
+    "description": "1y Poly+ Edge E320 Service",
+    "msrp": 19.75
+  },
+  "P87000312": {
+    "description": "3y Poly+ Edge E320 Service",
+    "msrp": 54.0
+  },
+  "P87010112": {
+    "description": "1y Poly+ Edge E350 Service",
+    "msrp": 19.75
+  },
+  "P87010312": {
+    "description": "3y Poly+ Edge E350 Service",
+    "msrp": 54.0
+  },
+  "P87835112": {
+    "description": "1y Poly+ Edge E400 Service",
+    "msrp": 19.75
+  },
+  "P87835312": {
+    "description": "3y Poly+ Edge E400 Service",
+    "msrp": 54.0
+  },
+  "P87030112": {
+    "description": "1y Poly+ Edge E450 Service",
+    "msrp": 19.75
+  },
+  "P87030312": {
+    "description": "3y Poly+ Edge E450 Service",
+    "msrp": 54.0
+  },
+  "P87050112": {
+    "description": "1y Poly+ Edge E550 Service",
+    "msrp": 19.75
+  },
+  "P87050312": {
+    "description": "3y Poly+ Edge E550 Service",
+    "msrp": 54.0
+  },
+  "P87020112": {
+    "description": "1y Poly+ Poly Edge E EM",
+    "msrp": 19.75
+  },
+  "P87020312": {
+    "description": "3y Poly+ Poly Edge E EM",
+    "msrp": 54.0
+  },
+  "UM5T1PB": {
+    "description": "5y Poly+ Edge E100 Service",
+    "msrp": 89.0
+  },
+  "UM5T2PB": {
+    "description": "5y Poly+ Edge E220 Service",
+    "msrp": 89.0
+  },
+  "UM5T7PB": {
+    "description": "5y Poly+ Edge E300 Service",
+    "msrp": 89.0
+  },
+  "UM5T3PB": {
+    "description": "5y Poly+ Edge E320 Service",
+    "msrp": 89.0
+  },
+  "UM5T4PB": {
+    "description": "5y Poly+ Edge E350 Service",
+    "msrp": 89.0
+  },
+  "UM5T8PB": {
+    "description": "5y Poly+ Edge E400 Service",
+    "msrp": 89.0
+  },
+  "UM5T5PB": {
+    "description": "5y Poly+ Edge E450 Service",
+    "msrp": 89.0
+  },
+  "UM5T6PB": {
+    "description": "5y Poly+ Edge E550 Service",
+    "msrp": 89.0
+  },
+  "U73W3PP": {
+    "description": "1y Poly+ CCX EM60 EM Service",
+    "msrp": 19.5
+  },
+  "U73W4PP": {
+    "description": "3y Poly+ CCX EM60 EM Service",
+    "msrp": 52.75
+  },
+  "P86820112": {
+    "description": "1y Poly+ RoveB2 DECT Svc",
+    "msrp": 19.75
+  },
+  "P86820312": {
+    "description": "3y Poly+ RoveB2 DECT Svc",
+    "msrp": 54.0
+  },
+  "P86810112": {
+    "description": "1y Poly+ Rove40 DECT Svc",
+    "msrp": 19.75
+  },
+  "P86810312": {
+    "description": "3y Poly+ Rove40 DECT Svc",
+    "msrp": 54.0
+  },
+  "P86830112": {
+    "description": "1y Poly+ RoveB4 DECT Svc",
+    "msrp": 19.75
+  },
+  "P86830312": {
+    "description": "3y Poly+ RoveB4 DECT Svc",
+    "msrp": 54.0
+  },
+  "P86840112": {
+    "description": "1y Poly+ RoveR8 DECT Svc",
+    "msrp": 19.75
+  },
+  "P86840312": {
+    "description": "3y Poly+ RoveR8 DECT Svc",
+    "msrp": 54.0
+  },
+  "P86930112": {
+    "description": "1y Poly+ Rove30 DECT Svc",
+    "msrp": 19.75
+  },
+  "P86930312": {
+    "description": "3y Poly+ Rove30 DECT Svc",
+    "msrp": 54.0
+  },
+  "P88080112": {
+    "description": "1y Poly+ Rove 20 and B1 Kit",
+    "msrp": 19.75
+  },
+  "P88080312": {
+    "description": "3y Poly+ Rove 20 and B1 Kit",
+    "msrp": 54.0
+  },
+  "P88090112": {
+    "description": "1y Poly+ Rove 20 Handset",
+    "msrp": 19.75
+  },
+  "P88090312": {
+    "description": "3y Poly+ Rove 20 Handset",
+    "msrp": 54.0
+  },
+  "UM5U2PB": {
+    "description": "5y Poly+ Rove 20 and B1 Kit",
+    "msrp": 89.0
+  },
+  "UM5U3PB": {
+    "description": "5y Poly+ Rove 20 Handset",
+    "msrp": 89.0
+  },
+  "UM5V0PB": {
+    "description": "5y Poly+ Rove30 DECT Svc",
+    "msrp": 89.0
+  },
+  "UM5U4PB": {
+    "description": "5y Poly+ Rove40 DECT Svc",
+    "msrp": 89.0
+  },
+  "UM5U5PB": {
+    "description": "5y Poly+ RoveB2 DECT Svc",
+    "msrp": 89.0
+  },
+  "UM5U6PB": {
+    "description": "5y Poly+ RoveB4 DECT Svc",
+    "msrp": 89.0
+  },
+  "UM5U7PB": {
+    "description": "5y Poly+ RoveR8 DECT Svc",
+    "msrp": 89.0
+  },
+  "UQ7C4PB": {
+    "description": "1y Poly+ Analyze CCX 350",
+    "msrp": 23.75
+  },
+  "UQ7C5PB": {
+    "description": "3y Poly+ Analyze CCX 350",
+    "msrp": 64.0
+  },
+  "UQ7C9PB": {
+    "description": "1y Poly+ Analyze CCX 400",
+    "msrp": 19.0
+  },
+  "UQ7D0PB": {
+    "description": "3y Poly+ Analyze CCX 400",
+    "msrp": 51.0
+  },
+  "UQ7D9PB": {
+    "description": "1y Poly+ Analyze CCX 505 Service",
+    "msrp": 23.75
+  },
+  "UQ7E0PB": {
+    "description": "3y Poly+ Analyze CCX 505 Service",
+    "msrp": 64.0
+  },
+  "UQ7E4PB": {
+    "description": "1y Poly+ Analyze CCX 600 Service",
+    "msrp": 22.25
+  },
+  "UQ7E5PB": {
+    "description": "3y Poly+ Analyze CCX 600 Service",
+    "msrp": 60.0
+  },
+  "UQ7U6PB": {
+    "description": "1y Poly+ Analyze Trio C60 Svc",
+    "msrp": 51.75
+  },
+  "UQ7U7PB": {
+    "description": "3y Poly+ Analyze Trio C60 Svc",
+    "msrp": 138.95
+  },
+  "UQ7S3PB": {
+    "description": "1y Poly+ Analyze Trio 8300 Svc",
+    "msrp": 44.25
+  },
+  "UQ7S4PB": {
+    "description": "3y Poly+ Analyze Trio 8300 Svc",
+    "msrp": 118.95
+  },
+  "UQ7G8PB": {
+    "description": "1y Poly+ Analyze Edge E100 Service",
+    "msrp": 23.75
+  },
+  "UQ7G9PB": {
+    "description": "3y Poly+ Analyze Edge E100 Service",
+    "msrp": 64.0
+  },
+  "UQ7H1PB": {
+    "description": "5y Poly+ Analyze Edge E100 Service",
+    "msrp": 106.0
+  },
+  "UQ7H4PB": {
+    "description": "1y Poly+ Analyze Edge E220 Service",
+    "msrp": 23.75
+  },
+  "UQ7H5PB": {
+    "description": "3y Poly+ Analyze Edge E220 Service",
+    "msrp": 64.0
+  },
+  "UQ7H7PB": {
+    "description": "5y Poly+ Analyze Edge E220 Service",
+    "msrp": 106.0
+  },
+  "UQ7J0PB": {
+    "description": "1y Poly+ Analyze Edge E300 Service",
+    "msrp": 23.75
+  },
+  "UQ7J1PB": {
+    "description": "3y Poly+ Analyze Edge E300 Service",
+    "msrp": 64.0
+  },
+  "UQ7J3PB": {
+    "description": "5y Poly+ Analyze Edge E300 Service",
+    "msrp": 106.0
+  },
+  "UQ7J6PB": {
+    "description": "1y Poly+ Analyze Edge E320 Service",
+    "msrp": 23.75
+  },
+  "UQ7J7PB": {
+    "description": "3y Poly+ Analyze Edge E320 Service",
+    "msrp": 64.0
+  },
+  "UQ7J9PB": {
+    "description": "5y Poly+ Analyze Edge E320 Service",
+    "msrp": 106.0
+  },
+  "UQ7K2PB": {
+    "description": "1y Poly+ Analyze Edge E350 Service",
+    "msrp": 23.75
+  },
+  "UQ7K3PB": {
+    "description": "3y Poly+ Analyze Edge E350 Service",
+    "msrp": 64.0
+  },
+  "UQ7K5PB": {
+    "description": "5y Poly+ Analyze Edge E350 Service",
+    "msrp": 106.0
+  },
+  "UQ7K8PB": {
+    "description": "1y Poly+ Analyze Edge E400 Service",
+    "msrp": 23.75
+  },
+  "UQ7K9PB": {
+    "description": "3y Poly+ Analyze Edge E400 Service",
+    "msrp": 64.0
+  },
+  "UQ7L1PB": {
+    "description": "5y Poly+ Analyze Edge E400 Service",
+    "msrp": 106.0
+  },
+  "UQ7L4PB": {
+    "description": "1y Poly+ Analyze Edge E450 Service",
+    "msrp": 23.75
+  },
+  "UQ7L5PB": {
+    "description": "3y Poly+ Analyze Edge E450 Service",
+    "msrp": 64.0
+  },
+  "UQ7L7PB": {
+    "description": "5y Poly+ Analyze Edge E450 Service",
+    "msrp": 106.0
+  },
+  "UQ7M6PB": {
+    "description": "1y Poly+ Analyze Edge E550 Service",
+    "msrp": 23.75
+  },
+  "UQ7M9PB": {
+    "description": "5y Poly+ Analyze Edge E550 Service",
+    "msrp": 106.0
+  },
+  "UQ7N8PB": {
+    "description": "1y Poly+ Analyze Rove30 DECT",
+    "msrp": 23.75
+  },
+  "UQ7N9PB": {
+    "description": "3y Poly+ Analyze Rove30 DECT",
+    "msrp": 64.0
+  },
+  "UQ7P1PB": {
+    "description": "5y Poly+ Analyze Rove30 DECT",
+    "msrp": 106.0
+  },
+  "UQ7P4PB": {
+    "description": "1y Poly+ Analyze Rove40 DECT",
+    "msrp": 23.75
+  },
+  "UQ7P5PB": {
+    "description": "3y Poly+ Analyze Rove40 DECT",
+    "msrp": 64.0
+  },
+  "UQ7P7PB": {
+    "description": "5y Poly+ Analyze Rove40 DECT",
+    "msrp": 106.0
+  },
+  "UQ7Q0PB": {
+    "description": "1y Poly+ Analyze Rove B2 DECT",
+    "msrp": 23.75
+  },
+  "UQ7Q1PB": {
+    "description": "3y Poly+ Analyze Rove B2 DECT",
+    "msrp": 64.0
+  },
+  "UQ7Q3PB": {
+    "description": "5y Poly+ Analyze Rove B2 DECT",
+    "msrp": 106.0
+  },
+  "UQ7Q6PB": {
+    "description": "1y Poly+ Analyze RoveB4 DECT",
+    "msrp": 23.75
+  },
+  "UQ7Q7PB": {
+    "description": "3y Poly+ Analyze RoveB4 DECT",
+    "msrp": 64.0
+  },
+  "UQ7Q9PB": {
+    "description": "5y Poly+ Analyze RoveB4 DECT",
+    "msrp": 106.0
+  },
+  "UQ7R2PB": {
+    "description": "1y Poly+ Analyze RoveR8 DECT",
+    "msrp": 23.75
+  },
+  "UQ7R3PB": {
+    "description": "3y Poly+ Analyze RoveR8 DECT",
+    "msrp": 64.0
+  },
+  "UQ7R5PB": {
+    "description": "5y Poly+ Analyze RoveR8 DECT",
+    "msrp": 106.0
   }
 }
