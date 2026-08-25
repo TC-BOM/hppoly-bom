@@ -1,5 +1,5 @@
-const VERSION = "v10.28";
-// script.js – HP | Poly Configurator – v10.28: Lens Pro, live qty, E60 HDCI, X/V inverted wall + USB VESA
+const VERSION = "v10.29";
+// script.js – HP | Poly Configurator – v10.29: optional E60/E70 power checkboxes + post-quote polarized filter
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
 
 document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
@@ -23,6 +23,10 @@ async function init() {
     return null;
   };
   const hasSku = (arr, sku) => arr.some(x => x.sku === sku);
+  function bomOffersPolarFilter(results) {
+    const skus = ["842F8AA","886C9AA","886C8AA","A4MA2AA","A4MA1AA","A4LZ8AA#ABA","AV1E4AA","AV1E3AA#ABA"];
+    return results.some(x => skus.includes(x.sku));
+  }
   const addLine = (arr, sku, fallback = "(Custom item)", qty = 1) => {
     const item = getItem(sku);
     const existing = arr.find(x => x.sku === sku);
@@ -221,13 +225,11 @@ async function init() {
   cameraPowerWrap.id = "cameraPowerWrap";
   cameraPowerWrap.className = "hidden";
   cameraPowerWrap.innerHTML = `
-    <label class="block font-medium">Camera power option</label>
-    <select id="cameraPower" class="border p-2 w-full">
-      <option value="None">None — using existing PoE+ switch</option>
-      <option value="Wall">Wall power supply</option>
-      <option value="Injector">PoE+ midspan injector kit (85X03AA#ABA)</option>
-    </select>
-    <p class="text-xs text-gray-600 mt-1">E60 &amp; E70 require PoE+ (Class 4 / 30W). Use injector if your switch is not PoE+.</p>`;
+    <p class="font-medium">Optional camera power</p>
+    <p class="text-xs text-gray-600 mb-1">E60 and E70 need PoE+ (Class 4 / 30W). Leave unchecked if the switch already provides PoE+.</p>
+    <label class="flex items-start gap-2 mt-1"><input id="camPowerWall" type="checkbox" class="border mt-1"><span id="camPowerWallLabel">Wall power accessory</span></label>
+    <label class="flex items-start gap-2 mt-1"><input id="camPowerInjector" type="checkbox" class="border mt-1"><span>PoE+ midspan injector (85X03AA#ABA)</span></label>
+    <label class="flex items-start gap-2 mt-1"><input id="camPowerPoePP" type="checkbox" class="border mt-1"><span>45W PoE++ adapter (B5NH6AA) — $102</span></label>`;
   hwSection.appendChild(cameraPowerWrap);
 
   // Camera mount option (VESA for E70, Ceiling for E60)
@@ -592,6 +594,11 @@ async function init() {
     const powerWrap = document.getElementById("cameraPowerWrap");
     const mountWrap = document.getElementById("cameraMountWrap");
     if (powerWrap) powerWrap.classList.toggle("hidden", !show);
+    const wallLabel = document.getElementById("camPowerWallLabel");
+    if (wallLabel) {
+      if (cam === "E60") wallLabel.textContent = "E60 wall power accessory (9W1A9AA) — $25.65";
+      else if (cam === "E70") wallLabel.textContent = "E70 wall / external PSU (875K6AA)";
+    }
 
     // Rebuild mount options from real catalog SKUs; hide the control if none exist
     const mountSel = document.getElementById("cameraMount");
@@ -730,6 +737,19 @@ async function init() {
       html += ` Prices are list MSRP and may not reflect final quote.</p>`;
     }
 
+    if (lastBom.showPolarFilter) {
+      const polarChecked = hasSku(results, "875K9AA") ? " checked" : "";
+      html += `<div class="mt-3 p-2 border border-amber-300 rounded bg-amber-50 text-sm text-amber-900">
+        <label class="flex items-start gap-2">
+          <input id="polarFilterOpt" type="checkbox" class="border mt-1"${polarChecked}>
+          <span>
+            <span class="font-medium">Optional polarized filter (875K9AA)</span>
+            <span class="block text-xs">For E70, X72, and V72. Cuts window glare on the camera lens. $181 list. Not included in the recommended quote unless you check this.</span>
+          </span>
+        </label>
+      </div>`;
+    }
+
     resultDiv.innerHTML = html;
     if (focusIdx != null) {
       const el = resultDiv.querySelector(`.qty-input[data-i="${focusIdx}"]`);
@@ -771,6 +791,20 @@ async function init() {
     handleQtyInputEvent(e.target, true);
   });
   resultDiv.addEventListener("change", (e) => {
+    if (e.target.id === "polarFilterOpt") {
+      if (!lastBom) return;
+      if (e.target.checked) {
+        if (!hasSku(lastBom.results, "875K9AA")) {
+          addLine(lastBom.results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", 1);
+          lastBom.polarOn = true;
+          renderBom();
+        }
+      } else {
+        lastBom.results = lastBom.results.filter(x => x.sku !== "875K9AA");
+        renderBom();
+      }
+      return;
+    }
     if (!e.target.classList.contains("qty-input")) return;
     handleQtyInputEvent(e.target, true);
   });
@@ -892,17 +926,20 @@ async function init() {
         const isX72 = hasSku(results, "A4MA2AA") || hasSku(results, "A4MA1AA");
         if (isG62 || isX52 || isX72) {
           const cam = document.getElementById("cameraChoice")?.value;
-          const camPwr = document.getElementById("cameraPower")?.value || "None";
+          const wantWall = !!document.getElementById("camPowerWall")?.checked;
+          const wantInjector = !!document.getElementById("camPowerInjector")?.checked;
+          const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
           const camMount = document.getElementById("cameraMount")?.value || "None";
           if (cam === "E60") {
             addLine(results, "9W1A7AA"); // E60 TAA
             addSupport(results, "e60", supportTerm);
-            if (camPwr === "Wall" && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
+            if (wantWall && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
               addLine(results, "9W1A9AA#ABA", "Poly Studio E60 Power Accessory (wall power supply)");
             }
-            if (camPwr === "Injector" && !hasSku(results, "85X03AA#ABA")) {
+            if (wantInjector && !hasSku(results, "85X03AA#ABA")) {
               addLine(results, "85X03AA#ABA", "Poly PoE+ midspan injector kit");
             }
+            if (wantPoePP) addLine(results, "B5NH6AA");
             if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
               addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
             }
@@ -912,12 +949,13 @@ async function init() {
           } else if (cam === "E70") {
             addLine(results, pick("886C9AA", "886C8AA")); // E70 TAA JITC / TAA
             addSupport(results, "e70", supportTerm);
-            if (camPwr === "Wall" && !hasSku(results, "875K6AA")) {
+            if (wantWall && !hasSku(results, "875K6AA")) {
               addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
             }
-            if (camPwr === "Injector" && !hasSku(results, "85X03AA#ABA")) {
+            if (wantInjector && !hasSku(results, "85X03AA#ABA")) {
               addLine(results, "85X03AA#ABA", "Poly PoE+ midspan injector kit");
             }
+            if (wantPoePP) addLine(results, "B5NH6AA");
             if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
               addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
             }
@@ -990,17 +1028,20 @@ async function init() {
       const isG62 = hasSku(results, "A01KCAA#AC3");
       if (isX52 || isX72 || isG62) {
         const cam = document.getElementById("cameraChoice")?.value;
-        const camPwr = document.getElementById("cameraPower")?.value || "None";
+        const wantWall = !!document.getElementById("camPowerWall")?.checked;
+        const wantInjector = !!document.getElementById("camPowerInjector")?.checked;
+        const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
         const camMount = document.getElementById("cameraMount")?.value || "None";
         if (cam === "E70") {
           if (!hasSku(results, "842F8AA")) addLine(results, "842F8AA");
           addSupport(results, "e70", supportTerm);
-          if (camPwr === "Wall" && !hasSku(results, "875K6AA")) {
+          if (wantWall && !hasSku(results, "875K6AA")) {
             addLine(results, "875K6AA", "Poly E70 wall / external power supply (12V 5A)");
           }
-          if (camPwr === "Injector" && !hasSku(results, "85X03AA#ABA")) {
+          if (wantInjector && !hasSku(results, "85X03AA#ABA")) {
             addLine(results, "85X03AA#ABA", "Poly PoE+ midspan injector kit");
           }
+          if (wantPoePP) addLine(results, "B5NH6AA");
           if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
             addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
           }
@@ -1010,12 +1051,13 @@ async function init() {
         } else if (cam === "E60") {
           if (!hasSku(results, "9W1A6AA#AC3")) addLine(results, "9W1A6AA#AC3");
           addSupport(results, "e60", supportTerm);
-          if (camPwr === "Wall" && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
-            addLine(results, "9W1A9AA#ABA", "Poly Studio E60 Power Accessory (wall power supply)");
+          if (wantWall && !hasSku(results, "9W1A9AA#ABA") && !hasSku(results, "9W1A9AA")) {
+            addLine(results, "9W1A9AA", "Poly Studio E60 Power Accessory");
           }
-          if (camPwr === "Injector" && !hasSku(results, "85X03AA#ABA")) {
+          if (wantInjector && !hasSku(results, "85X03AA#ABA")) {
             addLine(results, "85X03AA#ABA", "Poly PoE+ midspan injector kit");
           }
+          if (wantPoePP) addLine(results, "B5NH6AA");
           if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
             addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
           }
@@ -1116,6 +1158,8 @@ async function init() {
       includePrices,
       googleMeetNote: !!(needsPlatform && platform === "Google Meet")
     };
+    lastBom.showPolarFilter = bomOffersPolarFilter(results);
+    lastBom.polarOn = false;
     renderBom();
   }
 }

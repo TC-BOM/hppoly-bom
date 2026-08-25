@@ -832,12 +832,12 @@
     "msrp": 162.0
   },
   "9W1A9AA#ABA": {
-    "description": "Poly Studio E60 Power Accessory (wall power supply)",
-    "msrp": 35.0
+    "description": "Poly Studio E60 Power Accessory",
+    "msrp": 25.65
   },
   "9W1A9AA": {
-    "description": "Poly Studio E60 Power Accessory (wall power supply)",
-    "msrp": 35.0
+    "description": "Poly Studio E60 Power Accessory",
+    "msrp": 25.65
   },
   "PROADDON004": {
     "description": "Poly Remote install one additional peripheral",
@@ -870,5 +870,17 @@
   "875R9AA": {
     "description": "Poly Studio USB VESA Mount",
     "msrp": 178.0
+  },
+  "875K9AA": {
+    "description": "Poly Studio E70/X70/X72/V72 Polarized Filter",
+    "msrp": 181
+  },
+  "B5NH6AA": {
+    "description": "Poly 45W 2.5Gbps PoE++ Adapter w magnets / 0.23M CAT6A Cable w Power Cord",
+    "msrp": 102
+  },
+  "B42BFAA": {
+    "description": "Poly USB-C 65W Power Adapter and Power Cord Kit",
+    "msrp": 49.70
   }
 }
