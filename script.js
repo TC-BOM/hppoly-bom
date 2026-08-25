@@ -1,5 +1,5 @@
-const VERSION = "v10.25.1";
-// script.js – HP | Poly Configurator – v10.25.1: mapping/efficiency audit (stay on v10.25 catalog)
+const VERSION = "v10.26";
+// script.js – HP | Poly Configurator – v10.26: onsite PROADDON004 per extra camera and A2 mic
 // Features: V72 poly5, Expandable support comparison, A2 bridge PoE, Announcement, A2 qty, E60/E70 mounts
 
 document.title = 'Poly Video Conferencing "Bill" of Materials Generator';
@@ -930,7 +930,17 @@ async function init() {
       else if (roomSize === "Very large") remoteSku = "PROG7500RE2";
       else remoteSku = "PROSTDIOXR2";
       if (remoteSku) addLine(results, remoteSku);
-      if (implHelp === "Onsite Implementation help") addLine(results, "PROSMTHND04");
+      if (implHelp === "Onsite Implementation help") {
+        addLine(results, "PROSMTHND04");
+        // Extra peripherals only: base host is already in the onsite install.
+        // One PROADDON004 per camera and per A2 mic pod (not the A2 bridge).
+        const cameraSkus = ["842F8AA", "9W1A6AA#AC3", "9W1A7AA", "886C9AA", "886C8AA"];
+        const a2PodSkus = ["B22X4AA#AC3", "B22X6AA#AC3", "B22X5AA", "B22X7AA"];
+        const extra = results
+          .filter(x => cameraSkus.includes(x.sku) || a2PodSkus.includes(x.sku))
+          .reduce((n, x) => n + (x.quantity || 1), 0);
+        if (extra > 0) addLine(results, "PROADDON004", "Poly Remote install one additional peripheral", extra);
+      }
     }
 
     // Free-form accessories

@@ -804,11 +804,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount \u2014 White",
+    "description": "Poly TC10 Glass Mount — White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount \u2014 Black",
+    "description": "Poly TC10 Glass Mount — Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -838,5 +838,9 @@
   "9W1A9AA": {
     "description": "Poly Studio E60 Power Accessory (wall power supply)",
     "msrp": 35.0
+  },
+  "PROADDON004": {
+    "description": "Poly Remote install one additional peripheral",
+    "msrp": 177.95
   }
 }
