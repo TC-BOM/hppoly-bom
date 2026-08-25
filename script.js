@@ -1,5 +1,6 @@
-const VERSION = "v10.62";
-// script.js – HP | Poly Configurator – v10.62: Classic/New site toggle (top-right)
+const VERSION = "v10.64";
+// script.js – HP | Poly Configurator – v10.64: Audio Wi-Fi/BT radios under TAA; filter models; C60 NR from radios; drop Edge E500 and VVX
+// v10.62: Classic/New site toggle (top-right)
 // v10.61: EM pad rules, CCX 500, platform notes, qty field, Lens onboarding
 // v10.60: Trio C60 TAA/No Radio/cables + E500/CCX700 support
 // v10.59: Voice TAA/PSU bundles, VVX, E500, CCX 700
@@ -129,10 +130,8 @@ async function init() {
     trio_8300:   { poly1: "P66800112", poly3: "P66800312", poly5: "UM5V1PB", analyze1: "UQ7S3PB", analyze3: "UQ7S4PB", analyze5: null },
     ccx_350:     { poly1: "P49690112", poly3: "P49690312", poly5: null,     analyze1: "UQ7C4PB", analyze3: "UQ7C5PB", analyze5: null },
     ccx_400:     { poly1: "P49700112", poly3: "P49700312", poly5: null,     analyze1: "UQ7C9PB", analyze3: "UQ7D0PB", analyze5: null },
-    ccx_500:     { poly1: "P49720160", poly3: "P49720362", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     ccx_505:     { poly1: "P49735112", poly3: "P49735312", poly5: null,     analyze1: "UQ7D9PB", analyze3: "UQ7E0PB", analyze5: null },
     ccx_600:     { poly1: "P49780112", poly3: "P49780312", poly5: null,     analyze1: "UQ7E4PB", analyze3: "UQ7E5PB", analyze5: null },
-    ccx_700:     { poly1: "P49740160", poly3: "P49740362", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     ccx_em60:    { poly1: "U73W3PP",   poly3: "U73W4PP",   poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     edge_e100:   { poly1: "P86980112", poly3: "P86980312", poly5: "UM5T1PB", analyze1: "UQ7G8PB", analyze3: "UQ7G9PB", analyze5: "UQ7H1PB" },
     edge_e220:   { poly1: "P86990112", poly3: "P86990312", poly5: "UM5T2PB", analyze1: "UQ7H4PB", analyze3: "UQ7H5PB", analyze5: "UQ7H7PB" },
@@ -141,7 +140,6 @@ async function init() {
     edge_e350:   { poly1: "P87010112", poly3: "P87010312", poly5: "UM5T4PB", analyze1: "UQ7K2PB", analyze3: "UQ7K3PB", analyze5: "UQ7K5PB" },
     edge_e400:   { poly1: "P87835112", poly3: "P87835312", poly5: "UM5T8PB", analyze1: "UQ7K8PB", analyze3: "UQ7K9PB", analyze5: "UQ7L1PB" },
     edge_e450:   { poly1: "P87030112", poly3: "P87030312", poly5: "UM5T5PB", analyze1: "UQ7L4PB", analyze3: "UQ7L5PB", analyze5: "UQ7L7PB" },
-    edge_e500:   { poly1: null,       poly3: null,       poly5: null,     analyze1: "UQ7M4PB", analyze3: "UQ7M5PB", analyze5: null },
     edge_e550:   { poly1: "P87050112", poly3: "P87050312", poly5: "UM5T6PB", analyze1: "UQ7M6PB", analyze3: "UQ7N1PB", analyze5: "UQ7M9PB" },
     edge_em:     { poly1: "P87020112", poly3: "P87020312", poly5: null,     analyze1: null,     analyze3: null,     analyze5: null },
     rove_20:     { poly1: "P88090112", poly3: "P88090312", poly5: "UM5U3PB", analyze1: null,     analyze3: null,     analyze5: null },
@@ -776,28 +774,28 @@ async function init() {
         <span class="font-semibold">No Radio</span>
       </label>
     </div>
-    <p class="text-xs text-gray-600">TAA uses GSA/TAA SKU when one exists. No Radio uses the No Radio SKU when one exists. No JITC phone SKUs in this catalog.</p>`;
+    <p class="text-xs text-gray-600">TAA uses GSA/TAA SKU when one exists. No JITC phone SKUs in this catalog.</p>`;
   audioSection.appendChild(audioTaaWrap);
-  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove", "VVX"], true));
+  const audioRadioWrap = document.createElement("div");
+  audioRadioWrap.className = "space-y-1";
+  audioRadioWrap.innerHTML = `
+    <label class="inline-flex items-center gap-2"><input id="audioWifi" type="checkbox" class="border" checked><span>Wi-Fi</span></label>
+    <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>
+    <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are built-in on matching SKUs (no extra lines). The model list only shows phones that match these radios. Uncheck both for no-radio / DECT models.</p>`;
+  audioSection.appendChild(audioRadioWrap);
+  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
   const audioNote = document.createElement("p");
   audioNote.id = "audioPlatformNote";
   audioNote.className = "text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded hidden";
   audioSection.appendChild(audioNote);
-  const audioRadioWrap = document.createElement("div");
-  audioRadioWrap.className = "space-y-1";
-  audioRadioWrap.innerHTML = `
-    <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are included radios on these SKUs and do not add extra lines.</p>
-    <label class="inline-flex items-center gap-2"><input id="audioWifi" type="checkbox" class="border" checked><span>Wi-Fi</span></label>
-    <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>`;
-  audioSection.appendChild(audioRadioWrap);
   const audioAccWrap = document.createElement("div");
   audioAccWrap.id = "audioAccWrap";
   audioAccWrap.className = "space-y-1";
   audioAccWrap.innerHTML = `
     <label id="audioExpWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioExpMics" type="checkbox" class="border"><span id="audioExpLabel">Include expansion mics</span></label>
     <label id="audioEmWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm" type="checkbox" class="border"><span id="audioEmLabel">Include expansion module</span></label>
-    <label id="audioEm2Wrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm2" type="checkbox" class="border"><span id="audioEm2Label">Include second expansion module (E500/E550, max 2)</span></label>
+    <label id="audioEm2Wrap" class="hidden flex items-center gap-2 text-sm"><input id="audioEm2" type="checkbox" class="border"><span id="audioEm2Label">Include second expansion module (E550, max 2)</span></label>
     <label id="audioPsuWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioPsu" type="checkbox" class="border"><span id="audioPsuLabel">Include power supply (if no PoE)</span></label>
     <label id="audioCat52mWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioCat52m" type="checkbox" class="border"><span id="audioCat52mLabel">Include RJ45 CAT-5 2M (85X04AA)</span></label>
     <label id="audioCat57mWrap" class="hidden flex items-center gap-2 text-sm"><input id="audioCat57m" type="checkbox" class="border"><span id="audioCat57mLabel">Include RJ45 CAT-5 7.6M (85X05AA)</span></label>
@@ -896,51 +894,46 @@ async function init() {
         sip_nr_taa: "849B2AA",
         cat5_2m: "85X04AA",
         cat5_7m: "85X05AA",
-        usb_micro: "85X06AA" },
+        usb_micro: "85X06AA",
+        wifi: true, bt: true },
       "8300": { teams: null, sip: "849A0AA#AC3", support: "trio_8300", exp: "85X00AA", psu: "85W92AA#ABA",
         sip_taa: "849A2AA",
-        teamsNote: "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU." }
+        teamsNote: "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU.",
+        wifi: true, bt: true }
     },
     CCX: {
       "350": { teams: "848Z7AA#AC3", sip: null, support: "ccx_350", psu: "86H66AA#ABA",
         teams_taa: "8F3G3AA",
-        sipNote: "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet." },
+        sipNote: "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet.",
+        wifi: true, bt: true },
       "400": { teams: "848Z8AA#AC3", sip: "849A1AA#AC3", support: "ccx_400",
-        teams_taa: "848Z9AA", sip_psu: "84C14AA" },
-      "500": { teams: "82Z76AA", sip: null, support: "ccx_500", psu: "86P04AA#ABA",
-        sipNote: "No confirmed Open SIP commercial PN for CCX 500 (not invented).",
-        teamsNote: "CCX 500 Teams is phased out; CCX 505 Teams (82Z79AA) is the replacement. Price is reseller list, not HP.com." },
+        teams_taa: "848Z9AA", sip_psu: "84C14AA",
+        wifi: true, bt: true },
       "505": { teams: "82Z79AA", sip: "82Z82AA", support: "ccx_505", em: "8F3R9AA", psu: "86P04AA#ABA",
-        teams_taa: "849A5AA", sip_psu: "84C16AA" },
+        teams_taa: "849A5AA", sip_psu: "84C16AA",
+        wifi: true, bt: true },
       "600": { teams: "82Z84AA", sip: "82Z85AA", support: "ccx_600", em: "8F3R9AA", psu: "86P04AA#ABA",
-        teams_taa: "849A8AA", sip_psu: "84C17AA" },
-      "700": { teams: null, sip: "82Z83AA", support: "ccx_700", em: "8F3R9AA", psu: "86P04AA#ABA",
-        teamsNote: "CCX 700 is OpenSIP / Zoom Phone / ZPA only — not native Teams." }
+        teams_taa: "849A8AA", sip_psu: "84C17AA",
+        wifi: true, bt: true }
     },
     "Edge E": {
-      E100: { sip: "82M86AA", support: "edge_e100", psu: "86H66AA#ABA", sip_taa: "8F3G5AA", sip_psu: "89B49AA" },
-      E220: { sip: "82M87AA", support: "edge_e220", psu: "86H66AA#ABA", sip_taa: "8F3G6AA", sip_psu: "89B50AA" },
-      E300: { sip: "82M92AA", support: "edge_e300", psu: "86H66AA#ABA", sip_taa: "8F3H1AA", sip_psu: "89B51AA" },
-      E320: { sip: "82M88AA", support: "edge_e320", psu: "86H66AA#ABA", sip_taa: "8F3G7AA", sip_psu: "89B52AA" },
-      E350: { sip: "82M89AA", support: "edge_e350", psu: "86H66AA#ABA", sip_taa: "8F3G8AA", sip_psu: "89B53AA" },
-      E400: { sip: "82M93AA", support: "edge_e400", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3H2AA", sip_psu: "89B54AA" },
-      E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3G9AA", sip_psu: "89B55AA" },
-      E500: { sip: "82M94AA", support: "edge_e500", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2 },
-      E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2, sip_taa: "8F3H0AA", sip_psu: "89B57AA" }
+      E100: { sip: "82M86AA", support: "edge_e100", psu: "86H66AA#ABA", sip_taa: "8F3G5AA", sip_psu: "89B49AA", wifi: false, bt: false },
+      E220: { sip: "82M87AA", support: "edge_e220", psu: "86H66AA#ABA", sip_taa: "8F3G6AA", sip_psu: "89B50AA", wifi: false, bt: true },
+      E300: { sip: "82M92AA", support: "edge_e300", psu: "86H66AA#ABA", sip_taa: "8F3H1AA", sip_psu: "89B51AA", wifi: false, bt: false },
+      E320: { sip: "82M88AA", support: "edge_e320", psu: "86H66AA#ABA", sip_taa: "8F3G7AA", sip_psu: "89B52AA", wifi: false, bt: true },
+      E350: { sip: "82M89AA", support: "edge_e350", psu: "86H66AA#ABA", sip_taa: "8F3G8AA", sip_psu: "89B53AA", wifi: true, bt: true },
+      E400: { sip: "82M93AA", support: "edge_e400", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3H2AA", sip_psu: "89B54AA", wifi: false, bt: false },
+      E450: { sip: "82M90AA", support: "edge_e450", psu: "86H66AA#ABA", em: "85W93AA", emMax: 1, sip_taa: "8F3G9AA", sip_psu: "89B55AA", wifi: true, bt: true },
+      E550: { sip: "82M91AA", support: "edge_e550", psu: "86P04AA#ABA", em: "85W93AA", emMax: 2, sip_taa: "8F3H0AA", sip_psu: "89B57AA", wifi: true, bt: true }
     },
     Rove: {
-      "20": { sip: "8F3E4AA#ABA", support: "rove_20" },
-      "30": { sip: "84H76AA#ABA", support: "rove_30" },
-      "40": { sip: "84H77AA#ABA", support: "rove_40" },
-      B2: { sip: "84H80AA#ABA", support: "rove_b2" },
-      B4: { sip: "84H78AA#ABA", support: "rove_b4" },
-      R8: { sip: "84H79AA#ABA", support: "rove_r8" },
-      "20 + B1 kit": { sip: "8F3E1AA#ABA", support: "rove_20_b1" }
-    },
-    VVX: {
-      "250": { sip: "89B66AA", support: null },
-      "350": { sip: "89B69AA", support: null },
-      "450": { sip: "89B76AA", support: null }
+      "20": { sip: "8F3E4AA#ABA", support: "rove_20", wifi: false, bt: false },
+      "30": { sip: "84H76AA#ABA", support: "rove_30", wifi: false, bt: false },
+      "40": { sip: "84H77AA#ABA", support: "rove_40", wifi: false, bt: false },
+      B2: { sip: "84H80AA#ABA", support: "rove_b2", wifi: false, bt: false },
+      B4: { sip: "84H78AA#ABA", support: "rove_b4", wifi: false, bt: false },
+      R8: { sip: "84H79AA#ABA", support: "rove_r8", wifi: false, bt: false },
+      "20 + B1 kit": { sip: "8F3E1AA#ABA", support: "rove_20_b1", wifi: false, bt: false }
     }
   };
   function audioCfg() {
@@ -948,23 +941,35 @@ async function init() {
     const model = document.getElementById("audioModel")?.value || "";
     return (AUDIO_CATALOG[family] || {})[model] || null;
   }
+  function audioWantRadios() {
+    return {
+      wifi: !!document.getElementById("audioWifi")?.checked,
+      bt: !!document.getElementById("audioBt")?.checked
+    };
+  }
+  function audioHasNrSkus(cfg) {
+    return !!(cfg && (cfg.teams_nr || cfg.sip_nr || cfg.teams_nr_taa || cfg.sip_nr_taa));
+  }
+  function audioModelMatchesRadios(cfg, wantWifi, wantBt) {
+    if (!cfg) return false;
+    // C60: both radios off uses existing NR SKUs (do not invent 8300 NR)
+    if (!wantWifi && !wantBt && audioHasNrSkus(cfg)) return true;
+    return !!cfg.wifi === wantWifi && !!cfg.bt === wantBt;
+  }
   // Per family+model+platform field notes. Do not use one CCX-wide Zoom/Teams sentence. Not Zoom Rooms.
   const NOTE_TEAMS_NATIVE = "Native Teams (Android + Teams Admin Center).";
   const NOTE_TEAMS_SIP_GW = "Teams SIP Gateway is calling only (no calendar, hot desk, boss/admin). BOM uses the OpenSIP SKU.";
-  const NOTE_ZPA = "Native Zoom on CCX is Zoom Phone Appliance (ZPA), not Zoom Phone SIP and not Zoom Rooms. Hardware line is the OpenSIP SKU (no Zoom-branded HP PN). ZPA on CCX 400/500 needs Rev K or later. Zoom does not support PVOS 9.x for ZPA (use 8.1.8.x).";
+  const NOTE_ZPA = "Native Zoom on CCX is Zoom Phone Appliance (ZPA), not Zoom Phone SIP and not Zoom Rooms. Hardware line is the OpenSIP SKU (no Zoom-branded HP PN). ZPA on CCX 400 needs Rev K or later. Zoom does not support PVOS 9.x for ZPA (use 8.1.8.x).";
   const NOTE_ZOOM_SIP = "Zoom Phone SIP (not ZPA, not Zoom Rooms). Different stack from CCX Zoom Phone Appliance. BOM uses the OpenSIP SKU.";
   const NOTE_PVOS_SWITCH = "On PVOS 7+ this model can switch Generic / Teams / Zoom Phone from the web UI. Factory -019/-025 SKUs were historical profile locks only (not sellable lines and they do not hide the other stack). BOM still uses the OpenSIP SKU as the hardware line.";
   const NOTE_OPENSIP_FAMILY = "OpenSIP family (Zoom Phone SIP + Teams SIP Gateway). No native Teams Android.";
-  const NOTE_CCX500_PHASE = "CCX 500 Teams is phased out; CCX 505 Teams (82Z79AA) is the replacement. Price is reseller list, not HP.com.";
-  const NOTE_CCX500_NOSIP = "No confirmed Open SIP commercial PN for CCX 500 (not invented).";
   const EM60_PSU = "86H66AA#ABA";
   function audioEmVisible(family, model, platform, cfg) {
     if (!cfg || !cfg.em) return false;
     if (family === "Edge E") return true;
     if (family !== "CCX") return false;
-    if (model !== "505" && model !== "600" && model !== "700") return false;
+    if (model !== "505" && model !== "600") return false;
     if (platform === "Zoom") return false;
-    if (model === "700" && platform === "Microsoft Teams") return false;
     return platform === "Microsoft Teams" || platform === "OpenSIP";
   }
   function audioFieldNote(family, model, platform) {
@@ -973,8 +978,6 @@ async function init() {
     const isOpenSip = platform === "OpenSIP";
     if (isTeams) {
       if (family === "CCX") {
-        if (model === "700") return "CCX 700 is OpenSIP / Zoom Phone Appliance only. A Teams profile exists but Microsoft does not support it — never BOM 700 as Teams.";
-        if (model === "500") return NOTE_TEAMS_NATIVE + " " + NOTE_CCX500_PHASE;
         if (model === "350" || model === "400" || model === "505" || model === "600") return NOTE_TEAMS_NATIVE;
       }
       if (family === "Trio") {
@@ -983,30 +986,24 @@ async function init() {
       }
       if (family === "Edge E") return "Edge E is not native Teams. " + NOTE_TEAMS_SIP_GW;
       if (family === "Rove") return "Rove is not native Teams. " + NOTE_TEAMS_SIP_GW;
-      if (family === "VVX") return "VVX is not native Teams. Teams SIP Gateway is calling only (no calendar, hot desk, boss/admin). BOM uses the OpenSIP SKU.";
     }
     if (isZoom) {
       if (family === "CCX") {
         if (model === "350") return "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet. Do not offer a ZPA path.";
-        if (model === "500") return NOTE_ZPA + " " + NOTE_CCX500_NOSIP;
-        if (model === "400" || model === "505" || model === "600" || model === "700") return NOTE_ZPA;
+        if (model === "400" || model === "505" || model === "600") return NOTE_ZPA;
       }
       if (family === "Trio" && model === "C60") return NOTE_ZOOM_SIP;
       if (family === "Trio" && model === "8300") return "Trio 8300 is not Zoom Phone certified; OpenSIP SKU only.";
       if (family === "Edge E" || family === "Rove") return NOTE_ZOOM_SIP;
-      if (family === "VVX") return "Zoom Phone marks VVX EOL; BOM still uses the OpenSIP SKU from the HP Active catalog.";
     }
     if (isOpenSip) {
       if (family === "CCX") {
         if (model === "350") return "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet. Cannot switch; Teams-only (no Generic).";
-        if (model === "500") return "CCX 500 is not OpenSIP-default. " + NOTE_CCX500_NOSIP + " PVOS 7+ can switch Generic / Teams / Zoom Phone from the web UI.";
         if (model === "400" || model === "505" || model === "600") return NOTE_PVOS_SWITCH;
-        if (model === "700") return "CCX 700 is Generic (OpenSIP) + Zoom Phone Appliance. A Teams profile exists but Microsoft does not support it — never BOM 700 as Teams.";
       }
       if (family === "Trio" && model === "C60") return NOTE_PVOS_SWITCH;
       if (family === "Trio" && model === "8300") return "Trio 8300 is OpenSIP only (not native Teams, not SIP Gateway). BOM uses the OpenSIP SKU.";
       if (family === "Edge E" || family === "Rove") return NOTE_OPENSIP_FAMILY;
-      if (family === "VVX") return "VVX is OpenSIP only; BOM uses the OpenSIP SKU.";
     }
     return "";
   }
@@ -1026,18 +1023,31 @@ async function init() {
         const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
         msg = msg ? msg + " " + taaMsg : taaMsg;
       }
-      const nrOn = !!document.getElementById("audioNoRadio")?.checked;
+      const radios = audioWantRadios();
+      const nrOn = !radios.wifi && !radios.bt;
       const hasNr = isTeams
         ? (taaOn ? !!cfg.teams_nr_taa : !!cfg.teams_nr)
         : (taaOn ? !!cfg.sip_nr_taa : !!cfg.sip_nr);
-      if (nrOn && !hasNr) {
+      if (nrOn && (cfg.wifi || cfg.bt) && !hasNr) {
         const nrMsg = "No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.";
         msg = msg ? msg + " " + nrMsg : nrMsg;
       }
     }
-    if (cfg && audioEmVisible(family, model, platform, cfg) && family === "CCX" && (model === "600" || model === "700")) {
-      const rev = "CCX 600/700 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
+    if (cfg && audioEmVisible(family, model, platform, cfg) && family === "CCX" && model === "600") {
+      const rev = "CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
       msg = msg ? msg + " " + rev : rev;
+    }
+    if (!cfg) {
+      const familySel = document.getElementById("audioFamily")?.value || "";
+      if (familySel) {
+        const radios = audioWantRadios();
+        const fam = AUDIO_CATALOG[familySel] || {};
+        const any = Object.keys(fam).some(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt));
+        if (!any) {
+          const emptyMsg = "No models in this family match the Wi-Fi/Bluetooth selection.";
+          msg = msg ? msg + " " + emptyMsg : emptyMsg;
+        }
+      }
     }
     if (note) {
       note.textContent = msg;
@@ -1085,7 +1095,7 @@ async function init() {
       }
     }
     if (psuWrap) {
-      const show = !!(cfg && (cfg.psu || cfg.sip_psu));
+      const show = !!(cfg && (cfg.psu || (!isTeams && cfg.sip_psu)));
       psuWrap.classList.toggle("hidden", !show);
       if (psuLabel && show) {
         const psuSku = cfg.psu || cfg.sip_psu;
@@ -1101,14 +1111,7 @@ async function init() {
       }
     }
     const nrWrap = document.getElementById("audioNoRadioWrap");
-    if (nrWrap) {
-      const showNr = !!(cfg && (cfg.teams_nr || cfg.sip_nr || cfg.teams_nr_taa || cfg.sip_nr_taa));
-      nrWrap.classList.toggle("hidden", !showNr);
-      if (!showNr) {
-        const cb = document.getElementById("audioNoRadio");
-        if (cb) cb.checked = false;
-      }
-    }
+    if (nrWrap) nrWrap.classList.add("hidden");
     const cat52mWrap = document.getElementById("audioCat52mWrap");
     const cat52mLabel = document.getElementById("audioCat52mLabel");
     if (cat52mWrap) {
@@ -1160,7 +1163,9 @@ async function init() {
     const sel = document.getElementById("audioModel");
     if (!sel) return;
     const prev = sel.value;
-    const models = Object.keys(AUDIO_CATALOG[family] || {});
+    const radios = audioWantRadios();
+    const fam = AUDIO_CATALOG[family] || {};
+    const models = Object.keys(fam).filter(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt));
     sel.innerHTML = '<option value="">--</option>' + models.map(m => `<option value="${m}">${m}</option>`).join("");
     sel.value = models.includes(prev) ? prev : "";
     updateAudioNotesAndAcc();
@@ -1169,7 +1174,8 @@ async function init() {
   document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
   document.getElementById("audioPlatform")?.addEventListener("change", updateAudioNotesAndAcc);
   document.getElementById("audioTaa")?.addEventListener("change", updateAudioNotesAndAcc);
-  document.getElementById("audioNoRadio")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioWifi")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("audioBt")?.addEventListener("change", rebuildAudioModel);
   rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
@@ -2113,13 +2119,10 @@ async function init() {
       return;
     }
     const isTeams = platform === "Microsoft Teams";
-    if (family === "CCX" && model === "700" && isTeams) {
-      lastAudioBom = null;
-      mockError(audioResult, audioFieldNote(family, model, platform) || "CCX 700 is not BOM'd as Teams.");
-      return;
-    }
     const taa = !!document.getElementById("audioTaa")?.checked;
-    const nr = !!document.getElementById("audioNoRadio")?.checked;
+    const wifi = !!document.getElementById("audioWifi")?.checked;
+    const bt = !!document.getElementById("audioBt")?.checked;
+    const nr = !wifi && !bt;
     const psuOn = !!document.getElementById("audioPsu")?.checked;
     let sku = null;
     let usedTaaSku = false;
@@ -2139,7 +2142,7 @@ async function init() {
       else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
       else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
       else if (psuOn && cfg.sip_psu) { sku = cfg.sip_psu; usedSipPsu = true; }
-      else sku = cfg.sip || cfg.teams;
+      else sku = cfg.sip; // Zoom/OpenSIP: never fall back to a Teams SKU (CCX 350)
     }
     if (!sku) {
       lastAudioBom = null;
@@ -2168,8 +2171,8 @@ async function init() {
     const notes = [];
     const fieldNote = audioFieldNote(family, model, platform);
     if (fieldNote) notes.push(fieldNote);
-    if (family === "CCX" && emQty && (model === "600" || model === "700")) {
-      notes.push("CCX 600/700 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60).");
+    if (family === "CCX" && emQty && model === "600") {
+      notes.push("CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60).");
     }
     if (family === "Edge E" && emQty === 2) {
       notes.push("Second Edge E expansion module needs 802.3at PoE+ or a PSU on the host.");
@@ -2177,7 +2180,7 @@ async function init() {
     if (taa && !usedTaaSku) {
       notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
     }
-    if (nr && !usedNrSku) {
+    if (nr && (cfg.wifi || cfg.bt) && !usedNrSku) {
       notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
     }
     const map = SUPPORT_MAP[cfg.support] || {};
