@@ -831,8 +831,8 @@ async function init() {
 
   // Single compact legalese at bottom of page only
   const legalFooter = document.createElement("p");
-  legalFooter.className = "mt-6 text-[11px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
-  legalFooter.innerHTML = `<span style="font-size:15px"><span class="italic text-red-600">*</span>PLEASE NOTE: estimate only</span> Subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
+  legalFooter.className = "mt-6 w-full text-[15px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
+  legalFooter.innerHTML = `<span class="italic text-red-600">*</span><strong>Please note:</strong> Estimate only, subject to change. Confirm SKUs, pricing &amp; support with your HP Poly and distributor reps.<br>Created with AI tools that seem to have a track record of accuracy, but please be aware that I could make mistakes.`;
   app.appendChild(legalFooter);
 
   function setActiveTab(name) {
