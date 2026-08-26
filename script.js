@@ -1,5 +1,5 @@
-const VERSION = "v10.73";
-// script.js – HP | Poly Configurator – v10.73: hide X32 camera leak; polarizer X72/V72/E70; restore platform for all types; accessory Lens-style
+const VERSION = "v10.74";
+// script.js – HP | Poly Configurator – v10.74: BOM table hardware then support; 875K9AA under E70/X72/V72; Copy table; drawings below
 // v10.72: USB-Ethernet dongle 4Z7Z7AA for A2 on V12/X32/X52/V52 and camera on X52
 // v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
 // v10.70: split Device vs Controller compliance pickers (independent remap, no regenerate)
@@ -101,6 +101,163 @@ async function init() {
     ];
     return results.some(x => skus.includes(x.sku));
   }
+
+  function placePolarizerInBom(results) {
+    if (!results || !results.length) return;
+    const polarSku = "875K9AA";
+    const iPolar = results.findIndex(x => x.sku === polarSku);
+    if (iPolar < 0) return;
+    const line = results.splice(iPolar, 1)[0];
+    const e70 = ["842F8AA", "886C9AA", "886C8AA"];
+    const xv72 = ["A4LZ8AA", "A4LZ8AA#ABA", "A4MA1AA", "A4MA2AA", "A4MA4AA", "A4MA6AA", "AV1E3AA", "AV1E3AA#ABA", "AV1E4AA", "AV1E6AA"];
+    let after = results.findIndex(x => e70.includes(x.sku));
+    if (after < 0) after = results.findIndex(x => xv72.includes(x.sku));
+    if (after >= 0) results.splice(after + 1, 0, line);
+    else results.push(line);
+  }
+
+  function supportSkuSet() {
+    const s = new Set();
+    Object.values(SUPPORT_MAP).forEach(m => {
+      Object.values(m).forEach(sku => { if (sku) s.add(sku); });
+    });
+    return s;
+  }
+  function hostSkuSet() {
+    const s = new Set();
+    Object.values(HOST_SKUS).forEach(row => Object.values(row).forEach(sku => { if (sku) s.add(sku); }));
+    ["A4LZ8AA#ABA", "AV1E3AA#ABA", "A09D4AA#ABA", "A9DD8AA#ABA", "8D8K2AA#ABA", "A01KCAA#AC3"].forEach(x => s.add(x));
+    return s;
+  }
+  const E70_SKUS = new Set(["842F8AA", "886C9AA", "886C8AA"]);
+  const E60_SKUS = new Set(["9W1A6AA#AC3", "9W1A6AA", "9W1A7AA"]);
+  const A2_POD_SKUS = new Set(["B22X4AA#AC3", "B22X6AA#AC3", "B22X5AA", "B22X7AA"]);
+  const A2_BRIDGE_SKUS = new Set(["B22X2AA#AC3", "B22X3AA"]);
+  const ANALOG_MIC_SKUS = new Set(["875M6AA"]);
+  const HOST_MOUNT_SKUS = new Set(["783S4AA", "875L1AA", "875L5AA", "875L6AA", "875L7AA", "875L8AA", "875L9AA", "875M0AA", "875L2AA", "875L3AA"]);
+  const CAM_ACC_E70 = new Set(["875K6AA", "874T5AA", "B5NH6AA", "875K7AA", "875K9AA"]);
+  const CAM_ACC_E60 = new Set(["9W1A9AA", "9W1A9AA#ABA", "B5NH6AA", "9W1A8AA#AC3", "9W1A8AA", "89L88AA"]);
+  const GLASS_SKUS = new Set(["874P9AA", "874P6AA"]);
+  const DONGLE_SKUS = new Set(["4Z7Z7AA", "875M4AA"]);
+  const INJECTOR_SKUS = new Set(["A02F9AA"]);
+  const R30_DOCK = new Set(["9X478AA"]);
+  const G6_SKUS = new Set(["9X481UT#ABA"]);
+
+  function isSupportSku(sku, set) { return set.has(sku); }
+  function isPrimaryHardware(sku, hosts, tc10) {
+    if (hosts.has(sku)) return true;
+    if (E70_SKUS.has(sku) || E60_SKUS.has(sku)) return true;
+    if (tc10 && tc10.has(sku)) return true;
+    if (A2_POD_SKUS.has(sku) || A2_BRIDGE_SKUS.has(sku)) return true;
+    if (ANALOG_MIC_SKUS.has(sku)) return true;
+    if (PC_SKU_SET.has(sku)) return true;
+    if (G6_SKUS.has(sku)) return true;
+    return false;
+  }
+  function findPrimary(primaries, pred) {
+    for (let i = primaries.length - 1; i >= 0; i--) {
+      if (pred(primaries[i].sku)) return primaries[i].sku;
+    }
+    return null;
+  }
+  function parentHardwareSku(sku, primaries, hosts, tc10) {
+    if (sku === "875K9AA") {
+      return findPrimary(primaries, s => E70_SKUS.has(s)) || findPrimary(primaries, s => hosts.has(s));
+    }
+    if (HOST_MOUNT_SKUS.has(sku) || DONGLE_SKUS.has(sku) && sku === "4Z7Z7AA" || R30_DOCK.has(sku) || INJECTOR_SKUS.has(sku) && false) {
+      /* handled below */
+    }
+    if (HOST_MOUNT_SKUS.has(sku) || sku === "4Z7Z7AA" || R30_DOCK.has(sku)) {
+      return findPrimary(primaries, s => hosts.has(s));
+    }
+    if (CAM_ACC_E70.has(sku) && sku !== "875K9AA") {
+      return findPrimary(primaries, s => E70_SKUS.has(s)) || findPrimary(primaries, s => E60_SKUS.has(s));
+    }
+    if (CAM_ACC_E60.has(sku)) {
+      return findPrimary(primaries, s => E60_SKUS.has(s)) || findPrimary(primaries, s => E70_SKUS.has(s));
+    }
+    if (sku === "875M4AA") return findPrimary(primaries, s => ANALOG_MIC_SKUS.has(s));
+    if (INJECTOR_SKUS.has(sku)) return findPrimary(primaries, s => A2_BRIDGE_SKUS.has(s)) || findPrimary(primaries, s => A2_POD_SKUS.has(s));
+    if (GLASS_SKUS.has(sku)) return findPrimary(primaries, s => tc10.has(s));
+    return findPrimary(primaries, s => hosts.has(s));
+  }
+
+  function orderFinalBomTable(results) {
+    if (!results || !results.length) return;
+    placePolarizerInBom(results);
+    const supSet = supportSkuSet();
+    const hosts = hostSkuSet();
+    const tc10 = (typeof TC10_BLACK_SKUS !== "undefined") ? new Set([...TC10_BLACK_SKUS, "973G1AA", "93S70AA", "9A135AA", "9A134AA", "875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA"]) : new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA", "973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
+    const supportRows = [];
+    const other = [];
+    let lastPrimary = null;
+    results.forEach(line => {
+      if (supSet.has(line.sku)) {
+        supportRows.push({ line, after: lastPrimary });
+        return;
+      }
+      other.push(line);
+      if (isPrimaryHardware(line.sku, hosts, tc10)) lastPrimary = line.sku;
+    });
+    const primaries = [];
+    const buckets = {};
+    const leftover = [];
+    other.forEach(line => {
+      if (isPrimaryHardware(line.sku, hosts, tc10)) {
+        primaries.push(line);
+        return;
+      }
+      const parent = parentHardwareSku(line.sku, primaries, hosts, tc10);
+      if (parent) {
+        if (!buckets[parent]) buckets[parent] = [];
+        buckets[parent].push(line);
+      } else leftover.push(line);
+    });
+    const hardware = [];
+    primaries.forEach(p => {
+      hardware.push(p);
+      (buckets[p.sku] || []).forEach(a => hardware.push(a));
+    });
+    leftover.forEach(a => hardware.push(a));
+    const supportOut = [];
+    primaries.forEach(p => {
+      supportRows.filter(s => s.after === p.sku).forEach(s => supportOut.push(s.line));
+    });
+    supportRows.filter(s => !primaries.some(p => p.sku === s.after)).forEach(s => supportOut.push(s.line));
+    results.splice(0, results.length, ...hardware, ...supportOut);
+  }
+
+  function drawingSrcForBom(bom) {
+    const fam = (bom && bom.family) || hostFamily();
+    if (fam === "x72") return "x72-large-v2.png";
+    if (fam === "x52") return "x52-medium-v2.png";
+    return null;
+  }
+  function fillBomDrawing(dest, bom) {
+    const slot = dest && dest.querySelector("#bomLineDrawing");
+    if (!slot) return;
+    if (dest !== resultDiv) { slot.innerHTML = ""; return; }
+    const src = drawingSrcForBom(bom);
+    if (!src) {
+      slot.innerHTML = `<p class="text-xs text-gray-500 mt-2">Line drawing for this host will appear here when the template is ready.</p>`;
+      return;
+    }
+    slot.innerHTML = `<img src="${src}" alt="Room line drawing" class="w-full max-w-5xl border border-gray-200 rounded bg-white mt-1">`;
+  }
+
+  function copyBomTableText(bom) {
+    if (!bom || !bom.results) return "";
+    const priced = !!bom.includePrices;
+    const header = priced ? ["Qty", "SKU", "Description", "MSRP"] : ["Qty", "SKU", "Description"];
+    const lines = [header.join("\t")];
+    bom.results.forEach(r => {
+      const cols = [String(r.quantity ?? ""), r.sku || "", r.description || ""];
+      if (priced) cols.push((r.msrp === "" || r.msrp == null) ? "" : String(r.msrp));
+      lines.push(cols.join("\t"));
+    });
+    return lines.join("\n");
+  }
+
   const addLine = (arr, sku, fallback = "(Custom item)", qty = 1) => {
     const item = getItem(sku);
     const existing = arr.find(x => x.sku === sku);
@@ -2253,6 +2410,7 @@ async function init() {
     bom = bom || lastBom;
     if (!bom) return;
     const { results, includePrices, googleMeetNote } = bom;
+    orderFinalBomTable(results);
     const EXCEL_URL = "https://hpdigitalroom.sales.ext.hp.com/ls/220d4a87-7110-4c75-83aa-53af74106f7b/Yv7NSgCbYloyQ79p";
     const SPACES_URL = "https://www.hp.com/us-en/poly/spaces.html";
     const DIM_URL = "https://h30434.www3.hp.com/t5/Meeting-Room-Solutions/Dimensional-Drawings-for-Poly-Products-and-accessories/td-p/8738366";
@@ -2268,7 +2426,8 @@ async function init() {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">SCT prices are dealer quote, not Poly MSRP.</p>`;
     }
     html += renderQuoteOptionsHtml(bom);
-    html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
+    html += `<div class="flex justify-start mb-1"><button type="button" id="copyBomTableBtn" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50">Copy table</button></div>`;
+    html += `<table id="bomGenTable" class="w-full border-collapse text-sm"><thead><tr>`;
     html += `<th class="border px-4 py-2 text-left">Qty</th>`;
     html += `<th class="border px-4 py-2 text-left">SKU</th>`;
     html += `<th class="border px-4 py-2 text-left">Description</th>`;
@@ -2305,6 +2464,7 @@ async function init() {
     }
 
     html += `</tbody></table>`;
+    html += `<div id="bomLineDrawing" class="mt-4"></div>`;
 
     // Priced-line footnote moved to page footer (*PLEASE NOTE: estimate only).
 
@@ -2317,6 +2477,21 @@ async function init() {
     }
 
     dest.innerHTML = html;
+    fillBomDrawing(dest, bom);
+    const copyBtn = dest.querySelector("#copyBomTableBtn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const textOut = copyBomTableText(bom);
+        try {
+          await navigator.clipboard.writeText(textOut);
+          copyBtn.textContent = "Copied";
+          setTimeout(() => { copyBtn.textContent = "Copy table"; }, 1200);
+        } catch (err) {
+          copyBtn.textContent = "Copy failed";
+          setTimeout(() => { copyBtn.textContent = "Copy table"; }, 1500);
+        }
+      });
+    }
     if (focusIdx != null) {
       const el = dest.querySelector(`.bom-qty[data-idx="${focusIdx}"]`);
       if (el) {
@@ -2601,6 +2776,7 @@ async function init() {
     const polarOn = document.getElementById("polarFilterOpt")?.checked;
     if (polarOn && polarWrap && !polarWrap.classList.contains("hidden")) {
       addLine(results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", 1);
+      placePolarizerInBom(results);
     }
 
     const g6Wrap = document.getElementById("g6DockWrap");
@@ -2616,6 +2792,7 @@ async function init() {
     const tc10Flags = { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr };
     lastBom = {
       results,
+      family,
       includePrices,
       googleMeetNote: !!(typeOfSystem === "Windows PC based solution" && platform === "Google Meet"),
       sctQuoteNote,
