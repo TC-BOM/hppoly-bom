@@ -1,5 +1,7 @@
-const VERSION = "v10.69";
-// script.js – HP | Poly Configurator – v10.69: post-Generate Video compliance picker (Commercial / TAA / TAA NR / JITC / JITC NR)
+const VERSION = "v10.71";
+// script.js – HP | Poly Configurator – v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
+// v10.70: split Device vs Controller compliance pickers (independent remap, no regenerate)
+// v10.69: post-Generate Video compliance picker (Commercial / TAA / TAA NR / JITC / JITC NR)
 // v10.68: TC10 TAA-only SKUs + TAA checkbox label (drop / GSA)
 // v10.67: Audio TAA/JITC blue box (match Video)
 // v10.66: strip MSRP from form option labels (quote only)
@@ -788,11 +790,7 @@ async function init() {
       </label>
     </div>
     <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>
-    <p class="text-xs text-blue-800">No JITC phone SKUs in this catalog.</p>
-    <label id="audioNoRadioWrap" class="hidden inline-flex items-center gap-2 cursor-pointer">
-      <input id="audioNoRadio" type="checkbox" class="w-4 h-4 border">
-      <span class="font-semibold">No Radio</span>
-    </label>`;
+    <input id="audioNoRadio" type="checkbox" hidden aria-hidden="true">`;
   audioSection.appendChild(audioTaaWrap);
   const audioRadioWrap = document.createElement("div");
   audioRadioWrap.className = "space-y-1";
@@ -1304,8 +1302,6 @@ async function init() {
         if (cb) cb.checked = false;
       }
     }
-    const nrWrap = document.getElementById("audioNoRadioWrap");
-    if (nrWrap) nrWrap.classList.add("hidden");
     const cat52mWrap = document.getElementById("audioCat52mWrap");
     const cat52mLabel = document.getElementById("audioCat52mLabel");
     if (cat52mWrap) {
@@ -1878,6 +1874,16 @@ async function init() {
     jitc: "JITC",
     jitc_nr: "JITC + No Radio"
   };
+  const TC10_BLACK_SKUS = new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA"]);
+  const TC10_WHITE_SKUS = new Set(["973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
+  const TC10_HARDWARE_SKUS = new Set([...TC10_BLACK_SKUS, ...TC10_WHITE_SKUS]);
+  const A2_POD_WHITE_COMM = "B22X4AA#AC3";
+  const A2_POD_BLACK_COMM = "B22X6AA#AC3";
+  const A2_BRIDGE_COMM = "B22X2AA#AC3";
+  const A2_POD_WHITE_TAA = "B22X5AA";
+  const A2_POD_BLACK_TAA = "B22X7AA";
+  const A2_BRIDGE_TAA = "B22X3AA";
+  const R30_TAA_DOCK = "9X478AA";
   function flagsForComplianceChoice(choice) {
     if (choice === "jitc_nr") return { taa: true, jitc: true, nr: true };
     if (choice === "jitc") return { taa: true, jitc: true, nr: false };
@@ -1909,64 +1915,204 @@ async function init() {
     if (choice === "jitc_nr") return !!row.jitc_nr;
     return false;
   }
-  function bomHasTc10Line(bom) {
-    if (!bom) return false;
-    if (bom.hasInRoomTc10) return true;
-    const sch = document.getElementById("schedulingPanel")?.value;
-    if (sch && sch !== "None" && SCHEDULING_MAP[sch]) return true;
+  function hostSkuSet(hostKey) {
+    const keys = [hostKey];
+    if (hostKey === "g62" || hostKey === "g62_kit") keys.push("g62", "g62_kit");
+    const set = new Set();
+    keys.forEach(k => {
+      const row = HOST_SKUS[k];
+      if (!row) return;
+      Object.values(row).forEach(s => { if (s) set.add(s); });
+    });
+    return set;
+  }
+  function tc10ColorForSku(sku) {
+    if (TC10_BLACK_SKUS.has(sku)) return "black";
+    if (TC10_WHITE_SKUS.has(sku)) return "white";
+    return null;
+  }
+  function tc10ColorsOnBom(bom) {
+    const colors = [];
+    (bom && bom.results || []).forEach(r => {
+      const c = tc10ColorForSku(r.sku);
+      if (c && !colors.includes(c)) colors.push(c);
+    });
+    return colors;
+  }
+  function bomHasTc10Hardware(bom) {
+    return (bom && bom.results || []).some(r => TC10_HARDWARE_SKUS.has(r.sku));
+  }
+  function tc10HasComplianceSku(color, choice) {
+    if (color === "white") return choice !== "commercial";
+    if (color === "black") return true;
     return false;
   }
-  function skuMsrpSuffix(sku, includePrices) {
-    if (!sku) return "";
-    let out = " — " + sku;
-    if (includePrices) {
-      const item = getItem(sku);
-      out += " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
-    }
-    return out;
+  function controllerChoiceAvailable(choice, bom) {
+    const colors = tc10ColorsOnBom(bom);
+    if (!colors.length) return false;
+    return colors.some(c => tc10HasComplianceSku(c, choice));
   }
-  function applyComplianceChoice(choice) {
+  function controllerLabelSku(choice, bom) {
+    const colors = tc10ColorsOnBom(bom);
+    if (!colors.length) return null;
+    const color = colors.includes("black") ? "black" : colors[0];
+    if (!tc10HasComplianceSku(color, choice)) return null;
+    return pickTc10(color, flagsForComplianceChoice(choice));
+  }
+  function snapTc10ChoiceIfUnavailable(bom) {
+    if (!bom || !bomHasTc10Hardware(bom)) return;
+    if (controllerChoiceAvailable(bom.tc10Choice, bom)) return;
+    for (const choice of COMPLIANCE_CHOICE_ORDER) {
+      if (controllerChoiceAvailable(choice, bom)) {
+        bom.tc10Choice = choice;
+        bom.tc10Flags = flagsForComplianceChoice(choice);
+        return;
+      }
+    }
+  }
+  function updateLineSku(line, newSku) {
+    if (!line || !newSku || line.sku === newSku) return;
+    const item = getItem(newSku);
+    line.sku = newSku;
+    if (item) {
+      if (item.description) line.description = item.description;
+      line.msrp = (item.msrp != null) ? item.msrp : "";
+    }
+  }
+  function remapA2ForDeviceFlags(results, flags) {
+    const toTaa = !!flags.taa;
+    const pairs = toTaa
+      ? [[A2_POD_WHITE_COMM, A2_POD_WHITE_TAA], [A2_POD_BLACK_COMM, A2_POD_BLACK_TAA], [A2_BRIDGE_COMM, A2_BRIDGE_TAA]]
+      : [[A2_POD_WHITE_TAA, A2_POD_WHITE_COMM], [A2_POD_BLACK_TAA, A2_POD_BLACK_COMM], [A2_BRIDGE_TAA, A2_BRIDGE_COMM]];
+    results.forEach(line => {
+      for (const [from, to] of pairs) {
+        if (line.sku === from) { updateLineSku(line, to); break; }
+      }
+    });
+  }
+  function remapR30Dock(results, flags) {
+    if (hostFamily() !== "r30") return;
+    const idx = results.findIndex(r => r.sku === R30_TAA_DOCK);
+    if (flags.taa) {
+      if (idx >= 0) return;
+      const hostSet = hostSkuSet("r30");
+      const hostIdx = results.findIndex(r => hostSet.has(r.sku));
+      const item = getItem(R30_TAA_DOCK);
+      const line = {
+        sku: R30_TAA_DOCK,
+        description: (item && item.description) ? item.description : "(Custom item)",
+        msrp: (item && item.msrp != null) ? item.msrp : "",
+        quantity: 1
+      };
+      if (hostIdx >= 0) results.splice(hostIdx + 1, 0, line);
+      else results.push(line);
+    } else if (idx >= 0) {
+      results.splice(idx, 1);
+    }
+  }
+  function skuPriceSuffix(sku, includePrices) {
+    if (!sku || !includePrices) return "";
+    const item = getItem(sku);
+    return " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
+  }
+  function renderChoiceRowHtml(cbClass, dataAttr, choice, title, sku, includePrices, checked, disabled, skuNote) {
+    const grey = disabled ? "opacity-40 text-gray-400 cursor-not-allowed" : "cursor-pointer";
+    let html = `<label class="inline-flex items-start gap-2 ${grey}">`;
+    html += `<input type="checkbox" class="${cbClass} border mt-1" ${dataAttr}="${choice}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}>`;
+    html += `<span><span class="font-medium">${title}</span>`;
+    if (!disabled && sku) {
+      html += `<span class="block text-xs text-gray-600">${sku}${skuNote || ""}${skuPriceSuffix(sku, includePrices)}</span>`;
+    }
+    html += `</span></label>`;
+    return html;
+  }
+  function applyDeviceChoice(choice) {
+    if (!lastBom || !lastBom.results) return;
     const flags = flagsForComplianceChoice(choice);
-    const taa = document.getElementById("optTaa");
-    const jitc = document.getElementById("optJitc");
-    const nr = document.getElementById("optNoRadio");
-    if (taa) taa.checked = !!flags.taa;
-    if (jitc) jitc.checked = !!flags.jitc;
-    if (nr) nr.checked = !!flags.nr;
-    const oldChoice = lastBom && lastBom.pcChoice;
-    generate();
-    if (oldChoice && lastBom) {
-      const opts = getPcOptionMatrix(lastBom.pcPlatform, lastBom.pcFlags);
-      if (opts[oldChoice]) applyPcChoice(oldChoice);
+    const hostKey = currentHostKey();
+    const newSku = hostKey ? pickHost(hostKey, flags) : null;
+    if (newSku) {
+      const oldSet = hostSkuSet(hostKey);
+      const line = lastBom.results.find(r => oldSet.has(r.sku));
+      if (line) updateLineSku(line, newSku);
     }
+    remapA2ForDeviceFlags(lastBom.results, flags);
+    remapR30Dock(lastBom.results, flags);
+    lastBom.hostChoice = choice;
+    lastBom.hostFlags = flags;
+    renderBom();
   }
-  function renderCompliancePickerHtml(bom) {
-    if (!bom || !bom.pcFlags) return "";
+  function applyControllerChoice(choice) {
+    if (!lastBom || !lastBom.results) return;
+    const flags = flagsForComplianceChoice(choice);
+    lastBom.results.forEach(line => {
+      const color = tc10ColorForSku(line.sku);
+      if (!color) return;
+      updateLineSku(line, pickTc10(color, flags));
+    });
+    lastBom.tc10Choice = choice;
+    lastBom.tc10Flags = flags;
+    renderBom();
+  }
+  function renderQuoteOptionsHtml(bom) {
+    if (!bom) return "";
+    const gate = bom.hostFlags || bom.pcFlags || {};
+    const taaOrJitc = !!(gate.taa || gate.jitc);
+    const showDevice = taaOrJitc && typeof bom.hostChoice === "string";
+    const showController = taaOrJitc && bomHasTc10Hardware(bom);
+    const showPc = bom.pcPlatform === "teams" || bom.pcPlatform === "zoom";
+    if (!showDevice && !showController && !showPc) return "";
+    if (showController) snapTc10ChoiceIfUnavailable(bom);
     const hostKey = currentHostKey();
     const includePrices = !!bom.includePrices;
-    const current = complianceChoiceFromFlags(bom.pcFlags);
-    const showTc10 = bomHasTc10Line(bom);
-    let html = `<div class="p-3 border-2 border-amber-400 rounded bg-amber-50 mb-3" id="compliancePickerBox">`;
-    html += `<div class="font-bold mb-2">Compliance (pick one)</div>`;
-    COMPLIANCE_CHOICE_ORDER.forEach(choice => {
-      const flags = flagsForComplianceChoice(choice);
-      const sku = hostKey ? pickHost(hostKey, flags) : null;
-      const disabled = !sku || !hostHasComplianceSku(hostKey, choice);
-      const checked = current === choice && !disabled;
-      let label = COMPLIANCE_CHOICE_NAMES[choice] || choice;
-      if (!disabled && sku) {
-        label += skuMsrpSuffix(sku, includePrices);
-        if (showTc10) {
-          const tc10 = pickTc10("black", flags);
-          if (tc10) label += skuMsrpSuffix(tc10, includePrices);
-        }
+    const currentHost = bom.hostChoice;
+    const currentTc10 = bom.tc10Choice;
+    let html = `<div class="p-3 border-2 border-amber-400 rounded bg-amber-50 mb-3" id="quoteOptionsBox">`;
+    html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">`;
+    if (showDevice) {
+      html += `<div>`;
+      html += `<div class="block font-medium mb-2">Device</div>`;
+      COMPLIANCE_CHOICE_ORDER.forEach(choice => {
+        const flags = flagsForComplianceChoice(choice);
+        const sku = hostKey ? pickHost(hostKey, flags) : null;
+        const disabled = !sku || !hostHasComplianceSku(hostKey, choice);
+        const checked = currentHost === choice && !disabled;
+        const title = COMPLIANCE_CHOICE_NAMES[choice] || choice;
+        html += renderChoiceRowHtml("device-choice-cb", "data-device-choice", choice, title, sku, includePrices, checked, disabled);
+      });
+      html += `</div>`;
+    }
+    if (showController) {
+      html += `<div>`;
+      html += `<div class="block font-medium mb-2">Controller</div>`;
+      COMPLIANCE_CHOICE_ORDER.forEach(choice => {
+        const sku = controllerLabelSku(choice, bom);
+        const disabled = !controllerChoiceAvailable(choice, bom);
+        const checked = currentTc10 === choice && !disabled;
+        const title = COMPLIANCE_CHOICE_NAMES[choice] || choice;
+        html += renderChoiceRowHtml("controller-choice-cb", "data-controller-choice", choice, title, sku, includePrices, checked, disabled);
+      });
+      html += `</div>`;
+    }
+    if (showPc) {
+      const opts = getPcOptionMatrix(bom.pcPlatform, bom.pcFlags);
+      const allNull = !opts.studio5 && !opts.studio7 && !opts.g9plus;
+      html += `<div>`;
+      html += `<div class="block font-medium mb-2">Room compute</div>`;
+      if (allNull) {
+        html += `<p class="text-xs text-gray-600 mb-2">No TAA/No-Radio Zoom compute SKU in this catalog (do not invent).</p>`;
       }
-      const grey = disabled ? "opacity-40 text-gray-400 cursor-not-allowed" : "cursor-pointer";
-      html += `<label class="flex items-center gap-2 py-0.5 ${grey}">`;
-      html += `<input type="checkbox" class="compliance-choice-cb" data-compliance-choice="${choice}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}>`;
-      html += `<span>${label}</span></label>`;
-    });
-    html += `</div>`;
+      PC_CHOICE_ORDER.forEach(choice => {
+        const sku = opts[choice];
+        const disabled = !sku;
+        const checked = bom.pcChoice === choice && !!sku;
+        const title = PC_CHOICE_NAMES[choice] || choice;
+        const skuNote = sku === "A2TP1AA" ? " (includes TC10)" : "";
+        html += renderChoiceRowHtml("pc-choice-cb", "data-pc-choice", choice, title, sku, includePrices, checked, disabled, skuNote);
+      });
+      html += `</div>`;
+    }
+    html += `</div></div>`;
     return html;
   }
 
@@ -2002,7 +2148,8 @@ async function init() {
 
     lastBom.pcChoice = choice;
     const kitHasTc10 = sku === "A2TP1AA";
-    const inRoomTc10 = pickTc10("black");
+    const tc10Flags = lastBom.tc10Flags || lastBom.hostFlags || complianceFlags();
+    const inRoomTc10 = pickTc10("black", tc10Flags);
     const decQty = (arr, lineSku) => {
       const line = arr.find(r => r.sku === lineSku);
       if (!line) return;
@@ -2010,7 +2157,8 @@ async function init() {
       else arr.splice(arr.indexOf(line), 1);
     };
     if (kitHasTc10 && lastBom.hasInRoomTc10) {
-      decQty(lastBom.results, inRoomTc10);
+      const blackLine = lastBom.results.find(r => TC10_BLACK_SKUS.has(r.sku));
+      decQty(lastBom.results, blackLine ? blackLine.sku : inRoomTc10);
       const term = lastBom.supportTerm;
       const sSku = term && SUPPORT_MAP.tc10 && SUPPORT_MAP.tc10[term];
       if (sSku) decQty(lastBom.results, sSku);
@@ -2035,37 +2183,6 @@ async function init() {
     renderBom();
   }
 
-  function renderPcPickerHtml(bom) {
-    if (bom.pcPlatform !== "teams" && bom.pcPlatform !== "zoom") return "";
-    const opts = getPcOptionMatrix(bom.pcPlatform, bom.pcFlags);
-    const includePrices = !!bom.includePrices;
-    const allNull = !opts.studio5 && !opts.studio7 && !opts.g9plus;
-    let html = `<div class="p-3 border-2 border-amber-400 rounded bg-amber-50 mb-3" id="pcPickerBox">`;
-    html += `<div class="font-bold mb-2">Room compute (pick one)</div>`;
-    if (allNull) {
-      html += `<p class="text-sm text-amber-900 mb-2">No TAA/No-Radio Zoom compute SKU in this catalog (do not invent).</p>`;
-    }
-    PC_CHOICE_ORDER.forEach(choice => {
-      const sku = opts[choice];
-      const disabled = !sku;
-      const checked = bom.pcChoice === choice && !!sku;
-      let label = PC_CHOICE_NAMES[choice] || choice;
-      if (sku) {
-        label += " — " + sku;
-        if (sku === "A2TP1AA") label += " (includes TC10)";
-        if (includePrices) {
-          const item = getItem(sku);
-          label += " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
-        }
-      }
-      const grey = disabled ? "opacity-40 text-gray-400 cursor-not-allowed" : "cursor-pointer";
-      html += `<label class="flex items-center gap-2 py-0.5 ${grey}">`;
-      html += `<input type="checkbox" class="pc-choice-cb" data-pc-choice="${choice}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}>`;
-      html += `<span>${label}</span></label>`;
-    });
-    html += `</div>`;
-    return html;
-  }
 
   function renderBom(focusIdx, caretPos, dest, bom) {
     dest = dest || resultDiv;
@@ -2086,8 +2203,7 @@ async function init() {
     if (bom.sctQuoteNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">SCT prices are dealer quote, not Poly MSRP.</p>`;
     }
-    html += renderCompliancePickerHtml(bom);
-    html += renderPcPickerHtml(bom);
+    html += renderQuoteOptionsHtml(bom);
     html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
     html += `<th class="border px-4 py-2 text-left">Qty</th>`;
     html += `<th class="border px-4 py-2 text-left">SKU</th>`;
@@ -2162,13 +2278,22 @@ async function init() {
   resultDiv.addEventListener("input", (e) => handleBomQty(e, resultDiv, () => lastBom));
   audioResult.addEventListener("input", (e) => handleBomQty(e, audioResult, () => lastAudioBom));
   resultDiv.addEventListener("change", (e) => {
-    if (e.target.classList.contains("compliance-choice-cb")) {
-      const choice = e.target.getAttribute("data-compliance-choice");
+    if (e.target.classList.contains("device-choice-cb")) {
+      const choice = e.target.getAttribute("data-device-choice");
       if (!e.target.checked) {
         e.target.checked = true;
         return;
       }
-      applyComplianceChoice(choice);
+      applyDeviceChoice(choice);
+      return;
+    }
+    if (e.target.classList.contains("controller-choice-cb")) {
+      const choice = e.target.getAttribute("data-controller-choice");
+      if (!e.target.checked) {
+        e.target.checked = true;
+        return;
+      }
+      applyControllerChoice(choice);
       return;
     }
     if (e.target.classList.contains("pc-choice-cb")) {
@@ -2229,7 +2354,7 @@ async function init() {
     }
 
     const addInRoomTc10 = () => {
-      addLine(results, pickTc10("black"));
+      addLine(results, pickTc10("black", flags));
       addSupport(results, "tc10", supportTerm);
     };
 
@@ -2260,7 +2385,7 @@ async function init() {
     // Scheduling panel
     if (scheduling && scheduling !== "None" && SCHEDULING_MAP[scheduling]) {
       const sch = SCHEDULING_MAP[scheduling];
-      addLine(results, pickTc10(sch.color), sch.label);
+      addLine(results, pickTc10(sch.color, flags), sch.label);
       addSupport(results, "tc10", supportTerm);
       if (sch.glassMount) addLine(results, sch.glassMount);
     }
@@ -2408,6 +2533,10 @@ async function init() {
       addSupport(results, "g6_dock", supportTerm);
     }
 
+    const hostChoice = complianceChoiceFromFlags(flags);
+    const hostFlags = { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr };
+    const tc10Choice = hostChoice;
+    const tc10Flags = { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr };
     lastBom = {
       results,
       includePrices,
@@ -2418,9 +2547,14 @@ async function init() {
       pcPlatform,
       pcChoice,
       pcFlags: { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr },
+      hostChoice,
+      hostFlags,
+      tc10Choice,
+      tc10Flags,
       hasInRoomTc10: !!hasInRoomTc10,
       supportTerm
     };
+    snapTc10ChoiceIfUnavailable(lastBom);
     renderBom();
   }
 
