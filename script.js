@@ -1,5 +1,5 @@
-const VERSION = "v10.74";
-// script.js – HP | Poly Configurator – v10.74: BOM table hardware then support; 875K9AA under E70/X72/V72; Copy table; drawings below
+const VERSION = "v10.76";
+// script.js – HP | Poly Configurator – v10.76: no line diagrams; commercial hosts #ABA; 3rd-party click-down; BOM lead bar/PC then power, TC10, accessories, support
 // v10.72: USB-Ethernet dongle 4Z7Z7AA for A2 on V12/X32/X52/V52 and camera on X52
 // v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
 // v10.70: split Device vs Controller compliance pickers (independent remap, no regenerate)
@@ -182,68 +182,65 @@ async function init() {
     return findPrimary(primaries, s => hosts.has(s));
   }
 
-  function orderFinalBomTable(results) {
-    if (!results || !results.length) return;
-    placePolarizerInBom(results);
-    const supSet = supportSkuSet();
-    const hosts = hostSkuSet();
-    const tc10 = (typeof TC10_BLACK_SKUS !== "undefined") ? new Set([...TC10_BLACK_SKUS, "973G1AA", "93S70AA", "9A135AA", "9A134AA", "875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA"]) : new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA", "973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
-    const supportRows = [];
-    const other = [];
-    let lastPrimary = null;
-    results.forEach(line => {
-      if (supSet.has(line.sku)) {
-        supportRows.push({ line, after: lastPrimary });
-        return;
-      }
-      other.push(line);
-      if (isPrimaryHardware(line.sku, hosts, tc10)) lastPrimary = line.sku;
-    });
-    const primaries = [];
-    const buckets = {};
-    const leftover = [];
-    other.forEach(line => {
-      if (isPrimaryHardware(line.sku, hosts, tc10)) {
-        primaries.push(line);
-        return;
-      }
-      const parent = parentHardwareSku(line.sku, primaries, hosts, tc10);
-      if (parent) {
-        if (!buckets[parent]) buckets[parent] = [];
-        buckets[parent].push(line);
-      } else leftover.push(line);
-    });
-    const hardware = [];
-    primaries.forEach(p => {
-      hardware.push(p);
-      (buckets[p.sku] || []).forEach(a => hardware.push(a));
-    });
-    leftover.forEach(a => hardware.push(a));
-    const supportOut = [];
-    primaries.forEach(p => {
-      supportRows.filter(s => s.after === p.sku).forEach(s => supportOut.push(s.line));
-    });
-    supportRows.filter(s => !primaries.some(p => p.sku === s.after)).forEach(s => supportOut.push(s.line));
-    results.splice(0, results.length, ...hardware, ...supportOut);
+  const POWER_SKUS = new Set([
+    "A02F9AA", "B5NH6AA", "875K6AA", "874T5AA", "9W1A9AA", "9W1A9AA#ABA",
+    "9X478AA", "9X481UT#ABA"
+  ]);
+  function tc10SkuSet() {
+    return new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA", "973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
   }
-
-  function drawingSrcForBom(bom) {
-    const fam = (bom && bom.family) || hostFamily();
-    if (fam === "x72") return "x72-large-v2.png";
-    if (fam === "x52") return "x52-medium-v2.png";
+  function supportParentKey(sku) {
+    for (const [key, m] of Object.entries(SUPPORT_MAP)) {
+      if (Object.values(m).includes(sku)) return key;
+    }
     return null;
   }
-  function fillBomDrawing(dest, bom) {
-    const slot = dest && dest.querySelector("#bomLineDrawing");
-    if (!slot) return;
-    if (dest !== resultDiv) { slot.innerHTML = ""; return; }
-    const src = drawingSrcForBom(bom);
-    if (!src) {
-      slot.innerHTML = `<p class="text-xs text-gray-500 mt-2">Line drawing for this host will appear here when the template is ready.</p>`;
-      return;
-    }
-    slot.innerHTML = `<img src="${src}" alt="Room line drawing" class="w-full max-w-5xl border border-gray-200 rounded bg-white mt-1">`;
+  function hardwareRank(sku, hosts, tc10, hasE70) {
+    if (hosts.has(sku) || PC_SKU_SET.has(sku)) return 0;
+    if (sku === "875K9AA" && !hasE70) return 0;
+    if (POWER_SKUS.has(sku)) return 1;
+    if (tc10.has(sku) || GLASS_SKUS.has(sku)) return 2;
+    return 3;
   }
+  function parentForSupportKey(key, hosts, tc10) {
+    if (key === "tc10") return "tc10";
+    if (key === "e70") return "e70";
+    if (key === "e60") return "e60";
+    if (key === "a2_mic") return "a2_mic";
+    if (key === "a2_bridge") return "a2_bridge";
+    if (key === "g9plus_mtr" || key === "zoom_pc") return "pc";
+    if (key === "g6_dock") return "power";
+    if (["v12","v52","v72","x32","x52","x72","g62","r30"].includes(key)) return "host";
+    return key;
+  }
+
+  function orderFinalBomTable(results) {
+    if (!results || !results.length) return;
+    const supSet = supportSkuSet();
+    const hosts = hostSkuSet();
+    const tc10 = tc10SkuSet();
+    const hasE70 = results.some(x => E70_SKUS.has(x.sku));
+    const hw = [];
+    const support = [];
+    results.forEach((line, idx) => {
+      if (supSet.has(line.sku)) support.push({ line, idx });
+      else hw.push({ line, idx, rank: hardwareRank(line.sku, hosts, tc10, hasE70) });
+    });
+    hw.sort((a, b) => (a.rank - b.rank) || (a.idx - b.idx));
+    const orderedHw = hw.map(x => x.line);
+    // polarizer: directly under E70 if present, else already ranked with host (rank 0)
+    placePolarizerInBom(orderedHw);
+    const supportRank = { host: 0, pc: 0, e70: 3, e60: 3, a2_mic: 3, a2_bridge: 3, tc10: 2, power: 1 };
+    support.sort((a, b) => {
+      const ka = parentForSupportKey(supportParentKey(a.line.sku), hosts, tc10);
+      const kb = parentForSupportKey(supportParentKey(b.line.sku), hosts, tc10);
+      const ra = supportRank.hasOwnProperty(ka) ? supportRank[ka] : 3;
+      const rb = supportRank.hasOwnProperty(kb) ? supportRank[kb] : 3;
+      return (ra - rb) || (a.idx - b.idx);
+    });
+    results.splice(0, results.length, ...orderedHw, ...support.map(s => s.line));
+  }
+
 
   function copyBomTableText(bom) {
     if (!bom || !bom.results) return "";
@@ -412,14 +409,14 @@ async function init() {
   };
 
   const HOST_SKUS = {
-    v12:     { commercial: "A9DD8AA", taa: "B95SPAA", taa_nr: "B95SNAA" },
-    v52:     { commercial: "A09D4AA", taa: "A09D5AA", jitc: "A09D6AA", taa_nr: "A09D8AA", jitc_nr: "A09D9AA" },
-    v72:     { commercial: "AV1E3AA", jitc: "AV1E4AA", jitc_nr: "AV1E6AA" },
+    v12:     { commercial: "A9DD8AA#ABA", taa: "B95SPAA", taa_nr: "B95SNAA" },
+    v52:     { commercial: "A09D4AA#ABA", taa: "A09D5AA", jitc: "A09D6AA", taa_nr: "A09D8AA", jitc_nr: "A09D9AA" },
+    v72:     { commercial: "AV1E3AA#ABA", jitc: "AV1E4AA", jitc_nr: "AV1E6AA" },
     x32:     { commercial: "A3SV5AA#ABA", taa: "A3SV9AA", jitc: "A3SW0AA", taa_nr: "A3SW1AA", jitc_nr: "A3SW2AA" },
-    x52:     { commercial: "8D8K2AA", taa: "8D8K3AA", jitc: "8D8K4AA", taa_nr: "8D8K7AA", jitc_nr: "8D8K8AA" },
-    x72:     { commercial: "A4LZ8AA", taa: "A4MA1AA", jitc: "A4MA2AA", taa_nr: "A4MA4AA", jitc_nr: "A4MA6AA" },
+    x52:     { commercial: "8D8K2AA#ABA", taa: "8D8K3AA", jitc: "8D8K4AA", taa_nr: "8D8K7AA", jitc_nr: "8D8K8AA" },
+    x72:     { commercial: "A4LZ8AA#ABA", taa: "A4MA1AA", jitc: "A4MA2AA", taa_nr: "A4MA4AA", jitc_nr: "A4MA6AA" },
     g62:     { commercial: "99T09AA", taa: "99T10AA", jitc: "99T11AA", taa_nr: "99T12AA", jitc_nr: "99T13AA" },
-    g62_kit: { commercial: "A01KCAA", taa: "A01KBAA", jitc: "A01K9AA", taa_nr: "99T21AA", jitc_nr: "A01K7AA" },
+    g62_kit: { commercial: "A01KCAA#AC3", taa: "A01KBAA", jitc: "A01K9AA", taa_nr: "99T21AA", jitc_nr: "A01K7AA" },
     r30:     { commercial: "9U3U1AA", taa: "980F1AA", jitc: "980F2AA", taa_nr: "980F1AA", jitc_nr: "980F2AA" }
   };
   function pickHost(family, flags) {
@@ -846,11 +843,20 @@ async function init() {
   form.appendChild(select("implementationHelp", "Implementation Help", [
     "None", "Remote Implementation help", "Onsite Implementation help"
   ]));
-  form.appendChild(input("accessories", "Optional accessories (comma-separated SKUs)", "e.g. extra cables, 3rd-party SKUs"));
+  const thirdPartyDetails = document.createElement("details");
+  thirdPartyDetails.id = "thirdPartyDetails";
+  thirdPartyDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
+  thirdPartyDetails.innerHTML = `
+    <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
+      Third-party accessories — click to expand
+    </summary>
+    <div class="px-3 pb-3 space-y-3"></div>`;
+  const thirdPartyBody = thirdPartyDetails.querySelector("div");
+  thirdPartyBody.appendChild(input("accessories", "Optional accessories (comma-separated SKUs)", "e.g. extra cables, 3rd-party SKUs"));
 
   const netgearDetails = document.createElement("details");
   netgearDetails.id = "netgearDetails";
-  netgearDetails.className = "mt-2 border border-blue-200 rounded bg-white";
+  netgearDetails.className = "border border-blue-100 rounded bg-white";
   netgearDetails.innerHTML = `
     <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
       Netgear Pro AV switch — click to expand
@@ -863,11 +869,11 @@ async function init() {
       </p>
       <div id="netgearKitList" class="space-y-1"></div>
     </div>`;
-  form.appendChild(netgearDetails);
+  thirdPartyBody.appendChild(netgearDetails);
 
   const sctDetails = document.createElement("details");
   sctDetails.id = "sctDetails";
-  sctDetails.className = "mt-2 border border-blue-200 rounded bg-white";
+  sctDetails.className = "border border-blue-100 rounded bg-white";
   sctDetails.innerHTML = `
     <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
       Sound Control Technologies — click to expand
@@ -878,7 +884,8 @@ async function init() {
       </p>
       <div id="sctKitList" class="space-y-2"></div>
     </div>`;
-  form.appendChild(sctDetails);
+  thirdPartyBody.appendChild(sctDetails);
+  form.appendChild(thirdPartyDetails);
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
@@ -2464,8 +2471,6 @@ async function init() {
     }
 
     html += `</tbody></table>`;
-    html += `<div id="bomLineDrawing" class="mt-4"></div>`;
-
     // Priced-line footnote moved to page footer (*PLEASE NOTE: estimate only).
 
 
@@ -2477,7 +2482,6 @@ async function init() {
     }
 
     dest.innerHTML = html;
-    fillBomDrawing(dest, bom);
     const copyBtn = dest.querySelector("#copyBomTableBtn");
     if (copyBtn) {
       copyBtn.addEventListener("click", async () => {
