@@ -16,8 +16,8 @@
     "msrp": null
   },
   "4Z7Z7AA": {
-    "description": "HP USB to Ethernet dongle when using Poly A2 mics+Bridge with X32/X52",
-    "msrp": null
+    "description": "HP USB to Ethernet dongle",
+    "msrp": 25
   },
   "842D2AA#ABA": {
     "description": "Poly Studio R30 USB video/audio bar",
@@ -811,11 +811,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount \u2014 White",
+    "description": "Poly TC10 Glass Mount — White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount \u2014 Black",
+    "description": "Poly TC10 Glass Mount — Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -851,15 +851,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
