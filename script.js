@@ -1,5 +1,6 @@
-const VERSION = "v10.68";
-// script.js – HP | Poly Configurator – v10.68: TC10 TAA-only SKUs + TAA checkbox label (drop / GSA)
+const VERSION = "v10.69";
+// script.js – HP | Poly Configurator – v10.69: post-Generate Video compliance picker (Commercial / TAA / TAA NR / JITC / JITC NR)
+// v10.68: TC10 TAA-only SKUs + TAA checkbox label (drop / GSA)
 // v10.67: Audio TAA/JITC blue box (match Video)
 // v10.66: strip MSRP from form option labels (quote only)
 // v10.65: Audio Rove base/handset/R8 picker (replaces flat model list)
@@ -291,8 +292,8 @@ async function init() {
     const nr = !!document.getElementById("optNoRadio")?.checked;
     return { taa: taaBox || jitc, jitc, nr };
   }
-  function pickTc10(color) {
-    const flags = complianceFlags();
+  function pickTc10(color, flags) {
+    flags = flags || complianceFlags();
     // Order: JITC+NR, JITC, TAA+NR, TAA, commercial
     if (color === "white") {
       if (flags.jitc && flags.nr) return "9A134AA"; // Poly TC10 White Touch Controller No Radio GSA/TAA JITC
@@ -349,7 +350,7 @@ async function init() {
   promoWrap.id = "promoBox";
   promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 mb-4";
   promoWrap.innerHTML = `
-    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, and the new PC Studio Room kits have been added. Happy Hunting!</div>`;
+    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, and the new PC Studio Room kits have been added.</div>`;
 
   // TAA / JITC
   const taaWrap = document.createElement("div");
@@ -365,7 +366,8 @@ async function init() {
         <span class="font-semibold text-blue-900">JITC</span>
       </label>
     </div>
-    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>`;
+    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>
+    <input id="optNoRadio" type="checkbox" hidden aria-hidden="true">`;
 
   form.appendChild(taaWrap);
 
@@ -547,8 +549,8 @@ async function init() {
             <th class="border border-blue-100 px-2 py-1">Feature</th>
             <th class="border border-blue-100 px-2 py-1">Description</th>
             <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Poly+</th>
-            <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Lens Pro</th>
-            <th class="border border-blue-100 px-2 py-1 text-center whitespace-nowrap">Poly+ Analyze</th>
+            <th class="border border-blue-100 px-2 py-1 text-center leading-tight w-12">Lens<br>Pro</th>
+            <th class="border border-blue-100 px-2 py-1 text-center leading-tight w-14">Poly+<br>Analyze</th>
           </tr>
         </thead>
         <tbody>
@@ -1868,6 +1870,106 @@ async function init() {
   }
 
 
+  const COMPLIANCE_CHOICE_ORDER = ["commercial", "taa", "taa_nr", "jitc", "jitc_nr"];
+  const COMPLIANCE_CHOICE_NAMES = {
+    commercial: "Commercial",
+    taa: "TAA",
+    taa_nr: "TAA + No Radio",
+    jitc: "JITC",
+    jitc_nr: "JITC + No Radio"
+  };
+  function flagsForComplianceChoice(choice) {
+    if (choice === "jitc_nr") return { taa: true, jitc: true, nr: true };
+    if (choice === "jitc") return { taa: true, jitc: true, nr: false };
+    if (choice === "taa_nr") return { taa: true, jitc: false, nr: true };
+    if (choice === "taa") return { taa: true, jitc: false, nr: false };
+    return { taa: false, jitc: false, nr: false };
+  }
+  function complianceChoiceFromFlags(flags) {
+    flags = flags || {};
+    if (flags.jitc && flags.nr) return "jitc_nr";
+    if (flags.jitc) return "jitc";
+    if (flags.taa && flags.nr) return "taa_nr";
+    if (flags.taa) return "taa";
+    return "commercial";
+  }
+  function currentHostKey() {
+    const family = hostFamily();
+    const mounting = document.getElementById("mounting")?.value;
+    return (family === "g62" && mounting && mounting !== "None") ? "g62_kit" : family;
+  }
+  function hostHasComplianceSku(family, choice) {
+    const row = HOST_SKUS[family];
+    if (!row) return false;
+    // Dedicated key, plus existing pickHost TAA → JITC fallback (V72). Do not treat TAA as JITC (V12).
+    if (choice === "commercial") return !!row.commercial;
+    if (choice === "taa") return !!(row.taa || row.jitc);
+    if (choice === "taa_nr") return !!(row.taa_nr || row.jitc_nr);
+    if (choice === "jitc") return !!row.jitc;
+    if (choice === "jitc_nr") return !!row.jitc_nr;
+    return false;
+  }
+  function bomHasTc10Line(bom) {
+    if (!bom) return false;
+    if (bom.hasInRoomTc10) return true;
+    const sch = document.getElementById("schedulingPanel")?.value;
+    if (sch && sch !== "None" && SCHEDULING_MAP[sch]) return true;
+    return false;
+  }
+  function skuMsrpSuffix(sku, includePrices) {
+    if (!sku) return "";
+    let out = " — " + sku;
+    if (includePrices) {
+      const item = getItem(sku);
+      out += " — " + fmtCurrency(item && item.msrp != null ? item.msrp : "");
+    }
+    return out;
+  }
+  function applyComplianceChoice(choice) {
+    const flags = flagsForComplianceChoice(choice);
+    const taa = document.getElementById("optTaa");
+    const jitc = document.getElementById("optJitc");
+    const nr = document.getElementById("optNoRadio");
+    if (taa) taa.checked = !!flags.taa;
+    if (jitc) jitc.checked = !!flags.jitc;
+    if (nr) nr.checked = !!flags.nr;
+    const oldChoice = lastBom && lastBom.pcChoice;
+    generate();
+    if (oldChoice && lastBom) {
+      const opts = getPcOptionMatrix(lastBom.pcPlatform, lastBom.pcFlags);
+      if (opts[oldChoice]) applyPcChoice(oldChoice);
+    }
+  }
+  function renderCompliancePickerHtml(bom) {
+    if (!bom || !bom.pcFlags) return "";
+    const hostKey = currentHostKey();
+    const includePrices = !!bom.includePrices;
+    const current = complianceChoiceFromFlags(bom.pcFlags);
+    const showTc10 = bomHasTc10Line(bom);
+    let html = `<div class="p-3 border-2 border-amber-400 rounded bg-amber-50 mb-3" id="compliancePickerBox">`;
+    html += `<div class="font-bold mb-2">Compliance (pick one)</div>`;
+    COMPLIANCE_CHOICE_ORDER.forEach(choice => {
+      const flags = flagsForComplianceChoice(choice);
+      const sku = hostKey ? pickHost(hostKey, flags) : null;
+      const disabled = !sku || !hostHasComplianceSku(hostKey, choice);
+      const checked = current === choice && !disabled;
+      let label = COMPLIANCE_CHOICE_NAMES[choice] || choice;
+      if (!disabled && sku) {
+        label += skuMsrpSuffix(sku, includePrices);
+        if (showTc10) {
+          const tc10 = pickTc10("black", flags);
+          if (tc10) label += skuMsrpSuffix(tc10, includePrices);
+        }
+      }
+      const grey = disabled ? "opacity-40 text-gray-400 cursor-not-allowed" : "cursor-pointer";
+      html += `<label class="flex items-center gap-2 py-0.5 ${grey}">`;
+      html += `<input type="checkbox" class="compliance-choice-cb" data-compliance-choice="${choice}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}>`;
+      html += `<span>${label}</span></label>`;
+    });
+    html += `</div>`;
+    return html;
+  }
+
   function applyPcChoice(choice) {
     if (!lastBom || !lastBom.results) return;
     const opts = getPcOptionMatrix(lastBom.pcPlatform, lastBom.pcFlags);
@@ -1984,6 +2086,7 @@ async function init() {
     if (bom.sctQuoteNote) {
       html += `<p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded mb-2">SCT prices are dealer quote, not Poly MSRP.</p>`;
     }
+    html += renderCompliancePickerHtml(bom);
     html += renderPcPickerHtml(bom);
     html += `<table class="w-full border-collapse text-sm"><thead><tr>`;
     html += `<th class="border px-4 py-2 text-left">Qty</th>`;
@@ -2059,6 +2162,15 @@ async function init() {
   resultDiv.addEventListener("input", (e) => handleBomQty(e, resultDiv, () => lastBom));
   audioResult.addEventListener("input", (e) => handleBomQty(e, audioResult, () => lastAudioBom));
   resultDiv.addEventListener("change", (e) => {
+    if (e.target.classList.contains("compliance-choice-cb")) {
+      const choice = e.target.getAttribute("data-compliance-choice");
+      if (!e.target.checked) {
+        e.target.checked = true;
+        return;
+      }
+      applyComplianceChoice(choice);
+      return;
+    }
     if (e.target.classList.contains("pc-choice-cb")) {
       const choice = e.target.getAttribute("data-pc-choice");
       if (!e.target.checked) {
