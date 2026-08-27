@@ -1,4 +1,5 @@
-const VERSION = "v10.78";
+const VERSION = "v10.79";
+// v10.79: CCX 350 hidden on Zoom/OpenSIP (Teams-only); CCX radio map: 350/400 no Wi-Fi no BT, 505/600 Wi-Fi+BT; Video Lens copy+checkboxes moved into the Poly+/Lens details
 // script.js – HP | Poly Configurator – v10.77: V12 B42BFAA; BOM X/G62/PC, V, power/mounts, cameras, A2, support, Lens, install
 // v10.72: USB-Ethernet dongle 4Z7Z7AA for A2 on V12/X32/X52/V52 and camera on X52
 // v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
@@ -704,7 +705,6 @@ async function init() {
     <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-enterprise#hp-poly-analyze" target="_blank" rel="noopener" class="text-blue-700 underline">Poly+ / Analyze</a>
     ·
     <a href="https://info.lens.poly.com/docs/premium-Poly-Lens/poly-plus-features" target="_blank" rel="noopener" class="text-blue-700 underline">Lens Pro features</a>`;
-  form.appendChild(supportInfo);
 
   // Expandable Poly+ vs Poly+ Analyze comparison table
   const featuresDetails = document.createElement("details");
@@ -858,7 +858,9 @@ async function init() {
       <span class="block text-xs text-gray-600">Register and configure up to 3 Poly hardware devices on Poly Lens cloud management portal</span>
     </span>`;
   lensProWrap.appendChild(lensOnboardLabel);
-  form.appendChild(lensProWrap);
+  const featuresBody = featuresDetails.querySelector("div.px-3.pb-3");
+  featuresBody.prepend(lensProWrap);
+  featuresBody.prepend(supportInfo);
 
   form.appendChild(select("implementationHelp", "Implementation Help", [
     "None", "Remote Implementation help", "Onsite Implementation help"
@@ -1192,10 +1194,10 @@ async function init() {
       "350": { teams: "848Z7AA#AC3", sip: null, support: "ccx_350", psu: "86H66AA#ABA",
         teams_taa: "8F3G3AA",
         sipNote: "CCX 350 is Teams-native only — no OpenSIP/Zoom SKU on the Voice sheet.",
-        wifi: true, bt: true },
+        wifi: false, bt: false },
       "400": { teams: "848Z8AA#AC3", sip: "849A1AA#AC3", support: "ccx_400",
         teams_taa: "848Z9AA", sip_psu: "84C14AA",
-        wifi: true, bt: true },
+        wifi: false, bt: false },
       "505": { teams: "82Z79AA", sip: "82Z82AA", support: "ccx_505", em: "8F3R9AA", psu: "86P04AA#ABA",
         teams_taa: "849A5AA", sip_psu: "84C16AA",
         wifi: true, bt: true },
@@ -1375,6 +1377,10 @@ async function init() {
     if (!wantWifi && !wantBt && audioHasNrSkus(cfg)) return true;
     return !!cfg.wifi === wantWifi && !!cfg.bt === wantBt;
   }
+  function audioModelOnPlatform(cfg, platform) {
+    if (platform === "Zoom" || platform === "OpenSIP") return !!cfg.sip;
+    return true;
+  }
   // Per family+model+platform field notes. Do not use one CCX-wide Zoom/Teams sentence. Not Zoom Rooms.
   const NOTE_TEAMS_NATIVE = "Native Teams (Android + Teams Admin Center).";
   const NOTE_TEAMS_SIP_GW = "Teams SIP Gateway is calling only (no calendar, hot desk, boss/admin). BOM uses the OpenSIP SKU.";
@@ -1468,7 +1474,7 @@ async function init() {
       if (familySel) {
         const radios = audioWantRadios();
         const fam = AUDIO_CATALOG[familySel] || {};
-        const any = Object.keys(fam).some(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt));
+        const any = Object.keys(fam).some(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt) && audioModelOnPlatform(fam[m], platform));
         if (!any) {
           const emptyMsg = "No models in this family match the Wi-Fi/Bluetooth selection.";
           msg = msg ? msg + " " + emptyMsg : emptyMsg;
@@ -1593,15 +1599,16 @@ async function init() {
     if (!sel) return;
     const prev = sel.value;
     const radios = audioWantRadios();
+    const platform = document.getElementById("audioPlatform")?.value || "";
     const fam = AUDIO_CATALOG[family] || {};
-    const models = Object.keys(fam).filter(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt));
+    const models = Object.keys(fam).filter(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt) && audioModelOnPlatform(fam[m], platform));
     sel.innerHTML = '<option value="">--</option>' + models.map(m => `<option value="${m}">${m}</option>`).join("");
     sel.value = models.includes(prev) ? prev : "";
     updateAudioNotesAndAcc();
   }
   document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
-  document.getElementById("audioPlatform")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioPlatform")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioJitc")?.addEventListener("change", () => {
     if (document.getElementById("audioJitc")?.checked) {
       const taa = document.getElementById("audioTaa");
