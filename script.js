@@ -1,5 +1,5 @@
-const VERSION = "v10.76";
-// script.js – HP | Poly Configurator – v10.76: no line diagrams; commercial hosts #ABA; 3rd-party click-down; BOM lead bar/PC then power, TC10, accessories, support
+const VERSION = "v10.77";
+// script.js – HP | Poly Configurator – v10.77: V12 B42BFAA; BOM X/G62/PC, V, power/mounts, cameras, A2, support, Lens, install
 // v10.72: USB-Ethernet dongle 4Z7Z7AA for A2 on V12/X32/X52/V52 and camera on X52
 // v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
 // v10.70: split Device vs Controller compliance pickers (independent remap, no regenerate)
@@ -182,12 +182,22 @@ async function init() {
     return findPrimary(primaries, s => hosts.has(s));
   }
 
-  const POWER_SKUS = new Set([
-    "A02F9AA", "B5NH6AA", "875K6AA", "874T5AA", "9W1A9AA", "9W1A9AA#ABA",
-    "9X478AA", "9X481UT#ABA"
-  ]);
+  const HOST_POWER_SKUS = new Set(["B42BFAA", "9X478AA", "9X481UT#ABA"]);
+  const CAMERA_POWER_SKUS = new Set(["B5NH6AA", "875K6AA", "874T5AA", "9W1A9AA", "9W1A9AA#ABA"]);
+  const A2_POWER_SKUS = new Set(["A02F9AA"]);
+  const LENS_SKU_SET = new Set(["UJ8T6LN", "UJ8T5LN", "UJ8T4LN", "PRO8700101AB"]);
+  const INSTALL_SKU_SET = new Set(["PROECOSYS02", "PROG7500RE2", "PROSTDIOXR2", "PROSMTHND04", "PROADDON004"]);
   function tc10SkuSet() {
     return new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA", "973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
+  }
+  function familySkuSet(keys) {
+    const s = new Set();
+    keys.forEach(k => {
+      const row = HOST_SKUS[k];
+      if (!row) return;
+      Object.values(row).forEach(x => { if (x) s.add(x); });
+    });
+    return s;
   }
   function supportParentKey(sku) {
     for (const [key, m] of Object.entries(SUPPORT_MAP)) {
@@ -195,50 +205,60 @@ async function init() {
     }
     return null;
   }
-  function hardwareRank(sku, hosts, tc10, hasE70) {
-    if (hosts.has(sku) || PC_SKU_SET.has(sku)) return 0;
-    if (sku === "875K9AA" && !hasE70) return 0;
-    if (POWER_SKUS.has(sku)) return 1;
-    if (tc10.has(sku) || GLASS_SKUS.has(sku)) return 2;
-    return 3;
+  function bomLineRank(sku, xg62, vbar, tc10, hasE70) {
+    if (xg62.has(sku) || PC_SKU_SET.has(sku)) return 0;
+    if (vbar.has(sku)) return 1;
+    if (HOST_MOUNT_SKUS.has(sku) || HOST_POWER_SKUS.has(sku)) return 2;
+    if (sku === "875K9AA" && !hasE70) return 2;
+    if (tc10.has(sku) || GLASS_SKUS.has(sku)) return 3;
+    if (E70_SKUS.has(sku) || E60_SKUS.has(sku) || CAMERA_POWER_SKUS.has(sku) || CAM_ACC_E70.has(sku) || CAM_ACC_E60.has(sku)) return 4;
+    if (sku === "875K9AA" && hasE70) return 4;
+    if (A2_BRIDGE_SKUS.has(sku)) return 5;
+    if (A2_POWER_SKUS.has(sku)) return 6;
+    if (A2_POD_SKUS.has(sku)) return 7;
+    return 8;
   }
-  function parentForSupportKey(key, hosts, tc10) {
-    if (key === "tc10") return "tc10";
-    if (key === "e70") return "e70";
-    if (key === "e60") return "e60";
-    if (key === "a2_mic") return "a2_mic";
-    if (key === "a2_bridge") return "a2_bridge";
-    if (key === "g9plus_mtr" || key === "zoom_pc") return "pc";
-    if (key === "g6_dock") return "power";
-    if (["v12","v52","v72","x32","x52","x72","g62","r30"].includes(key)) return "host";
-    return key;
+  function supportRankForKey(key) {
+    if (["x32", "x52", "x72", "g62", "g9plus_mtr", "zoom_pc"].includes(key)) return 0;
+    if (["v12", "v52", "v72", "r30"].includes(key)) return 1;
+    if (key === "g6_dock") return 2;
+    if (key === "tc10") return 3;
+    if (key === "e70" || key === "e60") return 4;
+    if (key === "a2_bridge") return 5;
+    if (key === "a2_mic") return 7;
+    return 8;
   }
 
   function orderFinalBomTable(results) {
     if (!results || !results.length) return;
     const supSet = supportSkuSet();
-    const hosts = hostSkuSet();
     const tc10 = tc10SkuSet();
+    const xg62 = familySkuSet(["x32", "x52", "x72", "g62", "g62_kit"]);
+    ["A3SV5AA#ABA", "8D8K2AA#ABA", "A4LZ8AA#ABA", "A01KCAA#AC3"].forEach(x => xg62.add(x));
+    const vbar = familySkuSet(["v12", "v52", "v72", "r30"]);
+    ["A9DD8AA#ABA", "A09D4AA#ABA", "AV1E3AA#ABA"].forEach(x => vbar.add(x));
     const hasE70 = results.some(x => E70_SKUS.has(x.sku));
     const hw = [];
     const support = [];
+    const lens = [];
+    const install = [];
     results.forEach((line, idx) => {
-      if (supSet.has(line.sku)) support.push({ line, idx });
-      else hw.push({ line, idx, rank: hardwareRank(line.sku, hosts, tc10, hasE70) });
+      if (LENS_SKU_SET.has(line.sku)) { lens.push({ line, idx }); return; }
+      if (INSTALL_SKU_SET.has(line.sku)) { install.push({ line, idx }); return; }
+      if (supSet.has(line.sku)) { support.push({ line, idx }); return; }
+      hw.push({ line, idx, rank: bomLineRank(line.sku, xg62, vbar, tc10, hasE70) });
     });
     hw.sort((a, b) => (a.rank - b.rank) || (a.idx - b.idx));
     const orderedHw = hw.map(x => x.line);
-    // polarizer: directly under E70 if present, else already ranked with host (rank 0)
     placePolarizerInBom(orderedHw);
-    const supportRank = { host: 0, pc: 0, e70: 3, e60: 3, a2_mic: 3, a2_bridge: 3, tc10: 2, power: 1 };
     support.sort((a, b) => {
-      const ka = parentForSupportKey(supportParentKey(a.line.sku), hosts, tc10);
-      const kb = parentForSupportKey(supportParentKey(b.line.sku), hosts, tc10);
-      const ra = supportRank.hasOwnProperty(ka) ? supportRank[ka] : 3;
-      const rb = supportRank.hasOwnProperty(kb) ? supportRank[kb] : 3;
+      const ra = supportRankForKey(supportParentKey(a.line.sku));
+      const rb = supportRankForKey(supportParentKey(b.line.sku));
       return (ra - rb) || (a.idx - b.idx);
     });
-    results.splice(0, results.length, ...orderedHw, ...support.map(s => s.line));
+    lens.sort((a, b) => a.idx - b.idx);
+    install.sort((a, b) => a.idx - b.idx);
+    results.splice(0, results.length, ...orderedHw, ...support.map(s => s.line), ...lens.map(s => s.line), ...install.map(s => s.line));
   }
 
 
@@ -2594,6 +2614,11 @@ async function init() {
     // Huddle TAA dock (commercial 9U3U1AA already includes G5 dock)
     if (family === "r30" && flags.taa) {
       addLine(results, "9X478AA");
+    }
+
+    // V12 is USB-powered; always include the USB-C 65W adapter kit
+    if (family === "v12" && !hasSku(results, "B42BFAA")) {
+      addLine(results, "B42BFAA", "Poly USB-C 65W Power Adapter and Power Cord Kit");
     }
 
     const addInRoomTc10 = () => {
