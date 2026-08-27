@@ -1,4 +1,4 @@
-const VERSION = "v10.77";
+const VERSION = "v10.78";
 // script.js – HP | Poly Configurator – v10.77: V12 B42BFAA; BOM X/G62/PC, V, power/mounts, cameras, A2, support, Lens, install
 // v10.72: USB-Ethernet dongle 4Z7Z7AA for A2 on V12/X32/X52/V52 and camera on X52
 // v10.71: unify quote options (Lens Pro-style title+SKU, one amber box); Audio TAA box matches Video
@@ -68,7 +68,7 @@ const SCT_KITS = [
   { sku: "RCM-URMX", purpose: "Wall mount for E60 that hides the SCT camera-end module", camera: "E60", drawing: "https://docs.soundcontrol.net/download/3383/", drawingLabel: "E60 / G62 design guide (PDF)" }
 ];
 
-document.title = 'Poly Video Conference\'s Gem: "Bill" of Materials Generator';
+document.title = 'Poly Video Conferencing \u2018Gem\u2019: "Bill" of Materials Generator';
 
 async function init() {
   // Cache-bust so browsers/CDN never serve a stale skus_merged.json
