@@ -1,4 +1,5 @@
-const VERSION = "v10.83";
+const VERSION = "v10.84";
+// v10.84: full-width BOM Please Note; Black A2 above White; per-camera polarizer/mount/PoE stacks; E60 ceiling 9W1A8AA#AC3 on every extra camera.
 // v10.83: Camera dropdown; 2 extras on X52/X72/G62/PC; third on G62/PC; 3p above install; drop Teams/Zoom gate on extra cams.
 // v10.82: second extra camera on X52/X72/G62 Teams/Zoom; third picker on G62.
 // v10.81: main camera dropdown under expansion mic; secondary+accessories in click-down.
@@ -586,8 +587,8 @@ async function init() {
     "None",
     PREEXISTING_AUDIO,
     ANALOG_MIC_VALUE,
-    "New White A2 table mic pod(s)",
-    "New Black A2 table mic pod(s)"
+    "New Black A2 table mic pod(s)",
+    "New White A2 table mic pod(s)"
   ]);
   const expansionHint = document.createElement("p");
   expansionHint.id = "expansionHint";
@@ -635,6 +636,53 @@ async function init() {
     <div class="px-3 pb-3 space-y-3"></div>`;
   const cameraDetailsBody = cameraDetails.querySelector("div");
 
+  function polarizerInnerHtml(optId) {
+    return `
+    <label class="inline-flex items-start gap-2">
+      <input id="${optId}" type="checkbox" class="border mt-1">
+      <span>
+        <span class="font-medium">Optional polarized filter</span>
+        <span class="block text-xs text-gray-600">875K9AA. For X72 / V72 / E70. Cuts glare and window washout. Not added unless checked.</span>
+      </span>
+    </label>`;
+  }
+  function poeInnerHtml(optId) {
+    return `
+    <p class="font-medium">Optional camera power</p>
+    <p class="text-xs text-gray-600 mb-1">E60 and E70 do not include a PSU. They need PoE+ (Class 4 / 30W). Leave unchecked if the switch already provides PoE+.</p>
+    <label class="inline-flex items-center gap-2 mt-1">
+      <input id="${optId}" type="checkbox" class="border">
+      <span class="font-medium">45W PoE++ adapter (B5NH6AA)</span>
+    </label>`;
+  }
+  function mountInnerHtml(selId, hintId) {
+    return `
+    <label class="block font-medium">Camera mount option</label>
+    <select id="${selId}" class="border p-2 w-full">
+      <option value="None">None</option>
+    </select>
+    <p class="text-xs text-gray-600 mt-1" id="${hintId}"></p>`;
+  }
+
+  // Camera 1 accessories (built-in X72/V72 polarizer + Camera dropdown extras)
+  const polarFilterWrap = document.createElement("div");
+  polarFilterWrap.id = "polarFilterWrap";
+  polarFilterWrap.className = "hidden mt-2";
+  polarFilterWrap.innerHTML = polarizerInnerHtml("polarFilterOpt");
+  cameraDetailsBody.appendChild(polarFilterWrap);
+
+  const cameraMountWrap = document.createElement("div");
+  cameraMountWrap.id = "cameraMountWrap";
+  cameraMountWrap.className = "hidden";
+  cameraMountWrap.innerHTML = mountInnerHtml("cameraMount", "cameraMountHint");
+  cameraDetailsBody.appendChild(cameraMountWrap);
+
+  const cameraPowerWrap = document.createElement("div");
+  cameraPowerWrap.id = "cameraPowerWrap";
+  cameraPowerWrap.className = "hidden";
+  cameraPowerWrap.innerHTML = poeInnerHtml("camPowerPoePP");
+  cameraDetailsBody.appendChild(cameraPowerWrap);
+
   const camWrap2 = document.createElement("div");
   camWrap2.id = "cameraWrap2";
   camWrap2.innerHTML = `
@@ -646,6 +694,24 @@ async function init() {
     </select>
     <p id="cameraChoice2Hint" class="text-xs text-gray-600 mt-1">Second extra camera (max 2 except G62/PC).</p>`;
   cameraDetailsBody.appendChild(camWrap2);
+
+  const polarFilterWrap2 = document.createElement("div");
+  polarFilterWrap2.id = "polarFilterWrap2";
+  polarFilterWrap2.className = "hidden mt-2";
+  polarFilterWrap2.innerHTML = polarizerInnerHtml("polarFilterOpt2");
+  cameraDetailsBody.appendChild(polarFilterWrap2);
+
+  const cameraMountWrap2 = document.createElement("div");
+  cameraMountWrap2.id = "cameraMountWrap2";
+  cameraMountWrap2.className = "hidden";
+  cameraMountWrap2.innerHTML = mountInnerHtml("cameraMount2", "cameraMountHint2");
+  cameraDetailsBody.appendChild(cameraMountWrap2);
+
+  const cameraPowerWrap2 = document.createElement("div");
+  cameraPowerWrap2.id = "cameraPowerWrap2";
+  cameraPowerWrap2.className = "hidden";
+  cameraPowerWrap2.innerHTML = poeInnerHtml("camPowerPoePP2");
+  cameraDetailsBody.appendChild(cameraPowerWrap2);
 
   const camWrap3 = document.createElement("div");
   camWrap3.id = "cameraWrap3";
@@ -660,43 +726,24 @@ async function init() {
     <p id="cameraChoice3Hint" class="text-xs text-gray-600 mt-1">Third extra camera for G62 or PC.</p>`;
   cameraDetailsBody.appendChild(camWrap3);
 
-  const polarFilterWrap = document.createElement("div");
-  polarFilterWrap.id = "polarFilterWrap";
-  polarFilterWrap.className = "hidden mt-2";
-  polarFilterWrap.innerHTML = `
-    <label class="inline-flex items-start gap-2">
-      <input id="polarFilterOpt" type="checkbox" class="border mt-1">
-      <span>
-        <span class="font-medium">Optional polarized filter</span>
-        <span class="block text-xs text-gray-600">875K9AA. For X72 / V72 / E70. Cuts glare and window washout. Not added unless checked.</span>
-      </span>
-    </label>`;
-  cameraDetailsBody.appendChild(polarFilterWrap);
+  const polarFilterWrap3 = document.createElement("div");
+  polarFilterWrap3.id = "polarFilterWrap3";
+  polarFilterWrap3.className = "hidden mt-2";
+  polarFilterWrap3.innerHTML = polarizerInnerHtml("polarFilterOpt3");
+  cameraDetailsBody.appendChild(polarFilterWrap3);
 
-  // Camera power — PoE++ adapter only (E60/E70 have no in-box PSU; wall adapters not offered in UI)
-  const cameraPowerWrap = document.createElement("div");
-  cameraPowerWrap.id = "cameraPowerWrap";
-  cameraPowerWrap.className = "hidden";
-  cameraPowerWrap.innerHTML = `
-    <p class="font-medium">Optional camera power</p>
-    <p class="text-xs text-gray-600 mb-1">E60 and E70 do not include a PSU. They need PoE+ (Class 4 / 30W). Leave unchecked if the switch already provides PoE+.</p>
-    <label class="inline-flex items-center gap-2 mt-1">
-      <input id="camPowerPoePP" type="checkbox" class="border">
-      <span class="font-medium">45W PoE++ adapter (B5NH6AA)</span>
-    </label>`;
-  cameraDetailsBody.appendChild(cameraPowerWrap);
+  const cameraMountWrap3 = document.createElement("div");
+  cameraMountWrap3.id = "cameraMountWrap3";
+  cameraMountWrap3.className = "hidden";
+  cameraMountWrap3.innerHTML = mountInnerHtml("cameraMount3", "cameraMountHint3");
+  cameraDetailsBody.appendChild(cameraMountWrap3);
 
-  // Camera mount option (VESA for E70, Ceiling for E60)
-  const cameraMountWrap = document.createElement("div");
-  cameraMountWrap.id = "cameraMountWrap";
-  cameraMountWrap.className = "hidden";
-  cameraMountWrap.innerHTML = `
-    <label class="block font-medium">Camera mount option</label>
-    <select id="cameraMount" class="border p-2 w-full">
-      <option value="None">None</option>
-    </select>
-    <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
-  cameraDetailsBody.appendChild(cameraMountWrap);
+  const cameraPowerWrap3 = document.createElement("div");
+  cameraPowerWrap3.id = "cameraPowerWrap3";
+  cameraPowerWrap3.className = "hidden";
+  cameraPowerWrap3.innerHTML = poeInnerHtml("camPowerPoePP3");
+  cameraDetailsBody.appendChild(cameraPowerWrap3);
+
   const cameraMulticamNote = document.createElement("p");
   cameraMulticamNote.id = "cameraMulticamNote";
   cameraMulticamNote.className = "text-xs text-gray-600 mt-2";
@@ -1158,9 +1205,14 @@ async function init() {
 
   // Single compact legalese at bottom of page only
   const legalFooter = document.createElement("p");
+  legalFooter.id = "legalFooter";
   legalFooter.className = "mt-6 w-full text-[15px] text-gray-500 border-t border-gray-300 pt-2 leading-snug";
   legalFooter.innerHTML = `<span class="italic text-red-600">*</span><strong class="underline">Please Note:</strong> Estimate only, SKUs + pricing are subject to change. Created with AI tools that seem to have a track record of accuracy, but please be aware there could be mistakes. Double-check SKUs, pricing, and support with your HP Poly team.`;
   app.appendChild(legalFooter);
+
+  function syncLegalFooterVisibility() {
+    legalFooter.classList.toggle("hidden", !!document.getElementById("bomGenTable"));
+  }
 
   function setActiveTab(name) {
     panelVideo.classList.toggle("hidden", name !== "video");
@@ -1805,12 +1857,7 @@ async function init() {
     }
     hint.innerHTML = included + (qsg ? "<br>Quick start: " + qsg : "");
   }
-  function refreshCameraMountHint() {
-    const hint = document.getElementById("cameraMountHint");
-    const sel = document.getElementById("cameraMount");
-    const cam = extraCameraPicks()[0] || "None";
-    if (!hint) return;
-    const choice = sel ? (sel.value || "None") : "None";
+  function cameraMountHintHtml(cam, choice) {
     let included = "";
     let qsg = "";
     if (cam === "E70") {
@@ -1821,7 +1868,35 @@ async function init() {
       included = "E60 includes a wall mount in the box. Ceiling and HDCI brackets are sold separately.";
       qsg = qsgLink("https://h30434.www3.hp.com/t5/Poly-Video-Conferencing-Knowledge-Base/How-to-unbox-and-set-up-the-Poly-Studio-E60/ta-p/9223557", "E60 unbox and setup (included wall mount)");
     }
-    hint.innerHTML = included + (qsg ? "<br>Quick start: " + qsg : "");
+    return included + (qsg ? "<br>Quick start: " + qsg : "");
+  }
+  function refreshCameraMountHintFor(selId, hintId, cam) {
+    const hint = document.getElementById(hintId);
+    const sel = document.getElementById(selId);
+    if (!hint) return;
+    const choice = sel ? (sel.value || "None") : "None";
+    hint.innerHTML = cameraMountHintHtml(cam, choice);
+  }
+  function refreshCameraMountHint() {
+    refreshCameraMountHintFor("cameraMount", "cameraMountHint", document.getElementById("cameraChoice")?.value || "None");
+  }
+  function fillCameraMountSelect(mountSel, cam) {
+    if (!mountSel) return;
+    const prev = mountSel.value;
+    if (cam === "E70") {
+      mountSel.innerHTML = `<option value="None">None — in-box display clamp and wall mount</option>`;
+      mountSel.innerHTML += `<option value="VESA">VESA mount (875K7AA)</option>`;
+    } else if (cam === "E60") {
+      mountSel.innerHTML = `<option value="None">None — in-box wall mount</option>`;
+      mountSel.innerHTML += `<option value="Ceiling">Ceiling mount (9W1A8AA#AC3)</option>`;
+      if (getItem("89L88AA")) {
+        mountSel.innerHTML += `<option value="HDCI">HDCI camera bracket (89L88AA)</option>`;
+      }
+    } else {
+      mountSel.innerHTML = `<option value="None">None</option>`;
+    }
+    if ([...mountSel.options].some(o => o.value === prev)) mountSel.value = prev;
+    else mountSel.value = "None";
   }
   function updateMountingOptions() {
     const wrap = document.getElementById("mountingWrap");
@@ -1886,8 +1961,8 @@ async function init() {
     const opts = [{ value: "None", label: "None" }];
     opts.push({ value: PREEXISTING_AUDIO, label: PREEXISTING_AUDIO });
     if (analog) opts.push({ value: ANALOG_MIC_VALUE, label: "Single Analog Extension mics (875M6AA + 875M4AA)" });
-    opts.push({ value: "New White A2 table mic pod(s)", label: "New White A2 table mic pod(s)" });
     opts.push({ value: "New Black A2 table mic pod(s)", label: "New Black A2 table mic pod(s)" });
+    opts.push({ value: "New White A2 table mic pod(s)", label: "New White A2 table mic pod(s)" });
     sel.innerHTML = opts.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
     sel.value = opts.some(o => o.value === prev) ? prev : "None";
     const info = document.getElementById("expansionInfo");
@@ -1980,22 +2055,25 @@ async function init() {
       if (cb) cb.checked = false;
     }
   }
-  function updatePolarFilterVisibility() {
-    const wrap = document.getElementById("polarFilterWrap");
+  function setPolarWrapVisible(wrapId, optId, show) {
+    const wrap = document.getElementById(wrapId);
     if (!wrap) return;
-    const family = hostFamily();
-    const cam = document.getElementById("cameraChoice")?.value || "None";
-    const cam2 = document.getElementById("cameraChoice2")?.value || "None";
-    const cam3 = document.getElementById("cameraChoice3")?.value || "None";
-    const show = (family === "x72" || family === "v72")
-      || (canShowCameraAddOn() && cam === "E70")
-      || (canShowSecondaryCamera() && cam2 === "E70")
-      || (canShowTertiaryCamera() && cam3 === "E70");
     wrap.classList.toggle("hidden", !show);
     if (!show) {
-      const cb = document.getElementById("polarFilterOpt");
+      const cb = document.getElementById(optId);
       if (cb) cb.checked = false;
     }
+  }
+  function updatePolarFilterVisibility() {
+    const family = hostFamily();
+    const cam = document.getElementById("cameraChoice")?.value || "None";
+    const show = (family === "x72" || family === "v72")
+      || (canShowCameraAddOn() && cam === "E70");
+    setPolarWrapVisible("polarFilterWrap", "polarFilterOpt", show);
+    const show2 = canShowSecondaryCamera() && document.getElementById("cameraChoice2")?.value === "E70";
+    setPolarWrapVisible("polarFilterWrap2", "polarFilterOpt2", show2);
+    const show3 = canShowTertiaryCamera() && document.getElementById("cameraChoice3")?.value === "E70";
+    setPolarWrapVisible("polarFilterWrap3", "polarFilterOpt3", show3);
   }
   function refreshDependentControls() {
     updateHuddleAvailability();
@@ -2035,47 +2113,32 @@ async function init() {
     if (canShowTertiaryCamera() && (cam3 === "E60" || cam3 === "E70")) picks.push(cam3);
     return picks;
   }
-  function updateCameraAccessoryVisibility() {
-    const picks = extraCameraPicks();
-    const show = picks.length > 0;
-    const cam = picks[0] || "None";
-    const powerWrap = document.getElementById("cameraPowerWrap");
-    const mountWrap = document.getElementById("cameraMountWrap");
-    if (powerWrap) powerWrap.classList.toggle("hidden", !show);
-
-    // Rebuild mount options from real catalog SKUs; hide the control if none exist
-    const mountSel = document.getElementById("cameraMount");
-    const hint = document.getElementById("cameraMountHint");
-    let mountOptions = 0;
-    if (mountSel) {
-      const prev = mountSel.value;
-      mountSel.innerHTML = `<option value="None">None</option>`;
-      if (cam === "E70") {
-        mountSel.innerHTML = `<option value="None">None — in-box display clamp and wall mount</option>`;
-        if (getItem("875K7AA")) {
-          mountSel.innerHTML += `<option value="VESA">VESA mount (875K7AA)</option>`;
-          mountOptions++;
-        }
-        refreshCameraMountHint();
-      } else if (cam === "E60") {
-        mountSel.innerHTML = `<option value="None">None — in-box wall mount</option>`;
-        if (getItem("9W1A8AA#AC3") || getItem("9W1A8AA")) {
-          mountSel.innerHTML += `<option value="Ceiling">Ceiling mount (9W1A8AA#AC3)</option>`;
-          mountOptions++;
-        }
-        if (getItem("89L88AA")) {
-          mountSel.innerHTML += `<option value="HDCI">HDCI camera bracket (89L88AA)</option>`;
-          mountOptions++;
-        }
-        refreshCameraMountHint();
-      } else {
-        if (hint) hint.textContent = "";
-      }
-      if ([...mountSel.options].some(o => o.value === prev)) mountSel.value = prev;
-      else mountSel.value = "None";
-      if (cam === "E70" || cam === "E60") refreshCameraMountHint();
+  function updateOneCameraMountPower(cam, mountWrapId, mountSelId, hintId, powerWrapId, powerOptId) {
+    const extra = cam === "E60" || cam === "E70";
+    const mountSel = document.getElementById(mountSelId);
+    const mountWrap = document.getElementById(mountWrapId);
+    const powerWrap = document.getElementById(powerWrapId);
+    fillCameraMountSelect(mountSel, extra ? cam : "None");
+    if (!extra) {
+      const hint = document.getElementById(hintId);
+      if (hint) hint.textContent = "";
     }
-    if (mountWrap) mountWrap.classList.toggle("hidden", !show || mountOptions === 0);
+    if (mountWrap) mountWrap.classList.toggle("hidden", !extra);
+    if (powerWrap) powerWrap.classList.toggle("hidden", !extra);
+    if (!extra) {
+      const cb = document.getElementById(powerOptId);
+      if (cb) cb.checked = false;
+    } else {
+      refreshCameraMountHintFor(mountSelId, hintId, cam);
+    }
+  }
+  function updateCameraAccessoryVisibility() {
+    const cam1 = canShowCameraAddOn() ? (document.getElementById("cameraChoice")?.value || "None") : "None";
+    const cam2 = canShowSecondaryCamera() ? (document.getElementById("cameraChoice2")?.value || "None") : "None";
+    const cam3 = canShowTertiaryCamera() ? (document.getElementById("cameraChoice3")?.value || "None") : "None";
+    updateOneCameraMountPower(cam1, "cameraMountWrap", "cameraMount", "cameraMountHint", "cameraPowerWrap", "camPowerPoePP");
+    updateOneCameraMountPower(cam2, "cameraMountWrap2", "cameraMount2", "cameraMountHint2", "cameraPowerWrap2", "camPowerPoePP2");
+    updateOneCameraMountPower(cam3, "cameraMountWrap3", "cameraMount3", "cameraMountHint3", "cameraPowerWrap3", "camPowerPoePP3");
   }
   function updateCameraVisibility() {
     const allowed = canShowCameraAddOn();
@@ -2146,14 +2209,6 @@ async function init() {
       hint3.className = "text-xs text-gray-600 mt-1";
       hint3.style.color = "";
     }
-    if (!allowed) {
-      const poe = document.getElementById("camPowerPoePP");
-      if (poe) poe.checked = false;
-      const powerWrap = document.getElementById("cameraPowerWrap");
-      if (powerWrap) powerWrap.classList.add("hidden");
-      const mountWrap = document.getElementById("cameraMountWrap");
-      if (mountWrap) mountWrap.classList.add("hidden");
-    }
     updateCameraAccessoryVisibility();
   }
 
@@ -2194,6 +2249,12 @@ async function init() {
   });
   document.getElementById("mounting")?.addEventListener("change", refreshMountHint);
   document.getElementById("cameraMount")?.addEventListener("change", refreshCameraMountHint);
+  document.getElementById("cameraMount2")?.addEventListener("change", () => {
+    refreshCameraMountHintFor("cameraMount2", "cameraMountHint2", document.getElementById("cameraChoice2")?.value || "None");
+  });
+  document.getElementById("cameraMount3")?.addEventListener("change", () => {
+    refreshCameraMountHintFor("cameraMount3", "cameraMountHint3", document.getElementById("cameraChoice3")?.value || "None");
+  });
   refreshDependentControls();
 
   // ---------- promo button ----------
@@ -2602,8 +2663,10 @@ async function init() {
       </tr>`;
     }
 
-    html += `</tbody></table>`;
-    // Priced-line footnote moved to page footer (*PLEASE NOTE: estimate only).
+    html += `</tbody>`;
+    const colCount = includePrices ? 4 : 3;
+    html += `<tfoot><tr><td colspan="${colCount}" class="border-t px-4 py-2 text-[15px] text-gray-500 leading-snug">${legalFooter.innerHTML}</td></tr></tfoot></table>`;
+    // Priced-line footnote moved to table tfoot (full-width Please Note).
 
 
     if (bom.footnote) {
@@ -2614,6 +2677,7 @@ async function init() {
     }
 
     dest.innerHTML = html;
+    syncLegalFooterVisibility();
     const copyBtn = dest.querySelector("#copyBomTableBtn");
     if (copyBtn) {
       copyBtn.addEventListener("click", async () => {
@@ -2707,6 +2771,7 @@ async function init() {
     if (!roomSize) missing.push("Room size");
     if (missing.length) {
       resultDiv.innerHTML = `<div class="text-red-700 bg-red-50 border border-red-200 p-3 rounded">Please select ${missing.join(", ")} to generate a BOM. Optional fields default to None and are not required.</div>`;
+      syncLegalFooterVisibility();
       return;
     }
 
@@ -2799,30 +2864,36 @@ async function init() {
     // canShowCameraAddOn() is the source of truth: never emit E60/E70 when the add-on is not allowed
     {
       const extraCams = extraCameraPicks();
-      const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
-      const camMount = document.getElementById("cameraMount")?.value || "None";
       extraCams.forEach(c => {
         if (c === "E60") {
           addLine(results, flags.taa ? "9W1A7AA" : "9W1A6AA#AC3");
           addSupport(results, "e60", supportTerm);
-          if (wantPoePP) addLine(results, "B5NH6AA");
-          if (camMount === "Ceiling" && !hasSku(results, "9W1A8AA#AC3") && !hasSku(results, "9W1A8AA")) {
-            addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
-          }
-          if (camMount === "HDCI" && !hasSku(results, "89L88AA")) {
-            addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
-          }
         } else if (c === "E70") {
           const e70sku = flags.jitc ? "886C9AA" : flags.taa ? "886C8AA" : "842F8AA";
           addLine(results, e70sku);
           addSupport(results, "e70", supportTerm);
-          if (wantPoePP) addLine(results, "B5NH6AA");
-          if (camMount === "VESA" && !hasSku(results, "875K7AA")) {
-            addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
-          }
           // E70 in-box: display clamp + wall mount. Do not add 875K8AA.
         }
       });
+      [
+        ["cameraMountWrap", "cameraMount"],
+        ["cameraMountWrap2", "cameraMount2"],
+        ["cameraMountWrap3", "cameraMount3"]
+      ].forEach(([wrapId, selId]) => {
+        const wrap = document.getElementById(wrapId);
+        if (!wrap || wrap.classList.contains("hidden")) return;
+        const camMount = document.getElementById(selId)?.value || "None";
+        if (camMount === "Ceiling") addLine(results, "9W1A8AA#AC3", "Poly Studio E60 Ceiling Mount");
+        else if (camMount === "HDCI") addLine(results, "89L88AA", "Poly Studio E60 EagleEye IV HDCI Camera Mounting Bracket");
+        else if (camMount === "VESA") addLine(results, "875K7AA", "Poly Studio E70 VESA Mounting Kit");
+      });
+      let poeQty = 0;
+      [["cameraPowerWrap", "camPowerPoePP"], ["cameraPowerWrap2", "camPowerPoePP2"], ["cameraPowerWrap3", "camPowerPoePP3"]].forEach(([wrapId, optId]) => {
+        const wrap = document.getElementById(wrapId);
+        const cb = document.getElementById(optId);
+        if (cb?.checked && wrap && !wrap.classList.contains("hidden")) poeQty++;
+      });
+      if (poeQty > 0) addLine(results, "B5NH6AA", undefined, poeQty);
     }
 
     // HP USB-Ethernet dongle: one 4Z7Z7AA, no checkbox. A2 on V12/X32/X52/V52; camera E60/E70 on X52 only.
@@ -2905,10 +2976,14 @@ async function init() {
     });
     const sctQuoteNote = sctAdded;
 
-    const polarWrap = document.getElementById("polarFilterWrap");
-    const polarOn = document.getElementById("polarFilterOpt")?.checked;
-    if (polarOn && polarWrap && !polarWrap.classList.contains("hidden")) {
-      addLine(results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", 1);
+    let polarQty = 0;
+    [["polarFilterWrap", "polarFilterOpt"], ["polarFilterWrap2", "polarFilterOpt2"], ["polarFilterWrap3", "polarFilterOpt3"]].forEach(([wrapId, optId]) => {
+      const wrap = document.getElementById(wrapId);
+      const cb = document.getElementById(optId);
+      if (cb?.checked && wrap && !wrap.classList.contains("hidden")) polarQty++;
+    });
+    if (polarQty > 0) {
+      addLine(results, "875K9AA", "Poly Studio E70/X70/X72/V72 Polarized Filter", polarQty);
       placePolarizerInBom(results);
     }
 
@@ -2947,6 +3022,7 @@ async function init() {
 
   function mockError(el, msg) {
     el.innerHTML = `<div class="text-red-700 bg-red-50 border border-red-200 p-3 rounded">${msg}</div>`;
+    syncLegalFooterVisibility();
   }
 
   document.getElementById("audioGenerateBtn")?.addEventListener("click", () => {
