@@ -1,4 +1,7 @@
-const VERSION = "v10.80";
+const VERSION = "v10.83";
+// v10.83: Camera dropdown; 2 extras on X52/X72/G62/PC; third on G62/PC; 3p above install; drop Teams/Zoom gate on extra cams.
+// v10.82: second extra camera on X52/X72/G62 Teams/Zoom; third picker on G62.
+// v10.81: main camera dropdown under expansion mic; secondary+accessories in click-down.
 // v10.80: keep Optional Camera add-on visible; gray/disable E60/E70 when host cannot take an extra camera; drop HEADSETS tab; Large X72 secondary E60/E70 (max 2 extra cameras per Poly camera-support slide); optional cameras click-down; PoE-only camera power (no wall PSU).
 // v10.79: CCX 350 hidden on Zoom/OpenSIP (Teams-only); CCX radio map: 350/400 no Wi-Fi no BT, 505/600 Wi-Fi+BT; Video Lens copy+checkboxes moved into the Poly+/Lens details
 // script.js – HP | Poly Configurator – v10.77: V12 B42BFAA; BOM X/G62/PC, V, power/mounts, cameras, A2, support, Lens, install
@@ -97,6 +100,7 @@ async function init() {
     const cam = document.getElementById("cameraChoice")?.value;
     if (cam === "E70") return true;
     if (canShowSecondaryCamera() && document.getElementById("cameraChoice2")?.value === "E70") return true;
+    if (canShowTertiaryCamera() && document.getElementById("cameraChoice3")?.value === "E70") return true;
     const skus = [
       "842F8AA","886C9AA","886C8AA",
       "A4LZ8AA","A4LZ8AA#ABA","A4MA1AA","A4MA2AA","A4MA4AA","A4MA6AA",
@@ -607,28 +611,29 @@ async function init() {
     <p id="a2QtyHint" class="text-xs text-gray-600 mt-1"></p>`;
   form.appendChild(a2QtyWrap);
 
-  // Optional cameras — Lens/third-party style click-down (always in form; E60/E70 grayed unless allowed)
+  // Optional Camera add-on — same dropdown format as Include Expansion Mic? (not inside click-down)
+  const camWrap = select("cameraChoice", "Camera", [
+    { value: "None", label: "None (use built-in camera)" },
+    { value: "E70", label: "Poly E70 (842F8AA) — AI Director auto-tracking / camera switching" },
+    { value: "E60", label: "Poly E60 (9W1A6AA#AC3)" }
+  ]);
+  const cameraChoiceHint = document.createElement("p");
+  cameraChoiceHint.id = "cameraChoiceHint";
+  cameraChoiceHint.className = "text-xs text-gray-600 mt-1";
+  cameraChoiceHint.textContent = "E70 recommended for AI switching on X52.";
+  camWrap.appendChild(cameraChoiceHint);
+  form.appendChild(camWrap);
+
+  // Secondary camera + accessories — Lens/third-party style click-down
   const cameraDetails = document.createElement("details");
   cameraDetails.id = "cameraDetails";
   cameraDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
   cameraDetails.innerHTML = `
     <summary class="cursor-pointer select-none px-3 py-2 font-medium text-blue-900 hover:bg-blue-50 rounded">
-      Optional cameras — click to expand
+      Camera accessories — click to expand
     </summary>
     <div class="px-3 pb-3 space-y-3"></div>`;
   const cameraDetailsBody = cameraDetails.querySelector("div");
-
-  const camWrap = document.createElement("div");
-  camWrap.id = "cameraWrap";
-  camWrap.innerHTML = `
-    <label class="block font-medium">Optional Camera add-on</label>
-    <select id="cameraChoice" class="border p-2 w-full">
-      <option value="None">None (use built-in camera)</option>
-      <option value="E70">Poly E70 (842F8AA) — AI Director auto-tracking / camera switching</option>
-      <option value="E60">Poly E60 (9W1A6AA#AC3)</option>
-    </select>
-    <p id="cameraChoiceHint" class="text-xs text-gray-600 mt-1">E70 recommended for AI camera switching on X52 only.</p>`;
-  cameraDetailsBody.appendChild(camWrap);
 
   const camWrap2 = document.createElement("div");
   camWrap2.id = "cameraWrap2";
@@ -639,8 +644,21 @@ async function init() {
       <option value="E70">Poly E70 (842F8AA) — AI Director auto-tracking / camera switching</option>
       <option value="E60">Poly E60 (9W1A6AA#AC3)</option>
     </select>
-    <p id="cameraChoice2Hint" class="text-xs text-gray-600 mt-1">X72 supports 2 extra E60/E70 on Teams/Zoom.</p>`;
+    <p id="cameraChoice2Hint" class="text-xs text-gray-600 mt-1">Second extra camera (max 2 except G62/PC).</p>`;
   cameraDetailsBody.appendChild(camWrap2);
+
+  const camWrap3 = document.createElement("div");
+  camWrap3.id = "cameraWrap3";
+  camWrap3.className = "hidden";
+  camWrap3.innerHTML = `
+    <label class="block font-medium">Third camera add-on</label>
+    <select id="cameraChoice3" class="border p-2 w-full">
+      <option value="None">None (use built-in camera)</option>
+      <option value="E70">Poly E70 (842F8AA) — AI Director auto-tracking / camera switching</option>
+      <option value="E60">Poly E60 (9W1A6AA#AC3)</option>
+    </select>
+    <p id="cameraChoice3Hint" class="text-xs text-gray-600 mt-1">Third extra camera for G62 or PC.</p>`;
+  cameraDetailsBody.appendChild(camWrap3);
 
   const polarFilterWrap = document.createElement("div");
   polarFilterWrap.id = "polarFilterWrap";
@@ -679,6 +697,11 @@ async function init() {
     </select>
     <p class="text-xs text-gray-600 mt-1" id="cameraMountHint"></p>`;
   cameraDetailsBody.appendChild(cameraMountWrap);
+  const cameraMulticamNote = document.createElement("p");
+  cameraMulticamNote.id = "cameraMulticamNote";
+  cameraMulticamNote.className = "text-xs text-gray-600 mt-2";
+  cameraMulticamNote.textContent = "Multicam uses USB or Ethernet.";
+  cameraDetailsBody.appendChild(cameraMulticamNote);
   form.appendChild(cameraDetails);
 
   // Netgear Pro AV lives under Optional accessories (expandable table)
@@ -882,9 +905,6 @@ async function init() {
   featuresBody.prepend(lensProWrap);
   featuresBody.prepend(supportInfo);
 
-  form.appendChild(select("implementationHelp", "Implementation Help", [
-    "None", "Remote Implementation help", "Onsite Implementation help"
-  ]));
   const thirdPartyDetails = document.createElement("details");
   thirdPartyDetails.id = "thirdPartyDetails";
   thirdPartyDetails.className = "text-xs mt-2 border border-blue-200 rounded bg-white";
@@ -928,6 +948,10 @@ async function init() {
     </div>`;
   thirdPartyBody.appendChild(sctDetails);
   form.appendChild(thirdPartyDetails);
+
+  form.appendChild(select("implementationHelp", "Implementation Help", [
+    "None", "Remote Implementation help", "Onsite Implementation help"
+  ]));
 
   const actionsRow = document.createElement("div");
   actionsRow.className = "flex flex-wrap items-center gap-x-6 gap-y-3 pt-1";
@@ -1897,10 +1921,12 @@ async function init() {
     const exp = document.getElementById("expansionMic")?.value || "";
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const cam2 = document.getElementById("cameraChoice2")?.value || "None";
+    const cam3 = document.getElementById("cameraChoice3")?.value || "None";
     const ipMic = exp.includes("New White A2") || exp.includes("New Black A2")
       || exp === PREEXISTING_AUDIO || exp.includes("Existing IP");
     const extraCam = (canShowCameraAddOn() && (cam === "E60" || cam === "E70"))
-      || (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70"));
+      || (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70"))
+      || (canShowTertiaryCamera() && (cam3 === "E60" || cam3 === "E70"));
     return ipMic || extraCam;
   }
   function sctKitApplies(kit) {
@@ -1960,9 +1986,11 @@ async function init() {
     const family = hostFamily();
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const cam2 = document.getElementById("cameraChoice2")?.value || "None";
+    const cam3 = document.getElementById("cameraChoice3")?.value || "None";
     const show = (family === "x72" || family === "v72")
       || (canShowCameraAddOn() && cam === "E70")
-      || (canShowSecondaryCamera() && cam2 === "E70");
+      || (canShowSecondaryCamera() && cam2 === "E70")
+      || (canShowTertiaryCamera() && cam3 === "E70");
     wrap.classList.toggle("hidden", !show);
     if (!show) {
       const cb = document.getElementById("polarFilterOpt");
@@ -1985,18 +2013,26 @@ async function init() {
     const t = document.getElementById("typeOfSystem")?.value || "";
     const r = document.getElementById("roomSize")?.value || "";
     if (hostFamily() === "x32" || r === "Small" || r === "Huddle") return false;
-    return t === "Android appliance based solution" && (r === "Medium" || r === "Large" || r === "Very large");
+    if (t === "BYOD USB Bar only") return false;
+    const roomOk = r === "Medium" || r === "Large" || r === "Very large";
+    return roomOk && (t === "Android appliance based solution" || t === "Windows PC based solution");
   }
   function canShowSecondaryCamera() {
-    const p = document.getElementById("platform")?.value || "";
-    return hostFamily() === "x72" && canShowCameraAddOn() && (p === "Microsoft Teams" || p === "Zoom");
+    return canShowCameraAddOn();
+  }
+  function canShowTertiaryCamera() {
+    const t = document.getElementById("typeOfSystem")?.value || "";
+    if (!canShowCameraAddOn()) return false;
+    return hostFamily() === "g62" || t === "Windows PC based solution";
   }
   function extraCameraPicks() {
     const picks = [];
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const cam2 = document.getElementById("cameraChoice2")?.value || "None";
+    const cam3 = document.getElementById("cameraChoice3")?.value || "None";
     if (canShowCameraAddOn() && (cam === "E60" || cam === "E70")) picks.push(cam);
     if (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70")) picks.push(cam2);
+    if (canShowTertiaryCamera() && (cam3 === "E60" || cam3 === "E70")) picks.push(cam3);
     return picks;
   }
   function updateCameraAccessoryVisibility() {
@@ -2057,11 +2093,11 @@ async function init() {
     }
     if (hint) {
       if (allowed) {
-        hint.textContent = "E70 recommended for AI camera switching on X52 only.";
+        hint.textContent = "E70 recommended for AI switching on X52.";
         hint.className = "text-xs text-gray-600 mt-1";
         hint.style.color = "";
       } else {
-        hint.textContent = "Extra cameras are for Android Medium/Large/Very large (not X32, Small, Huddle, or USB/Windows).";
+        hint.textContent = "Extra cameras are for Android or Windows PC Medium/Large/Very large (not X32, Small, Huddle, or USB bar).";
         hint.className = "text-xs mt-1";
         hint.style.color = "#9ca3af";
       }
@@ -2082,14 +2118,33 @@ async function init() {
     }
     if (hint2) {
       if (allowed2) {
-        hint2.textContent = "X72 supports 2 extra E60/E70 on Teams/Zoom.";
+        hint2.textContent = "Second extra camera (max 2 except G62/PC).";
         hint2.className = "text-xs text-gray-600 mt-1";
         hint2.style.color = "";
       } else {
-        hint2.textContent = "Secondary camera is for Large Android X72 on Teams or Zoom (not Google Meet).";
+        hint2.textContent = "Extra cameras are for Android or Windows PC Medium/Large/Very large (not X32, Small, Huddle, or USB bar).";
         hint2.className = "text-xs mt-1";
         hint2.style.color = "#9ca3af";
       }
+    }
+    const allowed3 = canShowTertiaryCamera();
+    const wrap3 = document.getElementById("cameraWrap3");
+    if (wrap3) wrap3.classList.toggle("hidden", !allowed3);
+    const camSel3 = document.getElementById("cameraChoice3");
+    const hint3 = document.getElementById("cameraChoice3Hint");
+    if (camSel3) {
+      [...camSel3.options].forEach(opt => {
+        if (opt.value === "E60" || opt.value === "E70") {
+          opt.disabled = !allowed3;
+          opt.style.color = allowed3 ? "" : "#9ca3af";
+        }
+      });
+      if (!allowed3) camSel3.value = "None";
+    }
+    if (hint3) {
+      hint3.textContent = "Third extra camera for G62 or PC.";
+      hint3.className = "text-xs text-gray-600 mt-1";
+      hint3.style.color = "";
     }
     if (!allowed) {
       const poe = document.getElementById("camPowerPoePP");
@@ -2123,6 +2178,11 @@ async function init() {
     updatePolarFilterVisibility();
   });
   document.getElementById("cameraChoice2")?.addEventListener("change", () => {
+    updateCameraAccessoryVisibility();
+    updateNetgearVisibility();
+    updatePolarFilterVisibility();
+  });
+  document.getElementById("cameraChoice3")?.addEventListener("change", () => {
     updateCameraAccessoryVisibility();
     updateNetgearVisibility();
     updatePolarFilterVisibility();
@@ -2738,13 +2798,7 @@ async function init() {
     // Camera add-ons — keyed off hostFamily, not hasSku of a few SKUs
     // canShowCameraAddOn() is the source of truth: never emit E60/E70 when the add-on is not allowed
     {
-      const extraCams = [];
-      const cam = document.getElementById("cameraChoice")?.value;
-      const cam2 = document.getElementById("cameraChoice2")?.value;
-      if (canShowCameraAddOn() && (family === "g62" || family === "x52" || family === "x72")) {
-        if (cam === "E60" || cam === "E70") extraCams.push(cam);
-      }
-      if (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70")) extraCams.push(cam2);
+      const extraCams = extraCameraPicks();
       const wantPoePP = !!document.getElementById("camPowerPoePP")?.checked;
       const camMount = document.getElementById("cameraMount")?.value || "None";
       extraCams.forEach(c => {
@@ -2774,10 +2828,8 @@ async function init() {
     // HP USB-Ethernet dongle: one 4Z7Z7AA, no checkbox. A2 on V12/X32/X52/V52; camera E60/E70 on X52 only.
     {
       const a2On = (expansionMic || "").includes("New White A2") || (expansionMic || "").includes("New Black A2");
-      const camSel = document.getElementById("cameraChoice")?.value;
-      const camWrapVisible = canShowCameraAddOn();
       const needUsbEth = (a2On && ["v12", "x32", "x52", "v52"].includes(family))
-        || (camWrapVisible && family === "x52" && (camSel === "E60" || camSel === "E70"));
+        || (family === "x52" && extraCameraPicks().length > 0);
       if (needUsbEth && !hasSku(results, "4Z7Z7AA")) {
         addLine(results, "4Z7Z7AA", "HP USB to Ethernet dongle", 1);
       }
