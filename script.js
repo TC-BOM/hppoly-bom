@@ -1,4 +1,5 @@
-const VERSION = "v10.86";
+const VERSION = "v10.87";
+// v10.87: Audio: Select all models + Multi-phone under Wi-Fi/BT, above Platform; Family/Model stay on; multi-phone rows are Family then Model.
 // v10.86: Audio multi-phone quote (qty + per-line support; support under each model).
 // v10.85: Audio Select all models; short parenthetical labels; with-PSU bundle options.
 // v10.84: full-width BOM Please Note; Black A2 above White; per-camera polarizer/mount/PoE stacks; E60 ceiling 9W1A8AA#AC3 on every extra camera.
@@ -1089,7 +1090,6 @@ async function init() {
     <label class="inline-flex items-center gap-2 ml-4"><input id="audioBt" type="checkbox" class="border" checked><span>Bluetooth</span></label>
     <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are built-in on matching SKUs (no extra lines). The model list only shows phones that match these radios. Uncheck both for no-radio / DECT models.</p>`;
   audioSection.appendChild(audioRadioWrap);
-  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
   const audioAllModelsWrap = document.createElement("label");
   audioAllModelsWrap.className = "inline-flex items-center gap-2";
   audioAllModelsWrap.innerHTML = '<input id="audioAllModels" type="checkbox" class="w-4 h-4 border"><span>Select all models</span>';
@@ -1105,6 +1105,7 @@ async function init() {
     <div id="audioMultiRows" class="space-y-2"></div>
     <button type="button" id="audioMultiAdd" class="text-sm border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50">Add phone</button>`;
   audioSection.appendChild(audioMultiWrap);
+  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
   audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
   const rovePicker = document.createElement("div");
@@ -1786,9 +1787,6 @@ async function init() {
     const accWrap = document.getElementById("audioAccWrap");
     const note = document.getElementById("audioPlatformNote");
     if (on) {
-      document.getElementById("audioFamilyWrap")?.classList.add("hidden");
-      document.getElementById("audioModelWrap")?.classList.add("hidden");
-      document.getElementById("rovePicker")?.classList.add("hidden");
       if (supportWrap) supportWrap.classList.add("hidden");
       if (accWrap) accWrap.classList.add("hidden");
       if (note) note.classList.add("hidden");
@@ -1797,9 +1795,17 @@ async function init() {
     }
     if (!on && accWrap) accWrap.classList.remove("hidden");
   }
+  function fillRowAudioMultiModel(row, restoreExact) {
+    const familySel = row.querySelector(".audio-multi-family");
+    const modelSel = row.querySelector(".audio-multi-model");
+    const familyUi = familySel?.value || "";
+    const allModelsForm = !!document.getElementById("audioAllModels")?.checked;
+    const allModels = !familyUi && allModelsForm;
+    fillAudioModelSelect(modelSel, { allModels, familyUi, includeRove: false, restoreExact: !!restoreExact });
+  }
   function rebuildAudioMultiRows() {
-    document.querySelectorAll("#audioMultiRows .audio-multi-model").forEach(sel => {
-      fillAudioModelSelect(sel, { allModels: true, includeRove: false, restoreExact: true });
+    document.querySelectorAll("#audioMultiRows .audio-multi-row").forEach(row => {
+      fillRowAudioMultiModel(row, true);
     });
   }
   function addAudioMultiRow() {
@@ -1808,6 +1814,15 @@ async function init() {
     const row = document.createElement("div");
     row.className = "audio-multi-row flex flex-wrap items-end gap-2 p-2 border border-gray-200 rounded";
     row.innerHTML = `
+      <div class="min-w-[8rem]">
+        <label class="block text-xs font-medium">Family</label>
+        <select class="audio-multi-family border p-2 w-full">
+          <option value="">--</option>
+          <option value="Trio">Trio</option>
+          <option value="CCX">CCX</option>
+          <option value="Edge E">Edge E</option>
+        </select>
+      </div>
       <div class="flex-1 min-w-[14rem]">
         <label class="block text-xs font-medium">Model</label>
         <select class="audio-multi-model border p-2 w-full"></select>
@@ -1822,7 +1837,8 @@ async function init() {
         <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly5 border"><span>5yr Poly+</span></label>
       </div>
       <button type="button" class="audio-multi-remove text-xs text-gray-600 underline pb-1">Remove</button>`;
-    fillAudioModelSelect(row.querySelector(".audio-multi-model"), { allModels: true, includeRove: false, restoreExact: false });
+    fillRowAudioMultiModel(row, false);
+    row.querySelector(".audio-multi-family").addEventListener("change", () => fillRowAudioMultiModel(row, true));
     row.querySelector(".audio-multi-remove").addEventListener("click", () => {
       row.remove();
       const host = document.getElementById("audioMultiRows");
@@ -1836,8 +1852,6 @@ async function init() {
   }
   function rebuildAudioModel() {
     const allModels = !!document.getElementById("audioAllModels")?.checked;
-    const familyWrap = document.getElementById("audioFamilyWrap");
-    if (familyWrap) familyWrap.classList.toggle("hidden", allModels);
     const familySel = document.getElementById("audioFamily");
     const sel = document.getElementById("audioModel");
     const modelWrap = document.getElementById("audioModelWrap");
