@@ -1,4 +1,6 @@
-const VERSION = "v10.84";
+const VERSION = "v10.86";
+// v10.86: Audio multi-phone quote (qty + per-line support; support under each model).
+// v10.85: Audio Select all models; short parenthetical labels; with-PSU bundle options.
 // v10.84: full-width BOM Please Note; Black A2 above White; per-camera polarizer/mount/PoE stacks; E60 ceiling 9W1A8AA#AC3 on every extra camera.
 // v10.83: Camera dropdown; 2 extras on X52/X72/G62/PC; third on G62/PC; 3p above install; drop Teams/Zoom gate on extra cams.
 // v10.82: second extra camera on X52/X72/G62 Teams/Zoom; third picker on G62.
@@ -294,6 +296,15 @@ async function init() {
       quantity: qty
     });
   };
+  const addLineNoMerge = (arr, sku, fallback = "(Custom item)", qty = 1) => {
+    const item = getItem(sku);
+    arr.push({
+      sku,
+      description: (item && item.description) ? item.description : fallback,
+      msrp: (item && item.msrp != null) ? item.msrp : "",
+      quantity: qty
+    });
+  };
   const fmtCurrency = v => {
     if (v === "" || v === null || v === undefined) return "—";
     if (typeof v !== "number") return String(v);
@@ -350,6 +361,15 @@ async function init() {
     if (!map) return;
     const sku = map[term];
     if (sku) addLine(arr, sku, undefined, qty);
+  };
+  const addSupportNoMerge = (arr, key, term, qty = 1) => {
+    if (!term) return false;
+    const map = SUPPORT_MAP[key];
+    if (!map) return false;
+    const sku = map[term];
+    if (!sku) return false;
+    addLineNoMerge(arr, sku, undefined, qty);
+    return true;
   };
 
   // Room PC option matrix (Studio 5 / Studio 7 / G9+). Do not invent missing SKUs.
@@ -1070,6 +1090,21 @@ async function init() {
     <p class="text-xs text-gray-600">Wi-Fi and Bluetooth are built-in on matching SKUs (no extra lines). The model list only shows phones that match these radios. Uncheck both for no-radio / DECT models.</p>`;
   audioSection.appendChild(audioRadioWrap);
   audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
+  const audioAllModelsWrap = document.createElement("label");
+  audioAllModelsWrap.className = "inline-flex items-center gap-2";
+  audioAllModelsWrap.innerHTML = '<input id="audioAllModels" type="checkbox" class="w-4 h-4 border"><span>Select all models</span>';
+  audioSection.appendChild(audioAllModelsWrap);
+  const audioMultiPhoneWrap = document.createElement("label");
+  audioMultiPhoneWrap.className = "inline-flex items-center gap-2";
+  audioMultiPhoneWrap.innerHTML = '<input id="audioMultiPhone" type="checkbox" class="w-4 h-4 border"><span>Multi-phone quote</span>';
+  audioSection.appendChild(audioMultiPhoneWrap);
+  const audioMultiWrap = document.createElement("div");
+  audioMultiWrap.id = "audioMultiWrap";
+  audioMultiWrap.className = "hidden space-y-2";
+  audioMultiWrap.innerHTML = `
+    <div id="audioMultiRows" class="space-y-2"></div>
+    <button type="button" id="audioMultiAdd" class="text-sm border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50">Add phone</button>`;
+  audioSection.appendChild(audioMultiWrap);
   audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", "Rove"], true));
   audioSection.appendChild(select("audioModel", "Model", [], true));
   const rovePicker = document.createElement("div");
@@ -1277,11 +1312,56 @@ async function init() {
     },
     // Rove models live in the Rove picker (not this generic list)
   };
-  function audioCfg() {
-    const family = document.getElementById("audioFamily")?.value || "";
-    const model = document.getElementById("audioModel")?.value || "";
-    return (AUDIO_CATALOG[family] || {})[model] || null;
+  function parseAudioModelValue(raw) {
+    raw = raw || "";
+    if (raw === "Rove") return { family: "Rove", model: "", wantPsu: false };
+    const parts = raw.split("::");
+    if (parts.length >= 2 && parts[0]) {
+      return { family: parts[0], model: parts[1] || "", wantPsu: parts[2] === "psu" };
+    }
+    return {
+      family: document.getElementById("audioFamily")?.value || "",
+      model: raw,
+      wantPsu: false
+    };
   }
+  function audioModelEncode(family, model, psu) {
+    return family + "::" + model + (psu ? "::psu" : "");
+  }
+  function audioPhoneLabel(family, model) {
+    if (family === "Edge E") return "Edge " + model;
+    return family + " " + model;
+  }
+  function audioOptionLabel(family, model, cfg, isPsu) {
+    const name = audioPhoneLabel(family, model);
+    let paren = "";
+    if (isPsu) paren = "with power supply";
+    else if (family === "CCX" && model === "350") paren = "TAA";
+    else if (family === "Trio" && model === "8300") paren = "OpenSIP";
+    else if (cfg && cfg.wifi && cfg.bt) paren = "Bluetooth + Wifi";
+    else if (cfg && cfg.bt) paren = "Bluetooth";
+    else if (cfg && cfg.wifi) paren = "Wi-Fi";
+    else if (family === "Edge E" && model === "E100") paren = "PoE";
+    return paren ? (name + " (" + paren + ")") : name;
+  }
+  function audioTaaOn() {
+    return !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
+  }
+  function audioAllowSipPsuBundle(platform) {
+    return (platform === "Zoom" || platform === "OpenSIP") && !audioTaaOn();
+  }
+  function audioCfg() {
+    const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
+    if (!parsed.family || parsed.family === "Rove") return null;
+    return (AUDIO_CATALOG[parsed.family] || {})[parsed.model] || null;
+  }
+  function syncFamilyFromModel() {
+    const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
+    const familySel = document.getElementById("audioFamily");
+    if (familySel && parsed.family) familySel.value = parsed.family;
+    return parsed;
+  }
+  let audioPsuBundleHiddenNote = false;
   // NA 1920–1930 catalog keys only. No EU 8J8W*, no 85W96AA, no 84H81AA (30+B2 kit).
   const ROVE_PARTS = {
     kit_b1: { sku: "8F3E1AA#ABA", support: "rove_20_b1" },
@@ -1494,11 +1574,12 @@ async function init() {
   }
   function updateAudioNotesAndAcc() {
     const platform = document.getElementById("audioPlatform")?.value || "";
-    const family = document.getElementById("audioFamily")?.value || "";
+    const parsed = syncFamilyFromModel();
+    const family = parsed.family || document.getElementById("audioFamily")?.value || "";
+    const model = parsed.model;
     const cfg = audioCfg();
     const note = document.getElementById("audioPlatformNote");
     const isTeams = platform === "Microsoft Teams";
-    const model = document.getElementById("audioModel")?.value || "";
     let msg = "";
     if (family === "Rove") {
       msg = audioFieldNote(family, "", platform);
@@ -1529,7 +1610,7 @@ async function init() {
       const rev = "CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
       msg = msg ? msg + " " + rev : rev;
     }
-    if (!cfg && family !== "Rove") {
+    if (!cfg && family !== "Rove" && !document.getElementById("audioAllModels")?.checked) {
       const familySel = document.getElementById("audioFamily")?.value || "";
       if (familySel) {
         const radios = audioWantRadios();
@@ -1540,6 +1621,10 @@ async function init() {
           msg = msg ? msg + " " + emptyMsg : emptyMsg;
         }
       }
+    }
+    if (audioPsuBundleHiddenNote) {
+      const hideMsg = "TAA/JITC (or Teams) hides the OpenSIP phone+PSU bundle; TAA phone SKU is used. Include accessory PSU if no PoE.";
+      msg = msg ? msg + " " + hideMsg : hideMsg;
     }
     if (note) {
       note.textContent = msg;
@@ -1585,15 +1670,12 @@ async function init() {
       }
     }
     if (psuWrap) {
-      const show = !!(cfg && (cfg.psu || (!isTeams && cfg.sip_psu)));
+      const bundleOn = !!(parsed.wantPsu && audioAllowSipPsuBundle(platform));
+      const show = !!(cfg && !bundleOn && cfg.psu);
       psuWrap.classList.toggle("hidden", !show);
       if (psuLabel && show) psuLabel.textContent = "Include power supply if no PoE";
       const psuSku = document.getElementById("audioPsuSku");
-      if (psuSku) {
-        psuSku.textContent = show
-          ? (cfg.psu ? cfg.psu : ("phone+PSU " + cfg.sip_psu))
-          : "";
-      }
+      if (psuSku) psuSku.textContent = show ? cfg.psu : "";
       if (!show) {
         const cb = document.getElementById("audioPsu");
         if (cb) cb.checked = false;
@@ -1639,49 +1721,213 @@ async function init() {
       }
     }
   }
+  const AUDIO_MODEL_ORDER = { Trio: ["C60", "8300"], CCX: ["350", "400", "505", "600"], "Edge E": ["E100", "E220", "E300", "E320", "E350", "E400", "E450", "E550"] };
+  function fillAudioModelSelect(sel, spec) {
+    spec = spec || {};
+    const allModels = !!spec.allModels;
+    const familyUi = spec.familyUi || "";
+    const includeRove = !!spec.includeRove;
+    const restoreExact = !!spec.restoreExact;
+    const platform = document.getElementById("audioPlatform")?.value || "";
+    const radios = audioWantRadios();
+    const allowPsu = audioAllowSipPsuBundle(platform);
+    const prevRaw = sel ? sel.value : "";
+    if (!sel) return { offered: [], prevRaw, allowPsu };
+    sel.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "--";
+    sel.appendChild(blank);
+    const offered = [];
+    const families = allModels ? ["Trio", "CCX", "Edge E"] : [familyUi];
+    families.forEach(fam => {
+      if (!fam || fam === "Rove") return;
+      const famMap = AUDIO_CATALOG[fam] || {};
+      const keys = (AUDIO_MODEL_ORDER[fam] || Object.keys(famMap)).filter(m => famMap[m]);
+      keys.forEach(m => {
+        const cfg = famMap[m];
+        if (!audioModelOnPlatform(cfg, platform)) return;
+        if (!allModels && !audioModelMatchesRadios(cfg, radios.wifi, radios.bt)) return;
+        const val = audioModelEncode(fam, m, false);
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = audioOptionLabel(fam, m, cfg, false);
+        sel.appendChild(opt);
+        offered.push(val);
+        if (allowPsu && cfg.sip_psu) {
+          const pval = audioModelEncode(fam, m, true);
+          const popt = document.createElement("option");
+          popt.value = pval;
+          popt.textContent = audioOptionLabel(fam, m, cfg, true);
+          sel.appendChild(popt);
+          offered.push(pval);
+        }
+      });
+    });
+    if (includeRove) {
+      const roveOpt = document.createElement("option");
+      roveOpt.value = "Rove";
+      roveOpt.textContent = "Rove (DECT)";
+      sel.appendChild(roveOpt);
+      offered.push("Rove");
+    }
+    if (restoreExact && offered.indexOf(prevRaw) !== -1) sel.value = prevRaw;
+    else sel.value = "";
+    return { offered, prevRaw, allowPsu };
+  }
+  function isAudioMultiOn() {
+    return !!document.getElementById("audioMultiPhone")?.checked;
+  }
+  function applyAudioMultiVisibility() {
+    const on = isAudioMultiOn();
+    const wrap = document.getElementById("audioMultiWrap");
+    if (wrap) wrap.classList.toggle("hidden", !on);
+    const supportWrap = document.getElementById("audioSupportTermWrap");
+    const accWrap = document.getElementById("audioAccWrap");
+    const note = document.getElementById("audioPlatformNote");
+    if (on) {
+      document.getElementById("audioFamilyWrap")?.classList.add("hidden");
+      document.getElementById("audioModelWrap")?.classList.add("hidden");
+      document.getElementById("rovePicker")?.classList.add("hidden");
+      if (supportWrap) supportWrap.classList.add("hidden");
+      if (accWrap) accWrap.classList.add("hidden");
+      if (note) note.classList.add("hidden");
+    } else if (supportWrap) {
+      supportWrap.classList.remove("hidden");
+    }
+    if (!on && accWrap) accWrap.classList.remove("hidden");
+  }
+  function rebuildAudioMultiRows() {
+    document.querySelectorAll("#audioMultiRows .audio-multi-model").forEach(sel => {
+      fillAudioModelSelect(sel, { allModels: true, includeRove: false, restoreExact: true });
+    });
+  }
+  function addAudioMultiRow() {
+    const rows = document.getElementById("audioMultiRows");
+    if (!rows) return;
+    const row = document.createElement("div");
+    row.className = "audio-multi-row flex flex-wrap items-end gap-2 p-2 border border-gray-200 rounded";
+    row.innerHTML = `
+      <div class="flex-1 min-w-[14rem]">
+        <label class="block text-xs font-medium">Model</label>
+        <select class="audio-multi-model border p-2 w-full"></select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium">Qty</label>
+        <input type="number" min="1" value="1" class="audio-multi-qty bom-qty border p-2 w-20">
+      </div>
+      <div class="flex items-center gap-3 flex-wrap pb-1">
+        <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly1 border"><span>1yr Poly+</span></label>
+        <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly3 border"><span>3yr Poly+</span></label>
+        <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly5 border"><span>5yr Poly+</span></label>
+      </div>
+      <button type="button" class="audio-multi-remove text-xs text-gray-600 underline pb-1">Remove</button>`;
+    fillAudioModelSelect(row.querySelector(".audio-multi-model"), { allModels: true, includeRove: false, restoreExact: false });
+    row.querySelector(".audio-multi-remove").addEventListener("click", () => {
+      row.remove();
+      const host = document.getElementById("audioMultiRows");
+      if (host && !host.querySelector(".audio-multi-row")) addAudioMultiRow();
+    });
+    rows.appendChild(row);
+  }
+  function ensureAudioMultiRows() {
+    const host = document.getElementById("audioMultiRows");
+    if (host && !host.querySelector(".audio-multi-row")) addAudioMultiRow();
+  }
   function rebuildAudioModel() {
-    const family = document.getElementById("audioFamily")?.value || "";
-    const isRove = family === "Rove";
-    const modelWrap = document.getElementById("audioModelWrap");
-    if (modelWrap) modelWrap.classList.toggle("hidden", isRove);
-    const picker = document.getElementById("rovePicker");
-    if (picker) picker.classList.toggle("hidden", !isRove);
+    const allModels = !!document.getElementById("audioAllModels")?.checked;
+    const familyWrap = document.getElementById("audioFamilyWrap");
+    if (familyWrap) familyWrap.classList.toggle("hidden", allModels);
+    const familySel = document.getElementById("audioFamily");
     const sel = document.getElementById("audioModel");
-    if (isRove) {
+    const modelWrap = document.getElementById("audioModelWrap");
+    const picker = document.getElementById("rovePicker");
+    const prevRaw = sel ? sel.value : "";
+    const prevParsed = parseAudioModelValue(prevRaw);
+    const familyUi = allModels ? (prevParsed.family || familySel?.value || "") : (familySel?.value || "");
+
+    if (!allModels && familyUi === "Rove") {
+      if (modelWrap) modelWrap.classList.toggle("hidden", true);
+      if (picker) picker.classList.toggle("hidden", false);
       if (sel) {
         sel.innerHTML = '<option value="">--</option>';
         sel.value = "";
       }
+      if (familySel) familySel.value = "Rove";
       syncRovePicker();
       updateAudioNotesAndAcc();
+      applyAudioMultiVisibility();
+      if (isAudioMultiOn()) rebuildAudioMultiRows();
       return;
     }
-    if (!sel) return;
-    const prev = sel.value;
-    const radios = audioWantRadios();
-    const platform = document.getElementById("audioPlatform")?.value || "";
-    const fam = AUDIO_CATALOG[family] || {};
-    const models = Object.keys(fam).filter(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt) && audioModelOnPlatform(fam[m], platform));
-    sel.innerHTML = '<option value="">--</option>' + models.map(m => `<option value="${m}">${m}</option>`).join("");
-    sel.value = models.includes(prev) ? prev : "";
+
+    if (!sel) {
+      applyAudioMultiVisibility();
+      if (isAudioMultiOn()) rebuildAudioMultiRows();
+      return;
+    }
+    const filled = fillAudioModelSelect(sel, { allModels, familyUi, includeRove: allModels, restoreExact: false });
+    const offered = filled.offered;
+    const allowPsu = filled.allowPsu;
+
+    if (prevParsed.wantPsu && !allowPsu) audioPsuBundleHiddenNote = true;
+    else if (allowPsu) audioPsuBundleHiddenNote = false;
+
+    const candidates = [];
+    if (prevRaw === "Rove" || familyUi === "Rove" || prevParsed.family === "Rove") candidates.push("Rove");
+    if (prevParsed.family && prevParsed.model) {
+      if (prevParsed.wantPsu && allowPsu) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, true));
+      candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, false));
+    }
+    if (prevParsed.model && familyUi) candidates.push(audioModelEncode(familyUi, prevParsed.model, false));
+    let next = "";
+    for (const c of candidates) {
+      if (offered.indexOf(c) !== -1) { next = c; break; }
+    }
+    sel.value = next;
+    const chosen = parseAudioModelValue(sel.value);
+    if (familySel && chosen.family) familySel.value = chosen.family;
+    const nowRove = sel.value === "Rove";
+    if (modelWrap) modelWrap.classList.toggle("hidden", nowRove && !allModels);
+    if (picker) picker.classList.toggle("hidden", !nowRove);
+    if (nowRove) syncRovePicker();
     updateAudioNotesAndAcc();
+    applyAudioMultiVisibility();
+    if (isAudioMultiOn()) rebuildAudioMultiRows();
   }
+  document.getElementById("audioAllModels")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("audioMultiPhone")?.addEventListener("change", () => {
+    if (isAudioMultiOn()) ensureAudioMultiRows();
+    rebuildAudioModel();
+  });
+  document.getElementById("audioMultiAdd")?.addEventListener("click", () => addAudioMultiRow());
   document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
-  document.getElementById("audioModel")?.addEventListener("change", updateAudioNotesAndAcc);
+  document.getElementById("audioModel")?.addEventListener("change", () => {
+    const parsed = syncFamilyFromModel();
+    const allModels = !!document.getElementById("audioAllModels")?.checked;
+    const isRove = parsed.family === "Rove";
+    const modelWrap = document.getElementById("audioModelWrap");
+    const picker = document.getElementById("rovePicker");
+    if (modelWrap) modelWrap.classList.toggle("hidden", isRove && !allModels);
+    if (picker) picker.classList.toggle("hidden", !isRove);
+    if (isRove) syncRovePicker();
+    updateAudioNotesAndAcc();
+    applyAudioMultiVisibility();
+  });
   document.getElementById("audioPlatform")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioJitc")?.addEventListener("change", () => {
     if (document.getElementById("audioJitc")?.checked) {
       const taa = document.getElementById("audioTaa");
       if (taa) taa.checked = true;
     }
-    updateAudioNotesAndAcc();
+    rebuildAudioModel();
   });
   document.getElementById("audioTaa")?.addEventListener("change", () => {
     if (!document.getElementById("audioTaa")?.checked) {
       const jitc = document.getElementById("audioJitc");
       if (jitc) jitc.checked = false;
     }
-    updateAudioNotesAndAcc();
+    rebuildAudioModel();
   });
   document.getElementById("audioWifi")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioBt")?.addEventListener("change", rebuildAudioModel);
@@ -1691,6 +1937,7 @@ async function init() {
   document.getElementById("roveQty30")?.addEventListener("change", () => { roveLastHandset = "roveQty30"; syncRovePicker("roveQty30"); });
   document.getElementById("roveQty40")?.addEventListener("change", () => { roveLastHandset = "roveQty40"; syncRovePicker("roveQty40"); });
   document.getElementById("roveQtyR8")?.addEventListener("change", () => { syncRovePicker("roveQtyR8"); });
+  ensureAudioMultiRows();
   rebuildAudioModel();
 
   // ---------- dynamic UI helpers ----------
@@ -2610,7 +2857,7 @@ async function init() {
     bom = bom || lastBom;
     if (!bom) return;
     const { results, includePrices, googleMeetNote } = bom;
-    orderFinalBomTable(results);
+    if (!bom.keepOrder) orderFinalBomTable(results);
     const EXCEL_URL = "https://hpdigitalroom.sales.ext.hp.com/ls/220d4a87-7110-4c75-83aa-53af74106f7b/Yv7NSgCbYloyQ79p";
     const SPACES_URL = "https://www.hp.com/us-en/poly/spaces.html";
     const DIM_URL = "https://h30434.www3.hp.com/t5/Meeting-Room-Solutions/Dimensional-Drawings-for-Poly-Products-and-accessories/td-p/8738366";
@@ -3025,21 +3272,123 @@ async function init() {
     syncLegalFooterVisibility();
   }
 
+  function pickAudioPhoneSku(cfg, platform, wantBundlePsu) {
+    const isTeams = platform === "Microsoft Teams";
+    const jitc = !!document.getElementById("audioJitc")?.checked;
+    const taa = !!document.getElementById("audioTaa")?.checked || jitc;
+    const wifi = !!document.getElementById("audioWifi")?.checked;
+    const bt = !!document.getElementById("audioBt")?.checked;
+    const nr = !wifi && !bt;
+    let sku = null;
+    let usedTaaSku = false;
+    let usedSipPsu = false;
+    let usedNrSku = false;
+    if (isTeams) {
+      if (nr && taa && cfg.teams_nr_taa) { sku = cfg.teams_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.teams_nr) { sku = cfg.teams_nr; usedNrSku = true; }
+      else if (taa && cfg.teams_taa) { sku = cfg.teams_taa; usedTaaSku = true; }
+      else if (cfg.teams) sku = cfg.teams;
+      else if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
+      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
+      else sku = cfg.sip;
+    } else {
+      if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
+      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
+      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
+      else if (wantBundlePsu && cfg.sip_psu) { sku = cfg.sip_psu; usedSipPsu = true; }
+      else sku = cfg.sip; // Zoom/OpenSIP: never fall back to a Teams SKU (CCX 350)
+    }
+    return { sku, usedTaaSku, usedSipPsu, usedNrSku, isTeams, jitc, taa, nr };
+  }
+
   document.getElementById("audioGenerateBtn")?.addEventListener("click", () => {
     const platform = document.getElementById("audioPlatform")?.value || "";
-    const family = document.getElementById("audioFamily")?.value || "";
-    const model = document.getElementById("audioModel")?.value || "";
-    const supportTerm = document.getElementById("audioSupportTerm")?.value || "";
     const includePrices = !!document.getElementById("audioIncludePrices")?.checked;
+    if (isAudioMultiOn()) {
+      if (!platform) {
+        lastAudioBom = null;
+        mockError(audioResult, "Please select Platform to generate a BOM.");
+        return;
+      }
+      const filled = [];
+      document.querySelectorAll("#audioMultiRows .audio-multi-row").forEach(row => {
+        const raw = row.querySelector(".audio-multi-model")?.value || "";
+        const parsedRow = parseAudioModelValue(raw);
+        if (!parsedRow.family || !parsedRow.model || parsedRow.family === "Rove") return;
+        const cfgRow = (AUDIO_CATALOG[parsedRow.family] || {})[parsedRow.model];
+        if (!cfgRow) return;
+        let qty = parseInt(row.querySelector(".audio-multi-qty")?.value || "1", 10);
+        if (!Number.isFinite(qty) || qty < 1) qty = 1;
+        const terms = [];
+        if (row.querySelector(".audio-multi-poly1")?.checked) terms.push("poly1");
+        if (row.querySelector(".audio-multi-poly3")?.checked) terms.push("poly3");
+        if (row.querySelector(".audio-multi-poly5")?.checked) terms.push("poly5");
+        filled.push({ parsed: parsedRow, cfg: cfgRow, qty, terms });
+      });
+      if (!filled.length) {
+        lastAudioBom = null;
+        mockError(audioResult, "Please select at least one phone model.");
+        return;
+      }
+      const results = [];
+      const notes = [];
+      const seenNote = new Set();
+      const addNote = n => { if (n && !seenNote.has(n)) { seenNote.add(n); notes.push(n); } };
+      filled.forEach(item => {
+        const pick = pickAudioPhoneSku(item.cfg, platform, item.parsed.wantPsu);
+        if (!pick.sku) {
+          addNote(item.cfg.sipNote || item.cfg.teamsNote || "No SKU for this platform/model (not invented).");
+          return;
+        }
+        addLineNoMerge(results, pick.sku, undefined, item.qty);
+        item.terms.forEach(term => {
+          const map = SUPPORT_MAP[item.cfg.support] || {};
+          if (!map[term]) {
+            addNote("No " + term + " SKU mapped for this model (not invented).");
+            return;
+          }
+          addSupportNoMerge(results, item.cfg.support, term, item.qty);
+        });
+        const fieldNote = audioFieldNote(item.parsed.family, item.parsed.model, platform);
+        if (fieldNote) addNote(fieldNote);
+        if (pick.taa && !pick.usedTaaSku) addNote("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
+        if (pick.jitc) addNote("No JITC phone SKU (not invented). TAA SKU used when one exists.");
+        if (pick.nr && (item.cfg.wifi || item.cfg.bt) && !pick.usedNrSku) addNote("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
+        if (item.parsed.wantPsu && (pick.taa || pick.isTeams || !pick.usedSipPsu)) {
+          addNote("OpenSIP phone+PSU bundle is not used with TAA/JITC or Teams; TAA phone SKU plus accessory PSU when selected.");
+        }
+      });
+      if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
+      if (!results.length) {
+        lastAudioBom = null;
+        mockError(audioResult, "No SKU for this platform/model (not invented).");
+        return;
+      }
+      lastAudioBom = {
+        results,
+        includePrices,
+        footnote: notes.length ? notes.join(" ") : null,
+        keepOrder: true
+      };
+      renderBom(undefined, undefined, audioResult, lastAudioBom);
+      return;
+    }
+    const parsed = syncFamilyFromModel();
+    const family = parsed.family || document.getElementById("audioFamily")?.value || "";
+    const model = parsed.model;
+    const wantBundlePsu = parsed.wantPsu;
+    const allModelsOn = !!document.getElementById("audioAllModels")?.checked;
+    const supportTerm = document.getElementById("audioSupportTerm")?.value || "";
     const missing = [];
     if (!platform) missing.push("Platform");
-    if (!family) missing.push("Family");
     const isRove = family === "Rove";
     if (isRove) {
       const basePick = document.getElementById("roveBase")?.value || "";
       if (!basePick) missing.push("Base");
-    } else if (!model) {
-      missing.push("Model");
+    } else {
+      if (!allModelsOn && !family) missing.push("Family");
+      if (!model) missing.push("Model");
     }
     if (missing.length) {
       lastAudioBom = null;
@@ -3119,33 +3468,16 @@ async function init() {
       mockError(audioResult, "Unknown family/model combination.");
       return;
     }
-    const isTeams = platform === "Microsoft Teams";
-    const jitc = !!document.getElementById("audioJitc")?.checked;
-    const taa = !!document.getElementById("audioTaa")?.checked || jitc;
-    const wifi = !!document.getElementById("audioWifi")?.checked;
-    const bt = !!document.getElementById("audioBt")?.checked;
-    const nr = !wifi && !bt;
     const psuOn = !!document.getElementById("audioPsu")?.checked;
-    let sku = null;
-    let usedTaaSku = false;
-    let usedSipPsu = false;
-    let usedNrSku = false;
-    if (isTeams) {
-      if (nr && taa && cfg.teams_nr_taa) { sku = cfg.teams_nr_taa; usedTaaSku = true; usedNrSku = true; }
-      else if (nr && cfg.teams_nr) { sku = cfg.teams_nr; usedNrSku = true; }
-      else if (taa && cfg.teams_taa) { sku = cfg.teams_taa; usedTaaSku = true; }
-      else if (cfg.teams) sku = cfg.teams;
-      else if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
-      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
-      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
-      else sku = cfg.sip;
-    } else {
-      if (nr && taa && cfg.sip_nr_taa) { sku = cfg.sip_nr_taa; usedTaaSku = true; usedNrSku = true; }
-      else if (nr && cfg.sip_nr) { sku = cfg.sip_nr; usedNrSku = true; }
-      else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
-      else if (psuOn && cfg.sip_psu) { sku = cfg.sip_psu; usedSipPsu = true; }
-      else sku = cfg.sip; // Zoom/OpenSIP: never fall back to a Teams SKU (CCX 350)
-    }
+    const pick = pickAudioPhoneSku(cfg, platform, wantBundlePsu);
+    const sku = pick.sku;
+    const usedTaaSku = pick.usedTaaSku;
+    const usedSipPsu = pick.usedSipPsu;
+    const usedNrSku = pick.usedNrSku;
+    const isTeams = pick.isTeams;
+    const jitc = pick.jitc;
+    const taa = pick.taa;
+    const nr = pick.nr;
     if (!sku) {
       lastAudioBom = null;
       mockError(audioResult, cfg.sipNote || cfg.teamsNote || "No SKU for this platform/model (not invented).");
@@ -3187,6 +3519,9 @@ async function init() {
     }
     if (nr && (cfg.wifi || cfg.bt) && !usedNrSku) {
       notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
+    }
+    if (wantBundlePsu && (taa || isTeams || !usedSipPsu)) {
+      notes.push("OpenSIP phone+PSU bundle is not used with TAA/JITC or Teams; TAA phone SKU plus accessory PSU when selected.");
     }
     const map = SUPPORT_MAP[cfg.support] || {};
     if (supportTerm && !map[supportTerm]) {
