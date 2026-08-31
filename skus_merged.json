@@ -811,11 +811,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount — White",
+    "description": "Poly TC10 Glass Mount \u2014 White",
     "msrp": 89.0
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount — Black",
+    "description": "Poly TC10 Glass Mount \u2014 Black",
     "msrp": 89.0
   },
   "875K7AA": {
@@ -851,15 +851,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
@@ -1954,5 +1954,214 @@
   "PRO8700101AB": {
     "description": "Poly Onboarding Service for Poly Lens Includes registering up to three (3) Poly devices",
     "msrp": 202.95
+  },
+  "C93Z1AA": {
+    "description": "Poly Edge V200 IP Phone OpenSIP No Radio",
+    "msrp": 204.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93Z3AA": {
+    "description": "Poly Edge V250 IP Phone OpenSIP",
+    "msrp": 214.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93Z4AA": {
+    "description": "Poly Edge V250 IP Phone OpenSIP with Power Supply",
+    "msrp": 234.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93Z7AA": {
+    "description": "Poly Edge V250 Plus IP Phone OpenSIP",
+    "msrp": 309.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZBAA": {
+    "description": "Poly Edge V400 IP Phone OpenSIP No Radio",
+    "msrp": 349.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZFAA": {
+    "description": "Poly Edge V450 IP Phone OpenSIP",
+    "msrp": 399.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZHAA": {
+    "description": "Poly Edge V650 IP Phone OpenSIP",
+    "msrp": 444.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZJAA": {
+    "description": "Poly Edge V650 IP Phone OpenSIP with Power Supply",
+    "msrp": 464.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZMAA": {
+    "description": "Poly Edge V800 IP Phone OpenSIP No Radio",
+    "msrp": 529.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZQAA": {
+    "description": "Poly Edge V850 IP Phone OpenSIP",
+    "msrp": 569.0,
+    "family": "edge",
+    "platform": "opensip"
+  },
+  "C93ZSAA": {
+    "description": "Poly Edge V Expansion Module",
+    "msrp": 329.0,
+    "family": "edge"
+  },
+  "UR9A2PB": {
+    "description": "1y Poly+ Edge V200 Service",
+    "msrp": 20.35
+  },
+  "UR9A3PB": {
+    "description": "3y Poly+ Edge V200 Service",
+    "msrp": 55.0
+  },
+  "UR9A6PB": {
+    "description": "1y Poly+ Analyze Edge V200 Service",
+    "msrp": 24.5
+  },
+  "UR9A7PB": {
+    "description": "3y Poly+ Analyze Edge V200 Service",
+    "msrp": 66.0
+  },
+  "UR9B2PB": {
+    "description": "1y Poly+ Edge V250 Service",
+    "msrp": 20.35
+  },
+  "UR9B3PB": {
+    "description": "3y Poly+ Edge V250 Service",
+    "msrp": 55.0
+  },
+  "UR9B6PB": {
+    "description": "1y Poly+ Analyze Edge V250 Service",
+    "msrp": 24.5
+  },
+  "UR9B7PB": {
+    "description": "3y Poly+ Analyze Edge V250 Service",
+    "msrp": 66.0
+  },
+  "UR9C2PB": {
+    "description": "1y Poly+ Edge V250 Plus Service",
+    "msrp": 20.35
+  },
+  "UR9C3PB": {
+    "description": "3y Poly+ Edge V250 Plus Service",
+    "msrp": 55.0
+  },
+  "UR9C6PB": {
+    "description": "1y Poly+ Analyze Edge V250 Plus Service",
+    "msrp": 24.5
+  },
+  "UR9C7PB": {
+    "description": "3y Poly+ Analyze Edge V250 Plus Service",
+    "msrp": 66.0
+  },
+  "US1P2PB": {
+    "description": "1y Poly+ Edge V400 Service",
+    "msrp": 20.35
+  },
+  "US1P3PB": {
+    "description": "3y Poly+ Edge V400 Service",
+    "msrp": 55.0
+  },
+  "US1P6PB": {
+    "description": "1y Poly+ Analyze Edge V400 Service",
+    "msrp": 24.5
+  },
+  "US1P7PB": {
+    "description": "3y Poly+ Analyze Edge V400 Service",
+    "msrp": 66.0
+  },
+  "US1Q2PB": {
+    "description": "1y Poly+ Edge V450 Service",
+    "msrp": 20.35
+  },
+  "US1Q3PB": {
+    "description": "3y Poly+ Edge V450 Service",
+    "msrp": 55.0
+  },
+  "US1Q6PB": {
+    "description": "1y Poly+ Analyze Edge V450 Service",
+    "msrp": 24.5
+  },
+  "US1Q7PB": {
+    "description": "3y Poly+ Analyze Edge V450 Service",
+    "msrp": 66.0
+  },
+  "US1R2PB": {
+    "description": "1y Poly+ Edge V650 Service",
+    "msrp": 20.35
+  },
+  "US1R3PB": {
+    "description": "3y Poly+ Edge V650 Service",
+    "msrp": 55.0
+  },
+  "US1R6PB": {
+    "description": "1y Poly+ Analyze Edge V650 Service",
+    "msrp": 24.5
+  },
+  "US1R7PB": {
+    "description": "3y Poly+ Analyze Edge V650 Service",
+    "msrp": 66.0
+  },
+  "US1S2PB": {
+    "description": "1y Poly+ Edge V800 Service",
+    "msrp": 20.35
+  },
+  "US1S3PB": {
+    "description": "3y Poly+ Edge V800 Service",
+    "msrp": 55.0
+  },
+  "US1S6PB": {
+    "description": "1y Poly+ Analyze Edge V800 Service",
+    "msrp": 24.5
+  },
+  "US1S7PB": {
+    "description": "3y Poly+ Analyze Edge V800 Service",
+    "msrp": 66.0
+  },
+  "US1T2PB": {
+    "description": "1y Poly+ Edge V850 Service",
+    "msrp": 20.35
+  },
+  "US1T3PB": {
+    "description": "3y Poly+ Edge V850 Service",
+    "msrp": 55.0
+  },
+  "US1T6PB": {
+    "description": "1y Poly+ Analyze Edge V850 Service",
+    "msrp": 24.5
+  },
+  "US1T7PB": {
+    "description": "3y Poly+ Analyze Edge V850 Service",
+    "msrp": 66.0
+  },
+  "US1U2PB": {
+    "description": "1y Poly+ Edge V EM",
+    "msrp": 20.35
+  },
+  "US1U3PB": {
+    "description": "3y Poly+ Edge V EM",
+    "msrp": 55.0
+  },
+  "US1U6PB": {
+    "description": "1y Poly+ Analyze Edge V EM",
+    "msrp": 24.5
+  },
+  "US1U7PB": {
+    "description": "3y Poly+ Analyze Edge V EM",
+    "msrp": 66.0
   }
 }
