@@ -1,4 +1,5 @@
-const VERSION = "v10.87";
+const VERSION = "v10.88";
+// v10.88: Audio top filters: TAA limits model lists (incl. multi-phone); Select all models re-checks Wi-Fi+BT.
 // v10.87: Audio: Select all models + Multi-phone under Wi-Fi/BT, above Platform; Family/Model stay on; multi-phone rows are Family then Model.
 // v10.86: Audio multi-phone quote (qty + per-line support; support under each model).
 // v10.85: Audio Select all models; short parenthetical labels; with-PSU bundle options.
@@ -1348,6 +1349,15 @@ async function init() {
   function audioTaaOn() {
     return !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
   }
+  function audioModelHasTaa(cfg, platform, nr) {
+    if (!cfg) return false;
+    if (platform === "Microsoft Teams") {
+      if (nr) return !!(cfg.teams_nr_taa || cfg.sip_nr_taa);
+      return !!(cfg.teams_taa || cfg.sip_taa);
+    }
+    if (nr) return !!cfg.sip_nr_taa;
+    return !!cfg.sip_taa;
+  }
   function audioAllowSipPsuBundle(platform) {
     return (platform === "Zoom" || platform === "OpenSIP") && !audioTaaOn();
   }
@@ -1748,6 +1758,8 @@ async function init() {
       keys.forEach(m => {
         const cfg = famMap[m];
         if (!audioModelOnPlatform(cfg, platform)) return;
+        const nr = allModels ? false : (!radios.wifi && !radios.bt);
+        if (audioTaaOn() && !audioModelHasTaa(cfg, platform, nr)) return;
         if (!allModels && !audioModelMatchesRadios(cfg, radios.wifi, radios.bt)) return;
         const val = audioModelEncode(fam, m, false);
         const opt = document.createElement("option");
@@ -1909,7 +1921,15 @@ async function init() {
     applyAudioMultiVisibility();
     if (isAudioMultiOn()) rebuildAudioMultiRows();
   }
-  document.getElementById("audioAllModels")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("audioAllModels")?.addEventListener("change", () => {
+    if (document.getElementById("audioAllModels")?.checked) {
+      const wifi = document.getElementById("audioWifi");
+      const bt = document.getElementById("audioBt");
+      if (wifi) wifi.checked = true;
+      if (bt) bt.checked = true;
+    }
+    rebuildAudioModel();
+  });
   document.getElementById("audioMultiPhone")?.addEventListener("change", () => {
     if (isAudioMultiOn()) ensureAudioMultiRows();
     rebuildAudioModel();
@@ -1943,8 +1963,20 @@ async function init() {
     }
     rebuildAudioModel();
   });
-  document.getElementById("audioWifi")?.addEventListener("change", rebuildAudioModel);
-  document.getElementById("audioBt")?.addEventListener("change", rebuildAudioModel);
+  document.getElementById("audioWifi")?.addEventListener("change", () => {
+    if (!document.getElementById("audioWifi")?.checked || !document.getElementById("audioBt")?.checked) {
+      const all = document.getElementById("audioAllModels");
+      if (all) all.checked = false;
+    }
+    rebuildAudioModel();
+  });
+  document.getElementById("audioBt")?.addEventListener("change", () => {
+    if (!document.getElementById("audioWifi")?.checked || !document.getElementById("audioBt")?.checked) {
+      const all = document.getElementById("audioAllModels");
+      if (all) all.checked = false;
+    }
+    rebuildAudioModel();
+  });
   document.getElementById("roveBase")?.addEventListener("change", () => { syncRovePicker("roveBase"); updateAudioNotesAndAcc(); });
   document.getElementById("roveBaseQty")?.addEventListener("change", () => { syncRovePicker("roveBaseQty"); });
   document.getElementById("roveQty20")?.addEventListener("change", () => { roveLastHandset = "roveQty20"; syncRovePicker("roveQty20"); });
