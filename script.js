@@ -1,4 +1,6 @@
-const VERSION = "v10.93";
+const VERSION = "v10.95";
+// v10.95: Edge V PoE/non-PSU (V250 C93Z3AA, V650 C93ZHAA) grayed until October; quote with-power SKUs only.
+// v10.94: One TAA checkbox; JITC/NR listed as TAA-family host/TC10/camera variants (no invented PNs).
 // v10.93: Edge V labels for included-PSU SKUs; HP list MSRPs in catalog. Multi-phone hides leftover Platform unless a row is Trio/CCX; OpenSIP auto-filled for Edge E / Edge V / Rove.
 // v10.92: Multi-phone hides Platform/Family/Model (platform on the multi block); Rove kit back on multi-phone with existing base/handset caps.
 // v10.91: Select all models auto-checks Wi-Fi and Bluetooth.
@@ -108,9 +110,9 @@ async function init() {
     const family = hostFamily();
     if (family === "x72" || family === "v72") return true;
     const cam = document.getElementById("cameraChoice")?.value;
-    if (cam === "E70") return true;
-    if (canShowSecondaryCamera() && document.getElementById("cameraChoice2")?.value === "E70") return true;
-    if (canShowTertiaryCamera() && document.getElementById("cameraChoice3")?.value === "E70") return true;
+    if (cameraKind(cam) === "E70") return true;
+    if (canShowSecondaryCamera() && cameraKind(document.getElementById("cameraChoice2")?.value) === "E70") return true;
+    if (canShowTertiaryCamera() && cameraKind(document.getElementById("cameraChoice3")?.value) === "E70") return true;
     const skus = [
       "842F8AA","886C9AA","886C8AA",
       "A4LZ8AA","A4LZ8AA#ABA","A4MA1AA","A4MA2AA","A4MA4AA","A4MA6AA",
@@ -508,11 +510,191 @@ async function init() {
     }
     return null;
   }
+  const TAA_VARIANT_DEFS = [
+    { key: "taa", label: "TAA" },
+    { key: "jitc", label: "TAA JITC" },
+    { key: "taa_nr", label: "TAA No Radio" },
+    { key: "jitc_nr", label: "TAA JITC No Radio" }
+  ];
+  const TC10_TAA_VARIANTS = {
+    black: [
+      { key: "taa", sku: "977L6AA", label: "TAA" },
+      { key: "jitc", sku: "973F9AA", label: "TAA JITC" },
+      { key: "taa_nr", sku: "977L7AA", label: "TAA No Radio" },
+      { key: "jitc_nr", sku: "973G0AA", label: "TAA JITC No Radio" }
+    ],
+    white: [
+      { key: "taa", sku: "973G1AA", label: "TAA" },
+      { key: "jitc", sku: "9A135AA", label: "TAA JITC" },
+      { key: "taa_nr", sku: "93S70AA", label: "TAA No Radio" },
+      { key: "jitc_nr", sku: "9A134AA", label: "TAA JITC No Radio" }
+    ]
+  };
+  const CAM_TAA_VARIANTS = {
+    E70: [
+      { key: "taa", sku: "886C8AA", label: "TAA" },
+      { key: "jitc", sku: "886C9AA", label: "TAA JITC" }
+    ],
+    E60: [
+      { key: "taa", sku: "9W1A7AA", label: "TAA" }
+    ]
+  };
+  function nrFilterOn() {
+    return !!document.getElementById("optNoRadio")?.checked;
+  }
+  function videoTaaOn() {
+    return !!document.getElementById("optTaa")?.checked;
+  }
+  function uniqueTaaVariants(list) {
+    const seen = new Set();
+    const out = [];
+    (list || []).forEach(v => {
+      if (!v || !v.sku || seen.has(v.sku)) return;
+      seen.add(v.sku);
+      out.push(v);
+    });
+    if (nrFilterOn()) {
+      const nr = out.filter(v => v.key === "taa_nr" || v.key === "jitc_nr");
+      return nr.length ? nr : [];
+    }
+    return out;
+  }
+  function listHostTaaVariants(family) {
+    const row = HOST_SKUS[family];
+    if (!row) return [];
+    const list = TAA_VARIANT_DEFS.map(d => row[d.key] ? { key: d.key, sku: row[d.key], label: d.label } : null);
+    return uniqueTaaVariants(list);
+  }
+  function listTc10TaaVariants(color) {
+    return uniqueTaaVariants(TC10_TAA_VARIANTS[color] || []);
+  }
+  function defaultTaaVariantKey(variants) {
+    if (!variants || !variants.length) return "";
+    const taa = variants.find(v => v.key === "taa");
+    return (taa || variants[0]).key;
+  }
+  function fillSelectPreserve(sel, options, preferredValue) {
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = (options || []).map(o => `<option value="${o.value}">${o.label}</option>`).join("");
+    const vals = (options || []).map(o => o.value);
+    if (prev && vals.includes(prev)) sel.value = prev;
+    else if (preferredValue && vals.includes(preferredValue)) sel.value = preferredValue;
+    else if (vals.length) sel.value = vals[0];
+  }
+  function cameraKind(val) {
+    if (!val || val === "None") return null;
+    if (val === "E70" || String(val).startsWith("E70|")) return "E70";
+    if (val === "E60" || String(val).startsWith("E60|")) return "E60";
+    return null;
+  }
+  function cameraSkuFromValue(val) {
+    if (!val || val === "None") return null;
+    const parts = String(val).split("|");
+    if (parts[1]) return parts[1];
+    if (parts[0] === "E70") return "842F8AA";
+    if (parts[0] === "E60") return "9W1A6AA#AC3";
+    return null;
+  }
+  function cameraSelectOptions() {
+    const opts = [{ value: "None", label: "None (use built-in camera)" }];
+    if (!videoTaaOn()) {
+      opts.push({ value: "E70", label: "Poly E70 (842F8AA) — AI Director auto-tracking / camera switching" });
+      opts.push({ value: "E60", label: "Poly E60 (9W1A6AA#AC3)" });
+      return opts;
+    }
+    (CAM_TAA_VARIANTS.E70 || []).forEach(v => {
+      opts.push({ value: "E70|" + v.sku, label: "Poly E70 " + v.label + " (" + v.sku + ") — AI Director auto-tracking / camera switching" });
+    });
+    (CAM_TAA_VARIANTS.E60 || []).forEach(v => {
+      opts.push({ value: "E60|" + v.sku, label: "Poly E60 " + v.label + " (" + v.sku + ")" });
+    });
+    return opts;
+  }
+  function rebuildCameraSelect(sel) {
+    if (!sel) return;
+    const prev = sel.value;
+    const prevKind = cameraKind(prev);
+    const prevSku = cameraSkuFromValue(prev);
+    const opts = cameraSelectOptions();
+    let preferred = "None";
+    if (videoTaaOn() && prevKind === "E70") preferred = "E70|886C8AA";
+    else if (videoTaaOn() && prevKind === "E60") preferred = "E60|9W1A7AA";
+    else if (!videoTaaOn() && prevKind) preferred = prevKind;
+    if (videoTaaOn() && prevKind && prevSku) {
+      const exact = prevKind + "|" + prevSku;
+      if (opts.some(o => o.value === exact)) preferred = exact;
+    }
+    fillSelectPreserve(sel, opts, preferred);
+  }
+  function willNeedInRoomTc10() {
+    const t = document.getElementById("typeOfSystem")?.value || "";
+    const p = document.getElementById("platform")?.value || "";
+    if (t === "Android appliance based solution") return true;
+    if (t === "Windows PC based solution" && (p === "Microsoft Teams" || p === "Zoom")) return true;
+    return false;
+  }
+  function schedulingTc10Color() {
+    const s = document.getElementById("schedulingPanel")?.value || "";
+    if (s.includes("white")) return "white";
+    if (s.includes("black")) return "black";
+    return null;
+  }
+  function refreshTaaVariantUi() {
+    const taa = videoTaaOn();
+    const hostKey = (typeof currentHostKey === "function") ? currentHostKey() : null;
+    const hostWrap = document.getElementById("hostVariantWrap");
+    const hostSel = document.getElementById("hostVariant");
+    const hostVars = taa && hostKey ? listHostTaaVariants(hostKey) : [];
+    if (hostWrap) hostWrap.classList.toggle("hidden", !(taa && hostVars.length));
+    if (hostSel) {
+      fillSelectPreserve(hostSel, hostVars.map(v => ({ value: v.key, label: v.label + " (" + v.sku + ")" })), defaultTaaVariantKey(hostVars));
+    }
+    const schColor = schedulingTc10Color();
+    const showBlack = taa && (willNeedInRoomTc10() || schColor === "black");
+    const showWhite = taa && schColor === "white";
+    const blackWrap = document.getElementById("tc10BlackVariantWrap");
+    const whiteWrap = document.getElementById("tc10WhiteVariantWrap");
+    const blackVars = showBlack ? listTc10TaaVariants("black") : [];
+    const whiteVars = showWhite ? listTc10TaaVariants("white") : [];
+    if (blackWrap) blackWrap.classList.toggle("hidden", !blackVars.length);
+    if (whiteWrap) whiteWrap.classList.toggle("hidden", !whiteVars.length);
+    fillSelectPreserve(document.getElementById("tc10BlackVariant"), blackVars.map(v => ({ value: v.key, label: v.label + " (" + v.sku + ")" })), defaultTaaVariantKey(blackVars));
+    fillSelectPreserve(document.getElementById("tc10WhiteVariant"), whiteVars.map(v => ({ value: v.key, label: v.label + " (" + v.sku + ")" })), defaultTaaVariantKey(whiteVars));
+    rebuildCameraSelect(document.getElementById("cameraChoice"));
+    rebuildCameraSelect(document.getElementById("cameraChoice2"));
+    rebuildCameraSelect(document.getElementById("cameraChoice3"));
+  }
+  function selectedHostSku(hostKey, flags) {
+    if (!hostKey) return null;
+    if (!videoTaaOn()) return pickHost(hostKey, { taa: false, jitc: false, nr: false });
+    const vars = listHostTaaVariants(hostKey);
+    const key = document.getElementById("hostVariant")?.value;
+    const hit = vars.find(v => v.key === key);
+    if (hit) return hit.sku;
+    const def = vars.find(v => v.key === "taa") || vars[0];
+    return def ? def.sku : pickHost(hostKey, flags);
+  }
+  function selectedTc10Sku(color, flags) {
+    flags = flags || complianceFlags();
+    if (!videoTaaOn()) return pickTc10(color, { taa: false, jitc: false, nr: false });
+    const id = color === "white" ? "tc10WhiteVariant" : "tc10BlackVariant";
+    const vars = listTc10TaaVariants(color);
+    const key = document.getElementById(id)?.value;
+    const hit = vars.find(v => v.key === key);
+    if (hit) return hit.sku;
+    const def = vars.find(v => v.key === "taa") || vars[0];
+    if (def) return def.sku;
+    return pickTc10(color, flagsForComplianceChoice(key || "taa"));
+  }
   function complianceFlags() {
-    const jitc = !!document.getElementById("optJitc")?.checked;
     const taaBox = !!document.getElementById("optTaa")?.checked;
-    const nr = !!document.getElementById("optNoRadio")?.checked;
-    return { taa: taaBox || jitc, jitc, nr };
+    const nrBox = !!document.getElementById("optNoRadio")?.checked;
+    if (!taaBox) return { taa: false, jitc: false, nr: nrBox };
+    const key = document.getElementById("hostVariant")?.value || "taa";
+    const f = flagsForComplianceChoice(key);
+    if (nrBox) f.nr = true;
+    return f;
   }
   function pickTc10(color, flags) {
     flags = flags || complianceFlags();
@@ -572,7 +754,7 @@ async function init() {
   promoWrap.id = "promoBox";
   promoWrap.className = "px-3 py-2 border border-amber-400 rounded bg-amber-50 mb-4";
   promoWrap.innerHTML = `
-    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, PC Studio Room kits, and Edge V phones (NEW) have been added. Edge V first customer shipment is slated for September — please confirm availability with Poly / HP.</div>`;
+    <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, TAA (JITC variants listed when TAA is on), PC Studio Room kits, and Edge V phones (NEW) have been added. Quote with-power Edge V SKUs now; non-PSU / PoE-only Edge V is not available until October at the earliest — confirm with Poly / HP.</div>`;
 
   // TAA / JITC
   const taaWrap = document.createElement("div");
@@ -583,15 +765,32 @@ async function init() {
         <input id="optTaa" type="checkbox" class="w-4 h-4 border">
         <span class="font-semibold text-blue-900">TAA</span>
       </label>
-      <label class="inline-flex items-center gap-2 cursor-pointer">
-        <input id="optJitc" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold text-blue-900">JITC</span>
-      </label>
     </div>
-    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>
     <input id="optNoRadio" type="checkbox" hidden aria-hidden="true">`;
 
   form.appendChild(taaWrap);
+  const hostVariantWrap = document.createElement("div");
+  hostVariantWrap.id = "hostVariantWrap";
+  hostVariantWrap.className = "hidden";
+  hostVariantWrap.innerHTML = `
+    <label class="block font-medium">Host / codec variant</label>
+    <select id="hostVariant" class="border p-2 w-full"></select>
+    <p class="text-xs text-gray-600 mt-1">When TAA is on, every existing TAA-family SKU for this product is listed. Default is TAA (not JITC) if both exist.</p>`;
+  form.appendChild(hostVariantWrap);
+  const tc10BlackVariantWrap = document.createElement("div");
+  tc10BlackVariantWrap.id = "tc10BlackVariantWrap";
+  tc10BlackVariantWrap.className = "hidden";
+  tc10BlackVariantWrap.innerHTML = `
+    <label class="block font-medium">TC10 Black variant</label>
+    <select id="tc10BlackVariant" class="border p-2 w-full"></select>`;
+  form.appendChild(tc10BlackVariantWrap);
+  const tc10WhiteVariantWrap = document.createElement("div");
+  tc10WhiteVariantWrap.id = "tc10WhiteVariantWrap";
+  tc10WhiteVariantWrap.className = "hidden";
+  tc10WhiteVariantWrap.innerHTML = `
+    <label class="block font-medium">TC10 White variant</label>
+    <select id="tc10WhiteVariant" class="border p-2 w-full"></select>`;
+  form.appendChild(tc10WhiteVariantWrap);
 
   form.appendChild(select("typeOfSystem", "Select System Type", [
     "BYOD USB Bar only",
@@ -1058,7 +1257,7 @@ async function init() {
 
   const AUDIO_BANNER = `
     <div class="px-3 py-1.5 border border-amber-400 rounded bg-amber-50">
-      <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, JITC/TAA, PC Studio Room kits, and Edge V phones (NEW) have been added. Edge V first customer shipment is slated for September — please confirm availability with Poly / HP.</div>
+      <div class="text-sm text-amber-900">📢 Welcome to the new site! Poly+ Analyze, TAA (JITC variants listed when TAA is on), PC Studio Room kits, and Edge V phones (NEW) have been added. Quote with-power Edge V SKUs now; non-PSU / PoE-only Edge V is not available until October at the earliest — confirm with Poly / HP.</div>
     </div>`;
   const SUPPORT_OPTS = [
     { value: "",         label: "None" },
@@ -1090,12 +1289,7 @@ async function init() {
         <input id="audioTaa" type="checkbox" class="w-4 h-4 border">
         <span class="font-semibold text-blue-900">TAA</span>
       </label>
-      <label class="inline-flex items-center gap-2 cursor-pointer">
-        <input id="audioJitc" type="checkbox" class="w-4 h-4 border">
-        <span class="font-semibold text-blue-900">JITC</span>
-      </label>
     </div>
-    <p class="text-xs text-blue-800">JITC SKUs are TAA. Checking JITC auto-checks TAA. Unchecking TAA unchecks JITC.</p>
     <input id="audioNoRadio" type="checkbox" hidden aria-hidden="true">`;
   audioSection.appendChild(audioTaaWrap);
   const audioRadioWrap = document.createElement("div");
@@ -1178,7 +1372,7 @@ async function init() {
   const audioEdgeVNote = document.createElement("p");
   audioEdgeVNote.id = "audioEdgeVNote";
   audioEdgeVNote.className = "text-xs text-gray-600 hidden";
-  audioEdgeVNote.textContent = "First Customer Shipment is slated for September. Please confirm availability, lead times, and SKUs with Poly / HP before quoting.";
+  audioEdgeVNote.textContent = "Quote with-power Edge V SKUs now. Non-PSU / PoE-only Edge V is not available until October at the earliest. Confirm availability, lead times, and SKUs with Poly / HP before quoting.";
   audioSection.appendChild(audioEdgeVNote);
   const audioAccWrap = document.createElement("div");
   audioAccWrap.id = "audioAccWrap";
@@ -1366,6 +1560,9 @@ async function init() {
   function audioModelEncode(family, model, psu) {
     return family + "::" + model + (psu ? "::psu" : "");
   }
+  function audioEdgeVPoeHold(family, cfg, wantPsu) {
+    return family === "Edge V" && cfg && !cfg.psuIncluded && !wantPsu;
+  }
   function audioPhoneLabel(family, model) {
     if (family === "Edge E" || family === "Edge V") return "Edge " + model;
     return family + " " + model;
@@ -1388,7 +1585,7 @@ async function init() {
     return paren ? (name + " (" + paren + ")") : name;
   }
   function audioTaaOn() {
-    return !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
+    return !!document.getElementById("audioTaa")?.checked;
   }
   function audioModelHasTaa(cfg, platform, nr) {
     if (!cfg) return false;
@@ -1632,7 +1829,7 @@ async function init() {
   const NOTE_ZOOM_SIP = "Zoom Phone SIP (not ZPA, not Zoom Rooms). Different stack from CCX Zoom Phone Appliance. BOM uses the OpenSIP SKU.";
   const NOTE_PVOS_SWITCH = "On PVOS 7+ this model can switch Generic / Teams / Zoom Phone from the web UI. Factory -019/-025 SKUs were historical profile locks only (not sellable lines and they do not hide the other stack). BOM still uses the OpenSIP SKU as the hardware line.";
   const NOTE_OPENSIP_FAMILY = "OpenSIP family (Zoom Phone SIP + Teams SIP Gateway). No native Teams Android.";
-  const NOTE_EDGE_V_FCS = "First Customer Shipment is slated for September. Please confirm availability, lead times, and SKUs with Poly / HP before quoting.";
+  const NOTE_EDGE_V_FCS = "Quote with-power Edge V SKUs now. Non-PSU / PoE-only Edge V is not available until October at the earliest. Confirm availability, lead times, and SKUs with Poly / HP before quoting.";
   const EM60_PSU = "86H66AA#ABA";
   function audioEmVisible(family, model, platform, cfg) {
     if (!cfg || !cfg.em) return false;
@@ -1692,14 +1889,14 @@ async function init() {
     let msg = "";
     if (family === "Rove") {
       msg = audioFieldNote(family, "", platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
+      const taaOn = !!document.getElementById("audioTaa")?.checked;
       if (taaOn) {
         const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
         msg = msg ? msg + " " + taaMsg : taaMsg;
       }
     } else if (cfg) {
       msg = audioFieldNote(family, model, platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked || !!document.getElementById("audioJitc")?.checked;
+      const taaOn = !!document.getElementById("audioTaa")?.checked;
       const hasTaa = isTeams ? !!(cfg.teams_taa || cfg.sip_taa) : !!cfg.sip_taa;
       if (taaOn && !hasTaa) {
         const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
@@ -1732,7 +1929,7 @@ async function init() {
       }
     }
     if (audioPsuBundleHiddenNote) {
-      const hideMsg = "TAA/JITC (or Teams) hides the OpenSIP phone+PSU bundle; TAA phone SKU is used. Include accessory PSU if no PoE.";
+      const hideMsg = "TAA (or Teams) hides the OpenSIP phone+PSU bundle; TAA phone SKU is used. Include accessory PSU if no PoE.";
       msg = msg ? msg + " " + hideMsg : hideMsg;
     }
     if (!msg && family === "Edge V") msg = NOTE_EDGE_V_FCS;
@@ -1867,9 +2064,17 @@ async function init() {
         const opt = document.createElement("option");
         opt.value = val;
         opt.textContent = audioOptionLabel(fam, m, cfg, false);
+        const poeHold = audioEdgeVPoeHold(fam, cfg, false);
+        if (poeHold) {
+          opt.disabled = true;
+          opt.className = "text-gray-400";
+          opt.style.opacity = "0.55";
+          opt.textContent += " — Oct";
+        }
         sel.appendChild(opt);
-        offered.push(val);
-        if (allowPsu && (cfg.sip_psu || cfg.psu)) {
+        if (!poeHold) offered.push(val);
+        const addPsuOpt = (allowPsu && (cfg.sip_psu || cfg.psu)) || (fam === "Edge V" && !!cfg.sip_psu);
+        if (addPsuOpt) {
           const pval = audioModelEncode(fam, m, true);
           const popt = document.createElement("option");
           popt.value = pval;
@@ -1887,7 +2092,12 @@ async function init() {
       offered.push("Rove");
     }
     if (restoreExact && offered.indexOf(prevRaw) !== -1) sel.value = prevRaw;
-    else sel.value = "";
+    else {
+      const parsedPrev = parseAudioModelValue(prevRaw, { noFallback: true });
+      const psuFallback = (parsedPrev.family && parsedPrev.model) ? audioModelEncode(parsedPrev.family, parsedPrev.model, true) : "";
+      if (psuFallback && offered.indexOf(psuFallback) !== -1) sel.value = psuFallback;
+      else sel.value = "";
+    }
     return { offered, prevRaw, allowPsu };
   }
   function isAudioMultiOn() {
@@ -2231,10 +2441,16 @@ async function init() {
     const candidates = [];
     if (prevRaw === "Rove" || familyUi === "Rove" || prevParsed.family === "Rove") candidates.push("Rove");
     if (prevParsed.family && prevParsed.model) {
-      if (prevParsed.wantPsu && allowPsu) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, true));
-      candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, false));
+      const prevCfg = (AUDIO_CATALOG[prevParsed.family] || {})[prevParsed.model];
+      const edgeVPoe = audioEdgeVPoeHold(prevParsed.family, prevCfg, false);
+      if ((prevParsed.wantPsu && allowPsu) || (edgeVPoe && prevCfg.sip_psu)) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, true));
+      if (!edgeVPoe) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, false));
     }
-    if (prevParsed.model && familyUi) candidates.push(audioModelEncode(familyUi, prevParsed.model, false));
+    if (prevParsed.model && familyUi) {
+      const famCfg = (AUDIO_CATALOG[familyUi] || {})[prevParsed.model];
+      if (!audioEdgeVPoeHold(familyUi, famCfg, false)) candidates.push(audioModelEncode(familyUi, prevParsed.model, false));
+      else if (famCfg && famCfg.sip_psu) candidates.push(audioModelEncode(familyUi, prevParsed.model, true));
+    }
     let next = "";
     for (const c of candidates) {
       if (offered.indexOf(c) !== -1) { next = c; break; }
@@ -2291,18 +2507,7 @@ async function init() {
     applyAudioMultiVisibility();
   });
   document.getElementById("audioPlatform")?.addEventListener("change", rebuildAudioModel);
-  document.getElementById("audioJitc")?.addEventListener("change", () => {
-    if (document.getElementById("audioJitc")?.checked) {
-      const taa = document.getElementById("audioTaa");
-      if (taa) taa.checked = true;
-    }
-    rebuildAudioModel();
-  });
   document.getElementById("audioTaa")?.addEventListener("change", () => {
-    if (!document.getElementById("audioTaa")?.checked) {
-      const jitc = document.getElementById("audioJitc");
-      if (jitc) jitc.checked = false;
-    }
     rebuildAudioModel();
   });
   function onAudioRadioChange() {
@@ -2508,7 +2713,7 @@ async function init() {
     hint.innerHTML = cameraMountHintHtml(cam, choice);
   }
   function refreshCameraMountHint() {
-    refreshCameraMountHintFor("cameraMount", "cameraMountHint", document.getElementById("cameraChoice")?.value || "None");
+    refreshCameraMountHintFor("cameraMount", "cameraMountHint", cameraKind(document.getElementById("cameraChoice")?.value) || "None");
   }
   function fillCameraMountSelect(mountSel, cam) {
     if (!mountSel) return;
@@ -2629,9 +2834,9 @@ async function init() {
     const cam3 = document.getElementById("cameraChoice3")?.value || "None";
     const ipMic = exp.includes("New White A2") || exp.includes("New Black A2")
       || exp === PREEXISTING_AUDIO || exp.includes("Existing IP");
-    const extraCam = (canShowCameraAddOn() && (cam === "E60" || cam === "E70"))
-      || (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70"))
-      || (canShowTertiaryCamera() && (cam3 === "E60" || cam3 === "E70"));
+    const extraCam = (canShowCameraAddOn() && (cameraKind(cam) === "E60" || cameraKind(cam) === "E70"))
+      || (canShowSecondaryCamera() && (cameraKind(cam2) === "E60" || cameraKind(cam2) === "E70"))
+      || (canShowTertiaryCamera() && (cameraKind(cam3) === "E60" || cameraKind(cam3) === "E70"));
     return ipMic || extraCam;
   }
   function sctKitApplies(kit) {
@@ -2639,7 +2844,7 @@ async function init() {
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const exp = document.getElementById("expansionMic")?.value || "";
     const analogOn = exp.includes("Analog Extension") || exp.includes("Single Analog Exp");
-    if (kit.camera) return canShowCameraAddOn() && cam === kit.camera;
+    if (kit.camera) return canShowCameraAddOn() && cameraKind(cam) === kit.camera;
     if (kit.analog) return analogOn && analogMicApplies();
     if (kit.families) return kit.families.includes(family);
     return false;
@@ -2698,11 +2903,11 @@ async function init() {
     const family = hostFamily();
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const show = (family === "x72" || family === "v72")
-      || (canShowCameraAddOn() && cam === "E70");
+      || (canShowCameraAddOn() && cameraKind(cam) === "E70");
     setPolarWrapVisible("polarFilterWrap", "polarFilterOpt", show);
-    const show2 = canShowSecondaryCamera() && document.getElementById("cameraChoice2")?.value === "E70";
+    const show2 = canShowSecondaryCamera() && cameraKind(document.getElementById("cameraChoice2")?.value) === "E70";
     setPolarWrapVisible("polarFilterWrap2", "polarFilterOpt2", show2);
-    const show3 = canShowTertiaryCamera() && document.getElementById("cameraChoice3")?.value === "E70";
+    const show3 = canShowTertiaryCamera() && cameraKind(document.getElementById("cameraChoice3")?.value) === "E70";
     setPolarWrapVisible("polarFilterWrap3", "polarFilterOpt3", show3);
   }
   function refreshDependentControls() {
@@ -2711,6 +2916,7 @@ async function init() {
     updateSupportTermOptions();
     updateMountingOptions();
     updateExpansionOptions();
+    refreshTaaVariantUi();
     updateCameraVisibility();
     updateA2QtyVisibility();
     updateNetgearVisibility();
@@ -2738,17 +2944,18 @@ async function init() {
     const cam = document.getElementById("cameraChoice")?.value || "None";
     const cam2 = document.getElementById("cameraChoice2")?.value || "None";
     const cam3 = document.getElementById("cameraChoice3")?.value || "None";
-    if (canShowCameraAddOn() && (cam === "E60" || cam === "E70")) picks.push(cam);
-    if (canShowSecondaryCamera() && (cam2 === "E60" || cam2 === "E70")) picks.push(cam2);
-    if (canShowTertiaryCamera() && (cam3 === "E60" || cam3 === "E70")) picks.push(cam3);
+    if (canShowCameraAddOn() && cameraKind(cam)) picks.push(cam);
+    if (canShowSecondaryCamera() && cameraKind(cam2)) picks.push(cam2);
+    if (canShowTertiaryCamera() && cameraKind(cam3)) picks.push(cam3);
     return picks;
   }
   function updateOneCameraMountPower(cam, mountWrapId, mountSelId, hintId, powerWrapId, powerOptId) {
-    const extra = cam === "E60" || cam === "E70";
+    const kind = cameraKind(cam);
+    const extra = kind === "E60" || kind === "E70";
     const mountSel = document.getElementById(mountSelId);
     const mountWrap = document.getElementById(mountWrapId);
     const powerWrap = document.getElementById(powerWrapId);
-    fillCameraMountSelect(mountSel, extra ? cam : "None");
+    fillCameraMountSelect(mountSel, extra ? kind : "None");
     if (!extra) {
       const hint = document.getElementById(hintId);
       if (hint) hint.textContent = "";
@@ -2759,7 +2966,7 @@ async function init() {
       const cb = document.getElementById(powerOptId);
       if (cb) cb.checked = false;
     } else {
-      refreshCameraMountHintFor(mountSelId, hintId, cam);
+      refreshCameraMountHintFor(mountSelId, hintId, kind);
     }
   }
   function updateCameraAccessoryVisibility() {
@@ -2777,7 +2984,7 @@ async function init() {
     const hint = document.getElementById("cameraChoiceHint");
     if (camSel) {
       [...camSel.options].forEach(opt => {
-        if (opt.value === "E60" || opt.value === "E70") {
+        if (cameraKind(opt.value) === "E60" || cameraKind(opt.value) === "E70") {
           opt.disabled = !allowed;
           opt.style.color = allowed ? "" : "#9ca3af";
         }
@@ -2802,7 +3009,7 @@ async function init() {
     const hint2 = document.getElementById("cameraChoice2Hint");
     if (camSel2) {
       [...camSel2.options].forEach(opt => {
-        if (opt.value === "E60" || opt.value === "E70") {
+        if (cameraKind(opt.value) === "E60" || cameraKind(opt.value) === "E70") {
           opt.disabled = !allowed2;
           opt.style.color = allowed2 ? "" : "#9ca3af";
         }
@@ -2827,7 +3034,7 @@ async function init() {
     const hint3 = document.getElementById("cameraChoice3Hint");
     if (camSel3) {
       [...camSel3.options].forEach(opt => {
-        if (opt.value === "E60" || opt.value === "E70") {
+        if (cameraKind(opt.value) === "E60" || cameraKind(opt.value) === "E70") {
           opt.disabled = !allowed3;
           opt.style.color = allowed3 ? "" : "#9ca3af";
         }
@@ -2842,21 +3049,13 @@ async function init() {
     updateCameraAccessoryVisibility();
   }
 
-  document.getElementById("optJitc")?.addEventListener("change", () => {
-    if (document.getElementById("optJitc")?.checked) {
-      const taa = document.getElementById("optTaa");
-      if (taa) taa.checked = true;
-    }
-  });
   document.getElementById("optTaa")?.addEventListener("change", () => {
-    if (!document.getElementById("optTaa")?.checked) {
-      const jitc = document.getElementById("optJitc");
-      if (jitc) jitc.checked = false;
-    }
+    refreshDependentControls();
   });
   ["platform", "typeOfSystem", "roomSize"].forEach(id => {
     document.getElementById(id)?.addEventListener("change", refreshDependentControls);
   });
+  document.getElementById("schedulingPanel")?.addEventListener("change", refreshTaaVariantUi);
   document.getElementById("cameraChoice")?.addEventListener("change", () => {
     updateCameraAccessoryVisibility();
     updateNetgearVisibility();
@@ -2877,13 +3076,13 @@ async function init() {
     updateNetgearVisibility();
     refreshExpansionHint();
   });
-  document.getElementById("mounting")?.addEventListener("change", refreshMountHint);
+  document.getElementById("mounting")?.addEventListener("change", () => { refreshMountHint(); refreshTaaVariantUi(); });
   document.getElementById("cameraMount")?.addEventListener("change", refreshCameraMountHint);
   document.getElementById("cameraMount2")?.addEventListener("change", () => {
-    refreshCameraMountHintFor("cameraMount2", "cameraMountHint2", document.getElementById("cameraChoice2")?.value || "None");
+    refreshCameraMountHintFor("cameraMount2", "cameraMountHint2", cameraKind(document.getElementById("cameraChoice2")?.value) || "None");
   });
   document.getElementById("cameraMount3")?.addEventListener("change", () => {
-    refreshCameraMountHintFor("cameraMount3", "cameraMountHint3", document.getElementById("cameraChoice3")?.value || "None");
+    refreshCameraMountHintFor("cameraMount3", "cameraMountHint3", cameraKind(document.getElementById("cameraChoice3")?.value) || "None");
   });
   refreshDependentControls();
 
@@ -2891,7 +3090,7 @@ async function init() {
   const applyPromoBtn = document.getElementById("applyPromoBtn");
   if (applyPromoBtn) {
     applyPromoBtn.addEventListener("click", () => {
-      ["optTaa", "optJitc", "optNoRadio"].forEach(id => {
+      ["optTaa", "optNoRadio"].forEach(id => {
         const cb = document.getElementById(id);
         if (cb) cb.checked = false;
       });
@@ -2921,9 +3120,9 @@ async function init() {
   const COMPLIANCE_CHOICE_NAMES = {
     commercial: "Commercial",
     taa: "TAA",
-    taa_nr: "TAA + No Radio",
-    jitc: "JITC",
-    jitc_nr: "JITC + No Radio"
+    taa_nr: "TAA No Radio",
+    jitc: "TAA JITC",
+    jitc_nr: "TAA JITC No Radio"
   };
   const TC10_BLACK_SKUS = new Set(["875K5AA", "977L6AA", "977L7AA", "973F9AA", "973G0AA"]);
   const TC10_WHITE_SKUS = new Set(["973G1AA", "93S70AA", "9A135AA", "9A134AA"]);
@@ -3123,25 +3322,23 @@ async function init() {
     if (showDevice) {
       html += `<div>`;
       html += `<div class="block font-medium mb-2">Device</div>`;
-      COMPLIANCE_CHOICE_ORDER.forEach(choice => {
-        const flags = flagsForComplianceChoice(choice);
-        const sku = hostKey ? pickHost(hostKey, flags) : null;
-        const disabled = !sku || !hostHasComplianceSku(hostKey, choice);
-        const checked = currentHost === choice && !disabled;
-        const title = COMPLIANCE_CHOICE_NAMES[choice] || choice;
-        html += renderChoiceRowHtml("device-choice-cb", "data-device-choice", choice, title, sku, includePrices, checked, disabled);
+      const hostVars = listHostTaaVariants(hostKey);
+      hostVars.forEach(v => {
+        const checked = currentHost === v.key;
+        html += renderChoiceRowHtml("device-choice-cb", "data-device-choice", v.key, v.label, v.sku, includePrices, checked, false);
       });
       html += `</div>`;
     }
     if (showController) {
       html += `<div>`;
       html += `<div class="block font-medium mb-2">Controller</div>`;
-      COMPLIANCE_CHOICE_ORDER.forEach(choice => {
-        const sku = controllerLabelSku(choice, bom);
-        const disabled = !controllerChoiceAvailable(choice, bom);
-        const checked = currentTc10 === choice && !disabled;
-        const title = COMPLIANCE_CHOICE_NAMES[choice] || choice;
-        html += renderChoiceRowHtml("controller-choice-cb", "data-controller-choice", choice, title, sku, includePrices, checked, disabled);
+      const colors = tc10ColorsOnBom(bom);
+      const color = colors.includes("black") ? "black" : colors[0];
+      const tcVars = listTc10TaaVariants(color);
+      tcVars.forEach(v => {
+        const sku = controllerLabelSku(v.key, bom);
+        const checked = currentTc10 === v.key;
+        html += renderChoiceRowHtml("controller-choice-cb", "data-controller-choice", v.key, v.label, sku || v.sku, includePrices, checked, false);
       });
       html += `</div>`;
     }
@@ -3411,7 +3608,7 @@ async function init() {
 
     // Host (unified TAA / JITC / No Radio / commercial)
     const hostKey = (family === "g62" && mounting && mounting !== "None") ? "g62_kit" : family;
-    const hostSku = pickHost(hostKey, flags);
+    const hostSku = selectedHostSku(hostKey, flags);
     if (hostSku) addLine(results, hostSku);
     const supportKey = (family === "r30") ? "r30"
       : (family === "g62" || hostKey === "g62_kit") ? "g62"
@@ -3429,7 +3626,7 @@ async function init() {
     }
 
     const addInRoomTc10 = () => {
-      addLine(results, pickTc10("black", flags));
+      addLine(results, selectedTc10Sku("black", flags));
       addSupport(results, "tc10", supportTerm);
     };
 
@@ -3460,7 +3657,7 @@ async function init() {
     // Scheduling panel
     if (scheduling && scheduling !== "None" && SCHEDULING_MAP[scheduling]) {
       const sch = SCHEDULING_MAP[scheduling];
-      addLine(results, pickTc10(sch.color, flags), sch.label);
+      addLine(results, selectedTc10Sku(sch.color, flags), sch.label);
       addSupport(results, "tc10", supportTerm);
       if (sch.glassMount) addLine(results, sch.glassMount);
     }
@@ -3495,12 +3692,13 @@ async function init() {
     {
       const extraCams = extraCameraPicks();
       extraCams.forEach(c => {
-        if (c === "E60") {
-          addLine(results, flags.taa ? "9W1A7AA" : "9W1A6AA#AC3");
+        const kind = cameraKind(c);
+        const sku = cameraSkuFromValue(c);
+        if (kind === "E60" && sku) {
+          addLine(results, sku);
           addSupport(results, "e60", supportTerm);
-        } else if (c === "E70") {
-          const e70sku = flags.jitc ? "886C9AA" : flags.taa ? "886C8AA" : "842F8AA";
-          addLine(results, e70sku);
+        } else if (kind === "E70" && sku) {
+          addLine(results, sku);
           addSupport(results, "e70", supportTerm);
           // E70 in-box: display clamp + wall mount. Do not add 875K8AA.
         }
@@ -3624,10 +3822,17 @@ async function init() {
       addSupport(results, "g6_dock", supportTerm);
     }
 
-    const hostChoice = complianceChoiceFromFlags(flags);
-    const hostFlags = { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr };
-    const tc10Choice = hostChoice;
-    const tc10Flags = { taa: !!flags.taa, jitc: !!flags.jitc, nr: !!flags.nr };
+    const hostChoice = flags.taa
+      ? (document.getElementById("hostVariant")?.value || complianceChoiceFromFlags(flags) || "taa")
+      : "commercial";
+    const hostFlags = flags.taa ? flagsForComplianceChoice(hostChoice) : { taa: false, jitc: false, nr: false };
+    let tc10Choice = "commercial";
+    if (flags.taa) {
+      const schColor = schedulingTc10Color();
+      if (schColor === "white") tc10Choice = document.getElementById("tc10WhiteVariant")?.value || "taa";
+      else tc10Choice = document.getElementById("tc10BlackVariant")?.value || "taa";
+    }
+    const tc10Flags = flags.taa ? flagsForComplianceChoice(tc10Choice) : { taa: false, jitc: false, nr: false };
     lastBom = {
       results,
       family,
@@ -3657,8 +3862,8 @@ async function init() {
 
   function pickAudioPhoneSku(cfg, platform, wantBundlePsu) {
     const isTeams = platform === "Microsoft Teams";
-    const jitc = !!document.getElementById("audioJitc")?.checked;
-    const taa = !!document.getElementById("audioTaa")?.checked || jitc;
+    const jitc = false;
+    const taa = !!document.getElementById("audioTaa")?.checked;
     const wifi = !!document.getElementById("audioWifi")?.checked;
     const bt = !!document.getElementById("audioBt")?.checked;
     const nr = !wifi && !bt;
@@ -3681,6 +3886,9 @@ async function init() {
       else if (taa && cfg.sip_taa) { sku = cfg.sip_taa; usedTaaSku = true; }
       else if (wantBundlePsu && cfg.sip_psu) { sku = cfg.sip_psu; usedSipPsu = true; }
       else sku = cfg.sip; // Zoom/OpenSIP: never fall back to a Teams SKU (CCX 350)
+    }
+    if (cfg && !cfg.psuIncluded && !cfg.psu && cfg.sip_psu && sku === cfg.sip) {
+      sku = null; // never quote Edge V PoE/non-PSU (Oct hold); Edge E brick PSU models keep sip
     }
     return { sku, usedTaaSku, usedSipPsu, usedNrSku, isTeams, jitc, taa, nr };
   }
@@ -3723,6 +3931,7 @@ async function init() {
         if (!parsedRow.family || !parsedRow.model) return;
         const cfgRow = (AUDIO_CATALOG[parsedRow.family] || {})[parsedRow.model];
         if (!cfgRow) return;
+        if (audioEdgeVPoeHold(parsedRow.family, cfgRow, parsedRow.wantPsu)) return;
         let qty = parseInt(row.querySelector(".audio-multi-qty")?.value || "1", 10);
         if (!Number.isFinite(qty) || qty < 1) qty = 1;
         const wantBrick = !!row.querySelector(".audio-multi-psu")?.checked;
@@ -3748,10 +3957,8 @@ async function init() {
           emitRoveKit(results, item.kit, item.terms, usedKeys, true);
           const fieldNote = audioFieldNote("Rove", "", platform);
           if (fieldNote) addNote(fieldNote);
-          const jitc = !!document.getElementById("audioJitc")?.checked;
-          const taa = !!document.getElementById("audioTaa")?.checked || jitc;
+          const taa = !!document.getElementById("audioTaa")?.checked;
           if (taa) addNote("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
-          if (jitc) addNote("No JITC phone SKU (not invented). TAA SKU used when one exists.");
           usedKeys.forEach(key => {
             item.terms.forEach(term => {
               const map = SUPPORT_MAP[key] || {};
@@ -3780,10 +3987,9 @@ async function init() {
         const fieldNote = audioFieldNote(item.parsed.family, item.parsed.model, platform);
         if (fieldNote) addNote(fieldNote);
         if (pick.taa && !pick.usedTaaSku) addNote("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
-        if (pick.jitc) addNote("No JITC phone SKU (not invented). TAA SKU used when one exists.");
         if (pick.nr && (item.cfg.wifi || item.cfg.bt) && !pick.usedNrSku) addNote("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
         if (item.parsed.wantPsu && item.cfg.sip_psu && (pick.taa || pick.isTeams || !pick.usedSipPsu)) {
-          addNote("OpenSIP phone+PSU bundle is not used with TAA/JITC or Teams; TAA phone SKU plus accessory PSU when selected.");
+          addNote("OpenSIP phone+PSU bundle is not used with TAA or Teams; TAA phone SKU plus accessory PSU when selected.");
         }
       });
       if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
@@ -3842,10 +4048,8 @@ async function init() {
       const notes = [];
       const fieldNote = audioFieldNote("Rove", "", platform);
       if (fieldNote) notes.push(fieldNote);
-      const jitc = !!document.getElementById("audioJitc")?.checked;
-      const taa = !!document.getElementById("audioTaa")?.checked || jitc;
+      const taa = !!document.getElementById("audioTaa")?.checked;
       if (taa) notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
-      if (jitc) notes.push("No JITC phone SKU (not invented). TAA SKU used when one exists.");
       const seenSupportNote = new Set();
       usedKeys.forEach(key => {
         const map = SUPPORT_MAP[key] || {};
@@ -3868,6 +4072,11 @@ async function init() {
       mockError(audioResult, "Unknown family/model combination.");
       return;
     }
+    if (audioEdgeVPoeHold(family, cfg, wantBundlePsu)) {
+      lastAudioBom = null;
+      mockError(audioResult, "PoE-only Edge V is not available until October at the earliest. Select a with-power Edge V SKU.");
+      return;
+    }
     const psuOn = !!document.getElementById("audioPsu")?.checked;
     const pick = pickAudioPhoneSku(cfg, platform, wantBundlePsu);
     const sku = pick.sku;
@@ -3875,7 +4084,7 @@ async function init() {
     const usedSipPsu = pick.usedSipPsu;
     const usedNrSku = pick.usedNrSku;
     const isTeams = pick.isTeams;
-    const jitc = pick.jitc;
+    const jitc = false;
     const taa = pick.taa;
     const nr = pick.nr;
     if (!sku) {
@@ -3915,14 +4124,11 @@ async function init() {
     if (taa && !usedTaaSku) {
       notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
     }
-    if (jitc) {
-      notes.push("No JITC phone SKU (not invented). TAA SKU used when one exists.");
-    }
     if (nr && (cfg.wifi || cfg.bt) && !usedNrSku) {
       notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
     }
     if (wantBundlePsu && (taa || isTeams || !usedSipPsu)) {
-      notes.push("OpenSIP phone+PSU bundle is not used with TAA/JITC or Teams; TAA phone SKU plus accessory PSU when selected.");
+      notes.push("OpenSIP phone+PSU bundle is not used with TAA or Teams; TAA phone SKU plus accessory PSU when selected.");
     }
     const map = SUPPORT_MAP[cfg.support] || {};
     if (supportTerm && !map[supportTerm]) {
