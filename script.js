@@ -1,4 +1,5 @@
-const VERSION = "v10.95";
+const VERSION = "v10.96";
+// v10.96: X32 auto-adds PoE++ power injector B5NH6AA#ABA (Classic parity).
 // v10.95: Edge V PoE/non-PSU (V250 C93Z3AA, V650 C93ZHAA) grayed until October; quote with-power SKUs only.
 // v10.94: One TAA checkbox; JITC/NR listed as TAA-family host/TC10/camera variants (no invented PNs).
 // v10.93: Edge V labels for included-PSU SKUs; HP list MSRPs in catalog. Multi-phone hides leftover Platform unless a row is Trio/CCX; OpenSIP auto-filled for Edge E / Edge V / Rove.
@@ -3618,6 +3619,11 @@ async function init() {
     // Huddle TAA dock (commercial 9U3U1AA already includes G5 dock)
     if (family === "r30" && flags.taa) {
       addLine(results, "9X478AA");
+    }
+
+    // X32 is PoE++-powered; always include the injector (same as Classic)
+    if (family === "x32" && !hasSku(results, "B5NH6AA#ABA") && !hasSku(results, "B5NH6AA")) {
+      addLine(results, "B5NH6AA#ABA", "Poly 45W PoE++ power injector for X32");
     }
 
     // V12 is USB-powered; always include the USB-C 65W adapter kit
