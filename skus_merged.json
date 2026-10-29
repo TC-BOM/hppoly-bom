@@ -807,11 +807,11 @@
     "msrp": null
   },
   "874P6AA": {
-    "description": "Poly TC10 Glass Mount \u2014 White",
+    "description": "Poly TC10 Glass Mount — White",
     "msrp": 98
   },
   "874P9AA": {
-    "description": "Poly TC10 Glass Mount \u2014 Black",
+    "description": "Poly TC10 Glass Mount — Black",
     "msrp": 98
   },
   "875K7AA": {
@@ -847,15 +847,15 @@
     "msrp": 177.95
   },
   "UJ8T6LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Entry (1\u201365 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Entry (1–65 rooms)",
     "msrp": 99
   },
   "UJ8T5LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Midsize (66\u2013250 rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Midsize (66–250 rooms)",
     "msrp": 79
   },
   "UJ8T4LN": {
-    "description": "Poly Lens Pro for Rooms 1 Year \u2014 Enterprise (251+ rooms)",
+    "description": "Poly Lens Pro for Rooms 1 Year — Enterprise (251+ rooms)",
     "msrp": 59
   },
   "874R5AA": {
@@ -1083,9 +1083,11 @@
     "platform": "opensip"
   },
   "85W93AA": {
-    "description": "PLY Edge E Exp Mod",
+    "description": "Poly Edge E Expansion Module",
     "msrp": 323.95,
-    "family": "edge"
+    "family": "edge",
+    "category": "Expansion Module",
+    "packSize": 1
   },
   "8F3E4AA#ABA": {
     "description": "Poly Rove 20 DECT PH HS United States / Canada English",
@@ -2013,9 +2015,11 @@
     "platform": "opensip"
   },
   "C93ZSAA": {
-    "description": "Poly Edge V Expansion Module",
-    "msrp": 329.0,
-    "family": "edge"
+    "description": "HP Poly Edge V Expansion Module",
+    "msrp": 329,
+    "family": "edge",
+    "category": "Expansion Module",
+    "packSize": 1
   },
   "UR9A2PB": {
     "description": "1y Poly+ Edge V200 Service",
@@ -2160,5 +2164,89 @@
   "US1U7PB": {
     "description": "3y Poly+ Analyze Edge V EM",
     "msrp": 66.0
+  },
+  "8F3T6AA": {
+    "description": "Poly Edge E Expansion Module GSA/TAA",
+    "msrp": 361.95,
+    "category": "Expansion Module (TAA)",
+    "packSize": 1
+  },
+  "A2TM5AA": {
+    "description": "Poly Edge E Blue Handset (5 pieces)",
+    "msrp": 136.95,
+    "category": "Handset Kit",
+    "packSize": 5
+  },
+  "8F3S0AA": {
+    "description": "Poly Edge E Handset and Cord (5 pieces)",
+    "msrp": 134.95,
+    "category": "Handset Kit",
+    "packSize": 5
+  },
+  "8F3T9AA": {
+    "description": "Poly Edge E Expansion Module Desk Stand (5 pieces)",
+    "msrp": 73.4,
+    "category": "Desk Stand",
+    "packSize": 5
+  },
+  "8F3T8AA": {
+    "description": "Poly Edge E Expansion Module Wall Mount Bracket",
+    "msrp": 43.9,
+    "category": "Wall Mount",
+    "packSize": 1
+  },
+  "8F3S1AA": {
+    "description": "Poly Edge E100/220 Desk Stand (5 pieces)",
+    "msrp": 64.95,
+    "category": "Desk Stand",
+    "packSize": 5
+  },
+  "8F3R4AA": {
+    "description": "Poly Edge E100/220 Hook Tab (25 pieces)",
+    "msrp": 37.75,
+    "category": "Hook Tab",
+    "packSize": 25
+  },
+  "8F3R7AA": {
+    "description": "Poly Edge E100/220 Wall Mount Bracket",
+    "msrp": 32.9,
+    "category": "Wall Mount",
+    "packSize": 1
+  },
+  "8F3S2AA": {
+    "description": "Poly Edge E300/320/350 Desk Stand (5 pieces)",
+    "msrp": 64.95,
+    "category": "Desk Stand",
+    "packSize": 5
+  },
+  "8F3R2AA": {
+    "description": "Poly Edge E300/320/350 Wall Mount Bracket",
+    "msrp": 43.9,
+    "category": "Wall Mount",
+    "packSize": 1
+  },
+  "8F3R5AA": {
+    "description": "Poly Edge E300/320/350/400/450/500/550 Hook Tab (25 pieces)",
+    "msrp": 37.75,
+    "category": "Hook Tab",
+    "packSize": 25
+  },
+  "8F3R6AA": {
+    "description": "Poly Edge E400/450/500/550 Desk Stand (5 pieces)",
+    "msrp": 73.4,
+    "category": "Desk Stand",
+    "packSize": 5
+  },
+  "8F3R3AA": {
+    "description": "Poly Edge E400/450/500/550 Wall Mount Bracket",
+    "msrp": 43.9,
+    "category": "Wall Mount",
+    "packSize": 1
+  },
+  "86H66AA": {
+    "description": "Poly Edge V200-650 / E100-450 / CCX 350 / EM60 Power Supply",
+    "msrp": 25.85,
+    "category": "Power Supply",
+    "packSize": 1
   }
 }

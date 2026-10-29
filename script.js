@@ -1,5 +1,8 @@
-const VERSION = "v10.96";
-// v10.96: X32 auto-adds PoE++ power injector B5NH6AA#ABA (Classic parity).
+const VERSION = "v10.99";
+// v10.99: Separate expansion-module checkbox and quantity dropdown per phone row; compatible power supplies in Additional accessories.
+// v10.98: V12 auto-adds only USB-C 65W power; X32 retains automatic PoE injector.
+// v10.97: Multi-phone-only Audio; per-row model-filtered accessories, TAA Edge E module, explicit pack quantities and supplied MSRPs.
+// v10.96: Auto-include Classic X32/V12 PoE injector across all host variants; Trio C60 expansion mic kit checkbox on Video.
 // v10.95: Edge V PoE/non-PSU (V250 C93Z3AA, V650 C93ZHAA) grayed until October; quote with-power SKUs only.
 // v10.94: One TAA checkbox; JITC/NR listed as TAA-family host/TC10/camera variants (no invented PNs).
 // v10.93: Edge V labels for included-PSU SKUs; HP list MSRPs in catalog. Multi-phone hides leftover Platform unless a row is Trio/CCX; OpenSIP auto-filled for Edge E / Edge V / Rove.
@@ -64,6 +67,8 @@ const VERSION = "v10.96";
 
 
 const PREEXISTING_AUDIO = "Pre-existing / 3rd Party Audio, (not added to BOM)";
+const TRIO_C60_EXP_MIC_SKU = "85X02AA";
+const SMALL_HOST_POE_SKU = "B5NH6AA#ABA";
 const ANALOG_MIC_VALUE = "Single Analog Extension mics";
 const ANALOG_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_9575660_en-US-1.pdf", label: "Analog expansion mic quick start (PDF)" };
 const A2_QSG = { href: "https://kaas.hpcloud.hp.com/pdf-public/pdf_15155157_en-US-1.pdf", label: "Studio A2 quick start (PDF)" };
@@ -202,7 +207,7 @@ async function init() {
     return findPrimary(primaries, s => hosts.has(s));
   }
 
-  const HOST_POWER_SKUS = new Set(["B42BFAA", "9X478AA", "9X481UT#ABA"]);
+  const HOST_POWER_SKUS = new Set([SMALL_HOST_POE_SKU, "B42BFAA", "9X478AA", "9X481UT#ABA"]);
   const CAMERA_POWER_SKUS = new Set(["B5NH6AA"]);
   const A2_POWER_SKUS = new Set(["A02F9AA"]);
   const LENS_SKU_SET = new Set(["UJ8T6LN", "UJ8T5LN", "UJ8T4LN", "PRO8700101AB"]);
@@ -832,6 +837,17 @@ async function init() {
   expansionMicWrapEl.appendChild(expansionHint);
   form.appendChild(expansionMicWrapEl);
 
+  const trioC60MicsWrap = document.createElement("div");
+  trioC60MicsWrap.innerHTML = `
+    <label class="inline-flex items-start gap-2">
+      <input id="videoTrioC60Mics" type="checkbox" class="border mt-1">
+      <span>
+        <span class="font-medium">Include Trio C60 expansion mic kit (2 mics)</span>
+        <span class="block text-xs text-gray-600">${TRIO_C60_EXP_MIC_SKU}. For use with a Trio C60 in the room.</span>
+      </span>
+    </label>`;
+  form.appendChild(trioC60MicsWrap);
+
   const expansionInfo = document.createElement("div");
   expansionInfo.id = "expansionInfo";
   expansionInfo.className = "hidden text-sm mt-1 p-2 border-l-4 border-amber-400 bg-amber-50 text-amber-900 rounded";
@@ -1278,6 +1294,7 @@ async function init() {
 
   const audioForm = document.createElement("form");
   audioForm.className = "space-y-4";
+  audioForm.addEventListener("submit", e => e.preventDefault());
   audioForm.innerHTML = AUDIO_BANNER;
   const audioSection = document.createElement("fieldset");
   audioSection.className = "space-y-3 p-4 border border-gray-200 rounded";
@@ -1304,22 +1321,24 @@ async function init() {
   audioAllModelsWrap.className = "inline-flex items-center gap-2";
   audioAllModelsWrap.innerHTML = '<input id="audioAllModels" type="checkbox" class="w-4 h-4 border"><span>Select all models</span>';
   audioSection.appendChild(audioAllModelsWrap);
-  const audioMultiPhoneWrap = document.createElement("label");
-  audioMultiPhoneWrap.className = "inline-flex items-center gap-2";
-  audioMultiPhoneWrap.innerHTML = '<input id="audioMultiPhone" type="checkbox" class="w-4 h-4 border"><span>Multi-phone quote</span>';
-  audioSection.appendChild(audioMultiPhoneWrap);
+  const audioQuoteIntro = document.createElement("p");
+  audioQuoteIntro.className = "text-sm text-gray-600";
+  audioQuoteIntro.textContent = "Add one or more phones. Choose accessories and quantities for each phone row.";
+  audioSection.appendChild(audioQuoteIntro);
   const audioMultiWrap = document.createElement("div");
   audioMultiWrap.id = "audioMultiWrap";
-  audioMultiWrap.className = "hidden space-y-2";
+  audioMultiWrap.className = "space-y-2";
   audioMultiWrap.innerHTML = `
     <p id="audioMultiRoveNote" class="text-xs text-amber-800 hidden"></p>
     <div id="audioMultiRows" class="space-y-2"></div>
     <button type="button" id="audioMultiAdd" class="text-sm border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50">Add phone</button>`;
   audioMultiWrap.insertBefore(select("audioMultiPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true), audioMultiWrap.firstChild);
   audioSection.appendChild(audioMultiWrap);
-  audioSection.appendChild(select("audioPlatform", "Platform", ["Microsoft Teams", "Zoom", "OpenSIP"], true));
-  audioSection.appendChild(select("audioFamily", "Family", ["Trio", "CCX", "Edge E", {value:"Edge V", label:"Edge V (NEW)"}, "Rove"], true));
-  audioSection.appendChild(select("audioModel", "Model", [], true));
+  const audioPlatformState = document.createElement("input");
+  audioPlatformState.id = "audioPlatform";
+  audioPlatformState.type = "hidden";
+  audioPlatformState.value = "OpenSIP";
+  audioSection.appendChild(audioPlatformState);
   const rovePickerHome = document.createElement("div");
   rovePickerHome.id = "rovePickerHome";
   const rovePicker = document.createElement("div");
@@ -1375,61 +1394,6 @@ async function init() {
   audioEdgeVNote.className = "text-xs text-gray-600 hidden";
   audioEdgeVNote.textContent = "Quote with-power Edge V SKUs now. Non-PSU / PoE-only Edge V is not available until October at the earliest. Confirm availability, lead times, and SKUs with Poly / HP before quoting.";
   audioSection.appendChild(audioEdgeVNote);
-  const audioAccWrap = document.createElement("div");
-  audioAccWrap.id = "audioAccWrap";
-  audioAccWrap.className = "space-y-2";
-  audioAccWrap.innerHTML = `
-    <label id="audioExpWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioExpMics" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioExpLabel" class="font-medium">Include expansion mics</span>
-        <span id="audioExpSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioEmWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioEm" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioEmLabel" class="font-medium">Include expansion module</span>
-        <span id="audioEmSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioEm2Wrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioEm2" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioEm2Label" class="font-medium">Include second expansion module</span>
-        <span id="audioEm2Sku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioPsuWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioPsu" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioPsuLabel" class="font-medium">Include power supply if no PoE</span>
-        <span id="audioPsuSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioCat52mWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioCat52m" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioCat52mLabel" class="font-medium">Include RJ45 CAT-5 2M</span>
-        <span id="audioCat52mSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioCat57mWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioCat57m" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioCat57mLabel" class="font-medium">Include RJ45 CAT-5 7.6M</span>
-        <span id="audioCat57mSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>
-    <label id="audioUsbMicroWrap" class="hidden inline-flex items-start gap-2">
-      <input id="audioUsbMicro" type="checkbox" class="border mt-1">
-      <span>
-        <span id="audioUsbMicroLabel" class="font-medium">Include USB-A to Micro USB 1.2M</span>
-        <span id="audioUsbMicroSku" class="block text-xs text-gray-600"></span>
-      </span>
-    </label>`;
-  audioSection.appendChild(audioAccWrap);
-  audioSection.appendChild(select("audioSupportTerm", "Select Support term", SUPPORT_OPTS));
   const audioLensOnboardLabel = document.createElement("label");
   audioLensOnboardLabel.className = "inline-flex items-start gap-2";
   audioLensOnboardLabel.innerHTML = `
@@ -1490,7 +1454,7 @@ async function init() {
 
   const AUDIO_CATALOG = {
     Trio: {
-      C60:  { teams: "849B6AA#ABA", sip: "849B4AA#ABA", support: "trio_c60",  exp: "85X02AA", psu: "85X03AA#ABA",
+      C60:  { teams: "849B6AA#ABA", sip: "849B4AA#ABA", support: "trio_c60",  exp: TRIO_C60_EXP_MIC_SKU, psu: "85X03AA#ABA",
         teams_taa: "849B1AA",
         sip_taa: "849B3AA",
         teams_nr: "830A1AA",
@@ -1600,18 +1564,8 @@ async function init() {
   function audioAllowSipPsuBundle(platform) {
     return (platform === "Zoom" || platform === "OpenSIP") && !audioTaaOn();
   }
-  function audioCfg() {
-    const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
-    if (!parsed.family || parsed.family === "Rove") return null;
-    return (AUDIO_CATALOG[parsed.family] || {})[parsed.model] || null;
-  }
-  function syncFamilyFromModel() {
-    const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
-    const familySel = document.getElementById("audioFamily");
-    if (familySel && parsed.family) familySel.value = parsed.family;
-    return parsed;
-  }
-  let audioPsuBundleHiddenNote = false;
+
+
   // NA 1920–1930 catalog keys only. No EU 8J8W*, no 85W96AA, no 84H81AA (30+B2 kit).
   const ROVE_PARTS = {
     kit_b1: { sku: "8F3E1AA#ABA", support: "rove_20_b1" },
@@ -1831,7 +1785,7 @@ async function init() {
   const NOTE_PVOS_SWITCH = "On PVOS 7+ this model can switch Generic / Teams / Zoom Phone from the web UI. Factory -019/-025 SKUs were historical profile locks only (not sellable lines and they do not hide the other stack). BOM still uses the OpenSIP SKU as the hardware line.";
   const NOTE_OPENSIP_FAMILY = "OpenSIP family (Zoom Phone SIP + Teams SIP Gateway). No native Teams Android.";
   const NOTE_EDGE_V_FCS = "Quote with-power Edge V SKUs now. Non-PSU / PoE-only Edge V is not available until October at the earliest. Confirm availability, lead times, and SKUs with Poly / HP before quoting.";
-  const EM60_PSU = "86H66AA#ABA";
+  const EM60_PSU = "86H66AA";
   function audioEmVisible(family, model, platform, cfg) {
     if (!cfg || !cfg.em) return false;
     if (family === "Edge E" || family === "Edge V") return true;
@@ -1880,155 +1834,7 @@ async function init() {
     return "";
   }
   function updateAudioNotesAndAcc() {
-    const platform = document.getElementById("audioPlatform")?.value || "";
-    const parsed = syncFamilyFromModel();
-    const family = parsed.family || document.getElementById("audioFamily")?.value || "";
-    const model = parsed.model;
-    const cfg = audioCfg();
-    const note = document.getElementById("audioPlatformNote");
-    const isTeams = platform === "Microsoft Teams";
-    let msg = "";
-    if (family === "Rove") {
-      msg = audioFieldNote(family, "", platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked;
-      if (taaOn) {
-        const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
-        msg = msg ? msg + " " + taaMsg : taaMsg;
-      }
-    } else if (cfg) {
-      msg = audioFieldNote(family, model, platform);
-      const taaOn = !!document.getElementById("audioTaa")?.checked;
-      const hasTaa = isTeams ? !!(cfg.teams_taa || cfg.sip_taa) : !!cfg.sip_taa;
-      if (taaOn && !hasTaa) {
-        const taaMsg = "No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.";
-        msg = msg ? msg + " " + taaMsg : taaMsg;
-      }
-      const radios = audioWantRadios();
-      const nrOn = !radios.wifi && !radios.bt;
-      const hasNr = isTeams
-        ? (taaOn ? !!cfg.teams_nr_taa : !!cfg.teams_nr)
-        : (taaOn ? !!cfg.sip_nr_taa : !!cfg.sip_nr);
-      if (nrOn && (cfg.wifi || cfg.bt) && !hasNr) {
-        const nrMsg = "No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.";
-        msg = msg ? msg + " " + nrMsg : nrMsg;
-      }
-    }
-    if (cfg && audioEmVisible(family, model, platform, cfg) && family === "CCX" && model === "600") {
-      const rev = "CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60). Phone does not power the EM; BOM adds PSU 86H66AA#ABA with the module.";
-      msg = msg ? msg + " " + rev : rev;
-    }
-    if (!cfg && family !== "Rove" && !document.getElementById("audioAllModels")?.checked) {
-      const familySel = document.getElementById("audioFamily")?.value || "";
-      if (familySel) {
-        const radios = audioWantRadios();
-        const fam = AUDIO_CATALOG[familySel] || {};
-        const any = Object.keys(fam).some(m => audioModelMatchesRadios(fam[m], radios.wifi, radios.bt) && audioModelOnPlatform(fam[m], platform));
-        if (!any) {
-          const emptyMsg = "No models in this family match the Wi-Fi/Bluetooth selection.";
-          msg = msg ? msg + " " + emptyMsg : emptyMsg;
-        }
-      }
-    }
-    if (audioPsuBundleHiddenNote) {
-      const hideMsg = "TAA (or Teams) hides the OpenSIP phone+PSU bundle; TAA phone SKU is used. Include accessory PSU if no PoE.";
-      msg = msg ? msg + " " + hideMsg : hideMsg;
-    }
-    if (!msg && family === "Edge V") msg = NOTE_EDGE_V_FCS;
-    if (note) {
-      note.textContent = msg;
-      note.classList.toggle("hidden", !msg);
-    }
-    updateAudioEdgeVNote();
-    const expWrap = document.getElementById("audioExpWrap");
-    const emWrap = document.getElementById("audioEmWrap");
-    const psuWrap = document.getElementById("audioPsuWrap");
-    const expLabel = document.getElementById("audioExpLabel");
-    const emLabel = document.getElementById("audioEmLabel");
-    const psuLabel = document.getElementById("audioPsuLabel");
-    if (expWrap) {
-      const show = !!(cfg && cfg.exp);
-      expWrap.classList.toggle("hidden", !show);
-      if (expLabel && show) expLabel.textContent = "Include expansion mics";
-      const expSku = document.getElementById("audioExpSku");
-      if (expSku) expSku.textContent = show ? cfg.exp : "";
-      if (!show) {
-        const cb = document.getElementById("audioExpMics");
-        if (cb) cb.checked = false;
-      }
-    }
-    if (emWrap) {
-      const show = audioEmVisible(family, model, platform, cfg);
-      emWrap.classList.toggle("hidden", !show);
-      if (emLabel && show) emLabel.textContent = "Include expansion module";
-      const emSku = document.getElementById("audioEmSku");
-      if (emSku) emSku.textContent = (show && cfg && cfg.em) ? cfg.em : "";
-      if (!show) {
-        const cb = document.getElementById("audioEm");
-        if (cb) cb.checked = false;
-      }
-    }
-    const em2Wrap = document.getElementById("audioEm2Wrap");
-    if (em2Wrap) {
-      const show2 = !!(family === "Edge E" && cfg && cfg.em && cfg.emMax === 2);
-      em2Wrap.classList.toggle("hidden", !show2);
-      const em2Sku = document.getElementById("audioEm2Sku");
-      if (em2Sku) em2Sku.textContent = show2 ? cfg.em : "";
-      if (!show2) {
-        const cb2 = document.getElementById("audioEm2");
-        if (cb2) cb2.checked = false;
-      }
-    }
-    if (psuWrap) {
-      const bundleOn = !!(parsed.wantPsu && audioAllowSipPsuBundle(platform));
-      const show = !!(cfg && !bundleOn && cfg.psu);
-      psuWrap.classList.toggle("hidden", !show);
-      if (psuLabel && show) psuLabel.textContent = "Include power supply if no PoE";
-      const psuSku = document.getElementById("audioPsuSku");
-      if (psuSku) psuSku.textContent = show ? cfg.psu : "";
-      if (!show) {
-        const cb = document.getElementById("audioPsu");
-        if (cb) cb.checked = false;
-      }
-    }
-    const cat52mWrap = document.getElementById("audioCat52mWrap");
-    const cat52mLabel = document.getElementById("audioCat52mLabel");
-    if (cat52mWrap) {
-      const show = !!(cfg && cfg.cat5_2m);
-      cat52mWrap.classList.toggle("hidden", !show);
-      if (cat52mLabel && show) cat52mLabel.textContent = "Include RJ45 CAT-5 2M";
-      const cat52mSku = document.getElementById("audioCat52mSku");
-      if (cat52mSku) cat52mSku.textContent = show ? cfg.cat5_2m : "";
-      if (!show) {
-        const cb = document.getElementById("audioCat52m");
-        if (cb) cb.checked = false;
-      }
-    }
-    const cat57mWrap = document.getElementById("audioCat57mWrap");
-    const cat57mLabel = document.getElementById("audioCat57mLabel");
-    if (cat57mWrap) {
-      const show = !!(cfg && cfg.cat5_7m);
-      cat57mWrap.classList.toggle("hidden", !show);
-      if (cat57mLabel && show) cat57mLabel.textContent = "Include RJ45 CAT-5 7.6M";
-      const cat57mSku = document.getElementById("audioCat57mSku");
-      if (cat57mSku) cat57mSku.textContent = show ? cfg.cat5_7m : "";
-      if (!show) {
-        const cb = document.getElementById("audioCat57m");
-        if (cb) cb.checked = false;
-      }
-    }
-    const usbMicroWrap = document.getElementById("audioUsbMicroWrap");
-    const usbMicroLabel = document.getElementById("audioUsbMicroLabel");
-    if (usbMicroWrap) {
-      const show = !!(cfg && cfg.usb_micro);
-      usbMicroWrap.classList.toggle("hidden", !show);
-      if (usbMicroLabel && show) usbMicroLabel.textContent = "Include USB-A to Micro USB 1.2M";
-      const usbMicroSku = document.getElementById("audioUsbMicroSku");
-      if (usbMicroSku) usbMicroSku.textContent = show ? cfg.usb_micro : "";
-      if (!show) {
-        const cb = document.getElementById("audioUsbMicro");
-        if (cb) cb.checked = false;
-      }
-    }
+    applyAudioMultiVisibility();
   }
   const AUDIO_MODEL_ORDER = { Trio: ["C60", "8300"], CCX: ["350", "400", "505", "600"], "Edge E": ["E100", "E220", "E300", "E320", "E350", "E400", "E450", "E550"], "Edge V": ["V200", "V250", "V250 Plus", "V400", "V450", "V650", "V800", "V850"] };
   function fillAudioModelSelect(sel, spec) {
@@ -2102,7 +1908,7 @@ async function init() {
     return { offered, prevRaw, allowPsu };
   }
   function isAudioMultiOn() {
-    return !!document.getElementById("audioMultiPhone")?.checked;
+    return true;
   }
   function audioFamilyNeedsProvider(fam) {
     return fam === "Trio" || fam === "CCX";
@@ -2126,39 +1932,16 @@ async function init() {
     if (main) main.value = "OpenSIP";
   }
   function applyAudioProviderVisibility() {
-    const multiOn = isAudioMultiOn();
-    const multiWrap = document.getElementById("audioMultiPlatformWrap");
-    const mainWrap = document.getElementById("audioPlatformWrap");
-    const main = document.getElementById("audioPlatform");
-    const multi = document.getElementById("audioMultiPlatform");
-    if (multiOn) {
-      const need = audioMultiNeedsProvider();
-      if (multiWrap) multiWrap.classList.toggle("hidden", !need);
-      if (mainWrap) mainWrap.classList.add("hidden");
-      if (!need) applyOpenSipWhenNoProviderNeeded();
-    } else {
-      if (multiWrap) multiWrap.classList.add("hidden");
-      const fam = document.getElementById("audioFamily")?.value || "";
-      const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
-      const allModels = !!document.getElementById("audioAllModels")?.checked;
-      const need = audioFamilyNeedsProvider(fam) || audioFamilyNeedsProvider(parsed.family) || (allModels && !fam);
-      if (mainWrap) mainWrap.classList.toggle("hidden", !need);
-      if (!need) {
-        if (main) main.value = "OpenSIP";
-        if (multi) multi.value = "OpenSIP";
-      }
-    }
+    const need = audioMultiNeedsProvider();
+    document.getElementById("audioMultiPlatformWrap")?.classList.toggle("hidden", !need);
+    if (!need) applyOpenSipWhenNoProviderNeeded();
   }
   function syncAudioPlatformFromMulti() {
     const multi = document.getElementById("audioMultiPlatform");
     const main = document.getElementById("audioPlatform");
     if (multi && main) main.value = multi.value;
   }
-  function syncAudioMultiPlatformFromMain() {
-    const multi = document.getElementById("audioMultiPlatform");
-    const main = document.getElementById("audioPlatform");
-    if (multi && main) multi.value = main.value;
-  }
+
   function rowIsRove(row) {
     if (!row) return false;
     const fam = row.querySelector(".audio-multi-family")?.value || "";
@@ -2220,55 +2003,127 @@ async function init() {
     if (modelCol) modelCol.classList.toggle("hidden", isRove);
     if (qtyCol) qtyCol.classList.toggle("hidden", isRove);
   }
-  function syncRowPsuCb(row) {
-    const wrap = row.querySelector(".audio-multi-psu-wrap");
-    if (!wrap) return;
-    if (rowIsRove(row)) {
-      wrap.classList.add("hidden");
-      const cb = row.querySelector(".audio-multi-psu");
-      if (cb) cb.checked = false;
-      return;
-    }
-    const raw = row.querySelector(".audio-multi-model")?.value || "";
-    const parsed = parseAudioModelValue(raw, { noFallback: true });
-    const cfg = (parsed.family && parsed.model) ? ((AUDIO_CATALOG[parsed.family] || {})[parsed.model]) : null;
-    const show = !!(cfg && cfg.psu && !parsed.wantPsu);
-    wrap.classList.toggle("hidden", !show);
-    if (!show) {
-      const cb = row.querySelector(".audio-multi-psu");
-      if (cb) cb.checked = false;
-    }
+  const PHONE_ACCESSORY_RULES = [
+    { sku: "A2TM5AA", family: "Edge E" },
+    { sku: "8F3S0AA", family: "Edge E" },
+    { sku: "8F3T9AA", family: "Edge E", moduleMount: true },
+    { sku: "8F3T8AA", family: "Edge E", moduleMount: true },
+    { sku: "8F3S1AA", family: "Edge E", models: ["E100", "E220"] },
+    { sku: "8F3R4AA", family: "Edge E", models: ["E100", "E220"] },
+    { sku: "8F3R7AA", family: "Edge E", models: ["E100", "E220"] },
+    { sku: "8F3S2AA", family: "Edge E", models: ["E300", "E320", "E350"] },
+    { sku: "8F3R2AA", family: "Edge E", models: ["E300", "E320", "E350"] },
+    { sku: "8F3R5AA", family: "Edge E", models: ["E300", "E320", "E350", "E400", "E450", "E550"] },
+    { sku: "8F3R6AA", family: "Edge E", models: ["E400", "E450", "E550"] },
+    { sku: "8F3R3AA", family: "Edge E", models: ["E400", "E450", "E550"] }
+  ];
+  function phoneRowQuantity(row) {
+    const n = Number(row.querySelector(".audio-multi-qty")?.value);
+    return Number.isSafeInteger(n) && n > 0 ? n : 1;
   }
-  function applyAudioMultiVisibility() {
-    const on = isAudioMultiOn();
-    const wrap = document.getElementById("audioMultiWrap");
-    if (wrap) wrap.classList.toggle("hidden", !on);
-    const platformWrap = document.getElementById("audioPlatformWrap");
-    const familyWrap = document.getElementById("audioFamilyWrap");
-    const modelWrap = document.getElementById("audioModelWrap");
-    const picker = document.getElementById("rovePicker");
-    const supportWrap = document.getElementById("audioSupportTermWrap");
-    const accWrap = document.getElementById("audioAccWrap");
-    const note = document.getElementById("audioPlatformNote");
-    applyAudioProviderVisibility();
-    if (familyWrap) familyWrap.classList.toggle("hidden", on);
-    if (on) {
-      if (modelWrap) modelWrap.classList.add("hidden");
-      if (supportWrap) supportWrap.classList.add("hidden");
-      if (accWrap) accWrap.classList.add("hidden");
-      if (note) note.classList.add("hidden");
-      placeRovePickerForMulti();
-    } else {
-      restoreRovePickerHome();
-      if (supportWrap) supportWrap.classList.remove("hidden");
-      if (accWrap) accWrap.classList.remove("hidden");
-      const family = document.getElementById("audioFamily")?.value || "";
-      const parsed = parseAudioModelValue(document.getElementById("audioModel")?.value || "");
-      const isRove = family === "Rove" || parsed.family === "Rove";
-      const allModels = !!document.getElementById("audioAllModels")?.checked;
-      if (modelWrap) modelWrap.classList.toggle("hidden", isRove && !allModels);
-      if (picker) picker.classList.toggle("hidden", !isRove);
+  function phoneAccessoryOptions(parsed, cfg, platform, phoneQty) {
+    if (!cfg || !parsed.family || !parsed.model) return [];
+    const options = [];
+    const push = (key, sku, kind, max, note) => {
+      const product = getItem(sku);
+      if (!product) return;
+      options.push({ key, sku, kind, max, note: note || "", label: product.description, packSize: product.packSize || 1 });
+    };
+    if (audioEmVisible(parsed.family, parsed.model, platform, cfg)) {
+      const sku = parsed.family === "Edge E" && audioTaaOn() ? "8F3T6AA" : cfg.em;
+      push("module", sku, "module", phoneQty * (cfg.emMax || 1),
+        parsed.family === "CCX" ? "A power supply is added for each EM60 module." : "");
     }
+    PHONE_ACCESSORY_RULES.forEach(rule => {
+      if (parsed.family !== rule.family) return;
+      if (rule.models && !rule.models.includes(parsed.model)) return;
+      if (rule.moduleMount && !cfg.em) return;
+      push(rule.sku, rule.sku, "accessory", null, rule.moduleMount ? "For an Edge E expansion module (new or existing)." : "");
+    });
+    let psu = cfg.psu;
+    if ((parsed.family === "Edge E" && parsed.model !== "E550")
+      || (parsed.family === "CCX" && parsed.model === "350")
+      || (parsed.family === "Edge V" && ["V200", "V250", "V250 Plus", "V400", "V450", "V650"].includes(parsed.model))) psu = "86H66AA";
+    if (psu) push("phone-psu", psu, "psu", null, "Additional supplies; separate from supplies already included with the phone or required by EM60.");
+    [["mics", cfg.exp], ["cat5-2m", cfg.cat5_2m], ["cat5-7m", cfg.cat5_7m], ["usb-micro", cfg.usb_micro]].forEach(([key, sku]) => {
+      if (sku) push(key, sku, "accessory");
+    });
+    return options;
+  }
+  function refreshRowSupport(row) {
+    const parsed = parseAudioModelValue(row.querySelector(".audio-multi-model")?.value || "", { noFallback: true });
+    const cfg = (AUDIO_CATALOG[parsed.family] || {})[parsed.model];
+    const maps = rowIsRove(row)
+      ? Object.values(ROVE_PARTS).map(item => SUPPORT_MAP[item.support] || {})
+      : [SUPPORT_MAP[cfg?.support] || {}];
+    row.querySelectorAll(".audio-support-option").forEach(label => {
+      const input = label.querySelector("input");
+      const supported = maps.some(map => !!map[input.dataset.term]);
+      label.classList.toggle("hidden", !supported);
+      input.disabled = !supported;
+      if (!supported) input.checked = false;
+    });
+  }
+  function refreshRowAccessories(row) {
+    refreshRowSupport(row);
+    const host = row.querySelector(".audio-multi-accessory-list");
+    const moduleHost = row.querySelector(".audio-multi-module");
+    if (!host || !moduleHost) return;
+    const previous = new Map();
+    row.querySelectorAll(".phone-accessory").forEach(el => {
+      previous.set(el.dataset.key, { checked: !!el.querySelector(".phone-accessory-check")?.checked, qty: el.querySelector(".phone-accessory-qty")?.value || "1" });
+    });
+    const parsed = parseAudioModelValue(row.querySelector(".audio-multi-model")?.value || "", { noFallback: true });
+    const cfg = (AUDIO_CATALOG[parsed.family] || {})[parsed.model];
+    const platform = document.getElementById("audioMultiPlatform")?.value || "OpenSIP";
+    const options = rowIsRove(row) ? [] : phoneAccessoryOptions(parsed, cfg, platform, phoneRowQuantity(row));
+    const renderOption = option => {
+      const prev = previous.get(option.key);
+      const qty = Math.min(option.max || Number.MAX_SAFE_INTEGER, Math.max(1, Number(prev?.qty) || 1));
+      const module = option.kind === "module";
+      const units = module ? "Number of expansion modules" : option.packSize > 1 ? "Packs" : "Units";
+      const limit = option.max ? ` Maximum ${option.max} across this phone row.` : "";
+      const choices = module ? Array.from({ length: option.max }, (_, i) => `<option value="${i + 1}"${i + 1 === qty ? " selected" : ""}>${i + 1}</option>`).join("") : "";
+      const quantityControl = module
+        ? `<select aria-label="${units} for ${option.sku}" class="phone-accessory-qty block border p-2 w-24" ${prev?.checked ? "" : "disabled"}>${choices}</select>`
+        : `<input aria-label="${units} for ${option.sku}" type="number" min="1" step="1" value="${qty}" class="phone-accessory-qty block border p-1 w-20" ${prev?.checked ? "" : "disabled"}>`;
+      return `<div class="phone-accessory flex flex-wrap items-start gap-2" data-key="${option.key}">
+        <label class="inline-flex items-start gap-2 flex-1 min-w-[12rem]">
+          <input type="checkbox" class="phone-accessory-check border mt-1" ${prev?.checked ? "checked" : ""}>
+          <span><span class="font-medium">${module ? "Include expansion module — " : ""}${option.label}</span><span class="block text-xs text-gray-600">${option.sku}${option.packSize > 1 ? ` · ${option.packSize} pieces per pack` : ""}.${limit} ${option.note}</span></span>
+        </label>
+        <label class="phone-accessory-quantity text-xs${module && !prev?.checked ? " hidden" : ""}">${units}${quantityControl}</label>
+      </div>`;
+    };
+    const modules = options.filter(option => option.kind === "module");
+    const additional = options.filter(option => option.kind !== "module");
+    moduleHost.classList.toggle("hidden", !modules.length);
+    moduleHost.innerHTML = modules.map(renderOption).join("");
+    const details = row.querySelector(".audio-multi-accessories");
+    details.classList.toggle("hidden", !additional.length);
+    host.innerHTML = additional.map(renderOption).join("");
+  }
+  function readRowAccessories(row, parsed, cfg, platform, phoneQty) {
+    const available = phoneAccessoryOptions(parsed, cfg, platform, phoneQty);
+    const selected = [];
+    let error = null;
+    row.querySelectorAll(".phone-accessory").forEach(el => {
+      if (!el.querySelector(".phone-accessory-check")?.checked) return;
+      const option = available.find(x => x.key === el.dataset.key);
+      if (!option) return;
+      const qty = Number(el.querySelector(".phone-accessory-qty")?.value);
+      if (!Number.isSafeInteger(qty) || qty < 1 || (option.max && qty > option.max)) {
+        error = `Enter a whole-number quantity for ${option.sku}${option.max ? ` from 1 to ${option.max}` : " of at least 1"}.`;
+        return;
+      }
+      selected.push({ ...option, qty });
+    });
+    return { selected, error };
+  }
+
+  function applyAudioMultiVisibility() {
+    applyAudioProviderVisibility();
+    placeRovePickerForMulti();
     updateAudioEdgeVNote();
   }
   function audioEdgeVInPlay() {
@@ -2304,7 +2159,7 @@ async function init() {
     document.querySelectorAll("#audioMultiRows .audio-multi-row").forEach(row => {
       fillRowAudioMultiModel(row, true);
       applyRowRoveUi(row);
-      syncRowPsuCb(row);
+      refreshRowAccessories(row);
     });
     placeRovePickerForMulti();
   }
@@ -2335,23 +2190,28 @@ async function init() {
           <input type="number" min="1" value="1" class="audio-multi-qty bom-qty border p-2 w-20">
         </div>
         <div class="flex items-center gap-3 flex-wrap pb-1">
-          <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly1 border"><span>1yr Poly+</span></label>
-          <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly3 border"><span>3yr Poly+</span></label>
-          <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-poly5 border"><span>5yr Poly+</span></label>
-          <label class="audio-multi-psu-wrap hidden inline-flex items-center gap-1 text-xs"><input type="checkbox" class="audio-multi-psu border"><span>Include PSU</span></label>
+          ${SUPPORT_OPTS.filter(option => option.value).map(option => `<label class="audio-support-option inline-flex items-center gap-1 text-xs"><input type="checkbox" data-term="${option.value}" class="audio-multi-${option.value} border"><span>${option.label}</span></label>`).join("")}
         </div>
         <button type="button" class="audio-multi-remove text-xs text-gray-600 underline pb-1">Remove</button>
       </div>
+      <div class="audio-multi-module hidden border border-blue-100 rounded p-2"></div>
+      <details class="audio-multi-accessories hidden border border-blue-100 rounded p-2">
+        <summary class="cursor-pointer font-medium text-blue-900">Additional accessories — click to expand</summary>
+        <p class="text-xs text-gray-600 my-2">Quantities are totals for this phone row, not per phone. Pack quantities are whole packs. For example, 2 packs of 5 pieces supply 10 pieces.</p>
+        <div class="audio-multi-accessory-list space-y-3"></div>
+      </details>
       <div class="audio-multi-rove-slot"></div>`;
     fillRowAudioMultiModel(row, false);
     row.querySelector(".audio-multi-family").addEventListener("change", () => {
       const famSel = row.querySelector(".audio-multi-family");
+      row.querySelector(".audio-multi-accessory-list").innerHTML = "";
+      row.querySelector(".audio-multi-module").innerHTML = "";
       if (famSel.value === "Rove" && otherRowHasRove(row)) {
         famSel.value = "";
         setAudioMultiRoveNote(true);
         fillRowAudioMultiModel(row, false);
         applyRowRoveUi(row);
-        syncRowPsuCb(row);
+        refreshRowAccessories(row);
         placeRovePickerForMulti();
         updateAudioEdgeVNote();
         return;
@@ -2360,20 +2220,22 @@ async function init() {
       applyAudioProviderVisibility();
       fillRowAudioMultiModel(row, true);
       applyRowRoveUi(row);
-      syncRowPsuCb(row);
+      refreshRowAccessories(row);
       placeRovePickerForMulti();
       if (rowIsRove(row)) syncRovePicker();
       updateAudioEdgeVNote();
     });
     row.querySelector(".audio-multi-model").addEventListener("change", () => {
       const modelSel = row.querySelector(".audio-multi-model");
+      row.querySelector(".audio-multi-accessory-list").innerHTML = "";
+      row.querySelector(".audio-multi-module").innerHTML = "";
       const raw = modelSel.value || "";
       if (raw === "Rove") {
         if (otherRowHasRove(row)) {
           modelSel.value = "";
           setAudioMultiRoveNote(true);
           applyRowRoveUi(row);
-          syncRowPsuCb(row);
+          refreshRowAccessories(row);
           placeRovePickerForMulti();
           updateAudioEdgeVNote();
           return;
@@ -2384,7 +2246,7 @@ async function init() {
       }
       applyAudioProviderVisibility();
       applyRowRoveUi(row);
-      syncRowPsuCb(row);
+      refreshRowAccessories(row);
       placeRovePickerForMulti();
       if (rowIsRove(row)) syncRovePicker();
       updateAudioEdgeVNote();
@@ -2397,77 +2259,27 @@ async function init() {
       placeRovePickerForMulti();
       updateAudioEdgeVNote();
     });
+    row.querySelector(".audio-multi-qty").addEventListener("change", () => refreshRowAccessories(row));
+    row.addEventListener("change", e => {
+      if (!e.target.classList.contains("phone-accessory-check")) return;
+      const option = e.target.closest(".phone-accessory");
+      const input = option.querySelector(".phone-accessory-qty");
+      input.disabled = !e.target.checked;
+      if (option.dataset.key === "module") option.querySelector(".phone-accessory-quantity").classList.toggle("hidden", !e.target.checked);
+    });
     rows.appendChild(row);
     applyAudioProviderVisibility();
+    refreshRowAccessories(row);
   }
   function ensureAudioMultiRows() {
     const host = document.getElementById("audioMultiRows");
     if (host && !host.querySelector(".audio-multi-row")) addAudioMultiRow();
   }
   function rebuildAudioModel() {
-    const allModels = !!document.getElementById("audioAllModels")?.checked;
-    const familySel = document.getElementById("audioFamily");
-    const sel = document.getElementById("audioModel");
-    const modelWrap = document.getElementById("audioModelWrap");
-    const picker = document.getElementById("rovePicker");
-    const prevRaw = sel ? sel.value : "";
-    const prevParsed = parseAudioModelValue(prevRaw);
-    const familyUi = familySel?.value || "";
-
-    if (!allModels && familyUi === "Rove") {
-      if (sel) {
-        sel.innerHTML = '<option value="">--</option>';
-        sel.value = "";
-      }
-      if (familySel) familySel.value = "Rove";
-      updateAudioNotesAndAcc();
-      applyAudioMultiVisibility();
-      if (isAudioMultiOn()) rebuildAudioMultiRows();
-      else syncRovePicker();
-      return;
-    }
-
-    if (!sel) {
-      applyAudioMultiVisibility();
-      if (isAudioMultiOn()) rebuildAudioMultiRows();
-      return;
-    }
-    const filled = fillAudioModelSelect(sel, { allModels, familyUi, includeRove: allModels && !familyUi, restoreExact: false });
-    const offered = filled.offered;
-    const allowPsu = filled.allowPsu;
-
-    if (prevParsed.wantPsu && !allowPsu) audioPsuBundleHiddenNote = true;
-    else if (allowPsu) audioPsuBundleHiddenNote = false;
-
-    const candidates = [];
-    if (prevRaw === "Rove" || familyUi === "Rove" || prevParsed.family === "Rove") candidates.push("Rove");
-    if (prevParsed.family && prevParsed.model) {
-      const prevCfg = (AUDIO_CATALOG[prevParsed.family] || {})[prevParsed.model];
-      const edgeVPoe = audioEdgeVPoeHold(prevParsed.family, prevCfg, false);
-      if ((prevParsed.wantPsu && allowPsu) || (edgeVPoe && prevCfg.sip_psu)) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, true));
-      if (!edgeVPoe) candidates.push(audioModelEncode(prevParsed.family, prevParsed.model, false));
-    }
-    if (prevParsed.model && familyUi) {
-      const famCfg = (AUDIO_CATALOG[familyUi] || {})[prevParsed.model];
-      if (!audioEdgeVPoeHold(familyUi, famCfg, false)) candidates.push(audioModelEncode(familyUi, prevParsed.model, false));
-      else if (famCfg && famCfg.sip_psu) candidates.push(audioModelEncode(familyUi, prevParsed.model, true));
-    }
-    let next = "";
-    for (const c of candidates) {
-      if (offered.indexOf(c) !== -1) { next = c; break; }
-    }
-    sel.value = next;
-    const chosen = parseAudioModelValue(sel.value);
-    if (familySel && chosen.family) familySel.value = chosen.family;
-    const nowRove = sel.value === "Rove";
-    if (!isAudioMultiOn()) {
-      if (modelWrap) modelWrap.classList.toggle("hidden", nowRove && !allModels);
-      if (picker) picker.classList.toggle("hidden", !nowRove);
-      if (nowRove) syncRovePicker();
-    }
-    updateAudioNotesAndAcc();
+    applyAudioProviderVisibility();
+    syncAudioPlatformFromMulti();
+    rebuildAudioMultiRows();
     applyAudioMultiVisibility();
-    if (isAudioMultiOn()) rebuildAudioMultiRows();
   }
   document.getElementById("audioAllModels")?.addEventListener("change", () => {
     if (document.getElementById("audioAllModels")?.checked) {
@@ -2478,36 +2290,11 @@ async function init() {
     }
     rebuildAudioModel();
   });
-  document.getElementById("audioMultiPhone")?.addEventListener("change", () => {
-    if (isAudioMultiOn()) {
-      syncAudioMultiPlatformFromMain();
-      ensureAudioMultiRows();
-    } else {
-      restoreRovePickerHome();
-    }
-    rebuildAudioModel();
-  });
   document.getElementById("audioMultiAdd")?.addEventListener("click", () => addAudioMultiRow());
   document.getElementById("audioMultiPlatform")?.addEventListener("change", () => {
     syncAudioPlatformFromMulti();
     rebuildAudioModel();
   });
-  document.getElementById("audioFamily")?.addEventListener("change", rebuildAudioModel);
-  document.getElementById("audioModel")?.addEventListener("change", () => {
-    const parsed = syncFamilyFromModel();
-    const allModels = !!document.getElementById("audioAllModels")?.checked;
-    const isRove = parsed.family === "Rove";
-    if (!isAudioMultiOn()) {
-      const modelWrap = document.getElementById("audioModelWrap");
-      const picker = document.getElementById("rovePicker");
-      if (modelWrap) modelWrap.classList.toggle("hidden", isRove && !allModels);
-      if (picker) picker.classList.toggle("hidden", !isRove);
-      if (isRove) syncRovePicker();
-    }
-    updateAudioNotesAndAcc();
-    applyAudioMultiVisibility();
-  });
-  document.getElementById("audioPlatform")?.addEventListener("change", rebuildAudioModel);
   document.getElementById("audioTaa")?.addEventListener("change", () => {
     rebuildAudioModel();
   });
@@ -2910,6 +2697,9 @@ async function init() {
     setPolarWrapVisible("polarFilterWrap2", "polarFilterOpt2", show2);
     const show3 = canShowTertiaryCamera() && cameraKind(document.getElementById("cameraChoice3")?.value) === "E70";
     setPolarWrapVisible("polarFilterWrap3", "polarFilterOpt3", show3);
+  }
+  function smallHostPoeApplies() {
+    return hostFamily() === "x32";
   }
   function refreshDependentControls() {
     updateHuddleAvailability();
@@ -3621,14 +3411,17 @@ async function init() {
       addLine(results, "9X478AA");
     }
 
-    // X32 is PoE++-powered; always include the injector (same as Classic)
-    if (family === "x32" && !hasSku(results, "B5NH6AA#ABA") && !hasSku(results, "B5NH6AA")) {
-      addLine(results, "B5NH6AA#ABA", "Poly 45W PoE++ power injector for X32");
-    }
-
     // V12 is USB-powered; always include the USB-C 65W adapter kit
     if (family === "v12" && !hasSku(results, "B42BFAA")) {
       addLine(results, "B42BFAA", "Poly USB-C 65W Power Adapter and Power Cord Kit");
+    }
+
+    // X32 auto-includes one PoE injector across all variants; V12 uses USB-C power only.
+    if (smallHostPoeApplies()) {
+      addLine(results, SMALL_HOST_POE_SKU);
+    }
+    if (document.getElementById("videoTrioC60Mics")?.checked) {
+      addLine(results, TRIO_C60_EXP_MIC_SKU);
     }
 
     const addInRoomTc10 = () => {
@@ -3922,10 +3715,7 @@ async function init() {
         const familyUi = row.querySelector(".audio-multi-family")?.value || "";
         const raw = row.querySelector(".audio-multi-model")?.value || "";
         const parsedRow = parseAudioModelValue(raw, { noFallback: true });
-        const terms = [];
-        if (row.querySelector(".audio-multi-poly1")?.checked) terms.push("poly1");
-        if (row.querySelector(".audio-multi-poly3")?.checked) terms.push("poly3");
-        if (row.querySelector(".audio-multi-poly5")?.checked) terms.push("poly5");
+        const terms = SUPPORT_OPTS.filter(option => option.value && row.querySelector(".audio-multi-" + option.value)?.checked).map(option => option.value);
         const isRove = familyUi === "Rove" || parsedRow.family === "Rove" || raw === "Rove";
         if (isRove) {
           if (kitError) return;
@@ -3934,14 +3724,21 @@ async function init() {
           filled.push({ kind: "rove", kit, terms });
           return;
         }
-        if (!parsedRow.family || !parsedRow.model) return;
+        if (!parsedRow.family || !parsedRow.model) {
+          if (familyUi) kitError = "Choose a model for each phone row, or remove the unfinished row.";
+          return;
+        }
         const cfgRow = (AUDIO_CATALOG[parsedRow.family] || {})[parsedRow.model];
         if (!cfgRow) return;
-        if (audioEdgeVPoeHold(parsedRow.family, cfgRow, parsedRow.wantPsu)) return;
-        let qty = parseInt(row.querySelector(".audio-multi-qty")?.value || "1", 10);
-        if (!Number.isFinite(qty) || qty < 1) qty = 1;
-        const wantBrick = !!row.querySelector(".audio-multi-psu")?.checked;
-        filled.push({ kind: "phone", parsed: parsedRow, cfg: cfgRow, qty, terms, wantBrick });
+        if (audioEdgeVPoeHold(parsedRow.family, cfgRow, parsedRow.wantPsu)) {
+          kitError = "PoE-only Edge V remains on hold. Choose a with-power model.";
+          return;
+        }
+        const qty = Number(row.querySelector(".audio-multi-qty")?.value);
+        if (!Number.isSafeInteger(qty) || qty < 1) { kitError = "Enter a whole-number phone quantity of at least 1."; return; }
+        const accessories = readRowAccessories(row, parsedRow, cfgRow, platform, qty);
+        if (accessories.error) { kitError = accessories.error; return; }
+        filled.push({ kind: "phone", parsed: parsedRow, cfg: cfgRow, qty, terms, accessories: accessories.selected });
       });
       if (kitError) {
         lastAudioBom = null;
@@ -3979,9 +3776,23 @@ async function init() {
           return;
         }
         addLineNoMerge(results, pick.sku, undefined, item.qty);
-        if (!pick.usedSipPsu && item.cfg.psu && (item.parsed.wantPsu || item.wantBrick)) {
+        if (!pick.usedSipPsu && item.cfg.psu && item.parsed.wantPsu) {
           addLineNoMerge(results, item.cfg.psu, undefined, item.qty);
         }
+        item.accessories.forEach(accessory => {
+          addLineNoMerge(results, accessory.sku, undefined, accessory.qty);
+          if (accessory.kind !== "module") return;
+          const family = item.parsed.family;
+          const key = family === "Edge E" ? "edge_em" : family === "Edge V" ? "edge_v_em" : "ccx_em60";
+          item.terms.forEach(term => {
+            if (!addSupportNoMerge(results, key, term, accessory.qty)) addNote("No " + term + " support SKU mapped for " + accessory.sku + " (not invented).");
+          });
+          if (family === "CCX") {
+            addLineNoMerge(results, EM60_PSU, undefined, accessory.qty);
+            if (item.parsed.model === "600") addNote("CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60).");
+          }
+          if (family === "Edge E" && accessory.qty > item.qty) addNote("Second Edge E expansion module needs 802.3at PoE+ or a PSU on the host.");
+        });
         item.terms.forEach(term => {
           const map = SUPPORT_MAP[item.cfg.support] || {};
           if (!map[term]) {
@@ -4013,139 +3824,7 @@ async function init() {
       renderBom(undefined, undefined, audioResult, lastAudioBom);
       return;
     }
-    let platform = document.getElementById("audioPlatform")?.value || "";
-    const parsed = syncFamilyFromModel();
-    const family = parsed.family || document.getElementById("audioFamily")?.value || "";
-    const model = parsed.model;
-    const wantBundlePsu = parsed.wantPsu;
-    const allModelsOn = !!document.getElementById("audioAllModels")?.checked;
-    const supportTerm = document.getElementById("audioSupportTerm")?.value || "";
-    if (!platform && !audioFamilyNeedsProvider(family) && !audioFamilyNeedsProvider(parsed.family)) {
-      const main = document.getElementById("audioPlatform");
-      if (main) main.value = "OpenSIP";
-      platform = "OpenSIP";
-    }
-    const missing = [];
-    if (!platform) missing.push("Platform");
-    const isRove = family === "Rove";
-    if (isRove) {
-      const basePick = document.getElementById("roveBase")?.value || "";
-      if (!basePick) missing.push("Base");
-    } else {
-      if (!allModelsOn && !family) missing.push("Family");
-      if (!model) missing.push("Model");
-    }
-    if (missing.length) {
-      lastAudioBom = null;
-      mockError(audioResult, "Please select " + missing.join(", ") + " to generate a BOM.");
-      return;
-    }
-    if (isRove) {
-      const kit = readRoveKitState();
-      if (kit.error) {
-        lastAudioBom = null;
-        mockError(audioResult, kit.error);
-        return;
-      }
-      const results = [];
-      const usedKeys = [];
-      emitRoveKit(results, kit, supportTerm, usedKeys);
-      if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
-      const notes = [];
-      const fieldNote = audioFieldNote("Rove", "", platform);
-      if (fieldNote) notes.push(fieldNote);
-      const taa = !!document.getElementById("audioTaa")?.checked;
-      if (taa) notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
-      const seenSupportNote = new Set();
-      usedKeys.forEach(key => {
-        const map = SUPPORT_MAP[key] || {};
-        if (supportTerm && !map[supportTerm]) {
-          const n = "No " + supportTerm + " SKU mapped for this model (not invented).";
-          if (!seenSupportNote.has(n)) { seenSupportNote.add(n); notes.push(n); }
-        }
-      });
-      lastAudioBom = {
-        results,
-        includePrices,
-        footnote: notes.length ? notes.join(" ") : null
-      };
-      renderBom(undefined, undefined, audioResult, lastAudioBom);
-      return;
-    }
-    const cfg = audioCfg();
-    if (!cfg) {
-      lastAudioBom = null;
-      mockError(audioResult, "Unknown family/model combination.");
-      return;
-    }
-    if (audioEdgeVPoeHold(family, cfg, wantBundlePsu)) {
-      lastAudioBom = null;
-      mockError(audioResult, "PoE-only Edge V is not available until October at the earliest. Select a with-power Edge V SKU.");
-      return;
-    }
-    const psuOn = !!document.getElementById("audioPsu")?.checked;
-    const pick = pickAudioPhoneSku(cfg, platform, wantBundlePsu);
-    const sku = pick.sku;
-    const usedTaaSku = pick.usedTaaSku;
-    const usedSipPsu = pick.usedSipPsu;
-    const usedNrSku = pick.usedNrSku;
-    const isTeams = pick.isTeams;
-    const jitc = false;
-    const taa = pick.taa;
-    const nr = pick.nr;
-    if (!sku) {
-      lastAudioBom = null;
-      mockError(audioResult, cfg.sipNote || cfg.teamsNote || "No SKU for this platform/model (not invented).");
-      return;
-    }
-    const results = [];
-    addLine(results, sku);
-    addSupport(results, cfg.support, supportTerm);
-    if (document.getElementById("audioExpMics")?.checked && cfg.exp) addLine(results, cfg.exp);
-    let emQty = 0;
-    if (document.getElementById("audioEm")?.checked && audioEmVisible(family, model, platform, cfg)) {
-      emQty = (family === "Edge E" && cfg.emMax === 2 && document.getElementById("audioEm2")?.checked) ? 2 : 1;
-      addLine(results, cfg.em, undefined, emQty);
-      if (family === "CCX") {
-        addSupport(results, "ccx_em60", supportTerm, emQty);
-        addLine(results, EM60_PSU); // phone does not power EM60
-      }
-      if (family === "Edge E") addSupport(results, "edge_em", supportTerm, emQty);
-      if (family === "Edge V") addSupport(results, "edge_v_em", supportTerm, emQty);
-    }
-    if (!usedSipPsu && cfg.psu && (psuOn || wantBundlePsu)) addLine(results, cfg.psu);
-    if (document.getElementById("audioCat52m")?.checked && cfg.cat5_2m) addLine(results, cfg.cat5_2m);
-    if (document.getElementById("audioCat57m")?.checked && cfg.cat5_7m) addLine(results, cfg.cat5_7m);
-    if (document.getElementById("audioUsbMicro")?.checked && cfg.usb_micro) addLine(results, cfg.usb_micro);
-    if (document.getElementById("audioLensOnboard")?.checked) addLine(results, "PRO8700101AB");
-    const notes = [];
-    const fieldNote = audioFieldNote(family, model, platform);
-    if (fieldNote) notes.push(fieldNote);
-    if (family === "CCX" && emQty && model === "600") {
-      notes.push("CCX 600 EM60 needs hw rev P or later (rev A–O, pre-Nov 2022, no EM60).");
-    }
-    if (family === "Edge E" && emQty === 2) {
-      notes.push("Second Edge E expansion module needs 802.3at PoE+ or a PSU on the host.");
-    }
-    if (taa && !usedTaaSku) {
-      notes.push("No TAA/GSA SKU for this model on this platform (not invented). Commercial SKU will be used.");
-    }
-    if (nr && (cfg.wifi || cfg.bt) && !usedNrSku) {
-      notes.push("No No-Radio SKU for this model on this platform (not invented). Commercial SKU will be used.");
-    }
-    if (wantBundlePsu && (taa || isTeams || !usedSipPsu)) {
-      notes.push("OpenSIP phone+PSU bundle is not used with TAA or Teams; TAA phone SKU plus accessory PSU when selected.");
-    }
-    const map = SUPPORT_MAP[cfg.support] || {};
-    if (supportTerm && !map[supportTerm]) {
-      notes.push("No " + supportTerm + " SKU mapped for this model (not invented).");
-    }
-    lastAudioBom = {
-      results,
-      includePrices,
-      footnote: notes.length ? notes.join(" ") : null
-    };
-    renderBom(undefined, undefined, audioResult, lastAudioBom);
+
   });
 }
 
